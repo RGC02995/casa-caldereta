@@ -1,0 +1,197 @@
+@use '../../../../styles/variables' as *;
+@use '../../../../styles/mixins' as *;
+
+.cookie-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: $z-overlay;
+  background-color: $color-neutral-800;
+  color: $color-neutral-200;
+  box-shadow: 0 -4px 24px rgba($color-black, 0.2);
+  @include fade-in;
+
+  &__inner {
+    @include container;
+    padding-block: $space-6;
+    display: flex;
+    flex-direction: column;
+    gap: $space-5;
+
+    @include respond-to('lg') {
+      flex-direction: row;
+      align-items: center;
+      gap: $space-8;
+    }
+  }
+
+  &__text {
+    flex: 1;
+  }
+
+  &__title {
+    font-family: $font-family-heading;
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    color: $color-white;
+    margin: 0 0 $space-2;
+  }
+
+  &__description {
+    font-size: $font-size-sm;
+    line-height: $line-height-relaxed;
+    color: $color-neutral-300;
+    margin: 0;
+  }
+
+  &__link {
+    color: $color-secondary;
+    text-decoration: underline;
+    transition: color $transition-fast;
+
+    &:hover { color: $color-secondary-light; }
+  }
+
+  // ── Categorías (panel expandido) ─────────────────────────────────────────────
+  &__categories {
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+    padding: $space-4;
+    background-color: rgba($color-white, 0.05);
+    border-radius: $border-radius-md;
+    border: 1px solid rgba($color-white, 0.1);
+  }
+
+  &__category {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-4;
+  }
+
+  &__category-info {
+    display: flex;
+    flex-direction: column;
+    gap: $space-1;
+    flex: 1;
+  }
+
+  &__category-name {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-white;
+  }
+
+  &__category-desc {
+    font-size: $font-size-xs;
+    color: $color-neutral-400;
+  }
+
+  // ── Toggle switch (checkbox nativo personalizado) ─────────────────────────────
+  &__toggle {
+    appearance: none;
+    width: 44px;
+    height: 24px;
+    border-radius: $border-radius-full;
+    background-color: $color-neutral-500;
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color $transition-fast;
+
+    &::before {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: $border-radius-full;
+      background-color: $color-white;
+      top: 3px;
+      left: 3px;
+      transition: transform $transition-fast;
+    }
+
+    &:checked {
+      background-color: $color-secondary;
+
+      &::before { transform: translateX(20px); }
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible { @include focus-visible; }
+  }
+
+  // ── Acciones ─────────────────────────────────────────────────────────────────
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-3;
+    flex-shrink: 0;
+
+    @include respond-to('lg') {
+      flex-direction: column;
+      flex-wrap: nowrap;
+      min-width: 180px;
+    }
+  }
+
+  &__btn {
+    @include button-reset;
+    padding: $space-3 $space-5;
+    border-radius: $border-radius-md;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+    text-align: center;
+    transition:
+      background-color $transition-fast,
+      color $transition-fast;
+    flex: 1;
+
+    @include respond-to('lg') { flex: unset; }
+
+    &:focus-visible { @include focus-visible; }
+
+    &--accept {
+      background-color: $color-secondary;
+      color: $color-white;
+
+      &:hover { background-color: $color-secondary-dark; }
+    }
+
+    &--reject {
+      background-color: transparent;
+      color: $color-neutral-300;
+      border: 1px solid $color-neutral-500;
+
+      &:hover {
+        background-color: rgba($color-white, 0.06);
+        color: $color-white;
+      }
+    }
+
+    &--configure {
+      background-color: transparent;
+      color: $color-neutral-300;
+      border: 1px solid $color-neutral-500;
+
+      &:hover {
+        background-color: rgba($color-white, 0.06);
+        color: $color-white;
+      }
+    }
+
+    &--save {
+      background-color: $color-primary;
+      color: $color-white;
+
+      &:hover { background-color: $color-primary-light; }
+    }
+  }
+}

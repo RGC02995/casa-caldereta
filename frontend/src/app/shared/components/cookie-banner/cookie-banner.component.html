@@ -1,0 +1,111 @@
+@if (isVisible()) {
+  <div
+    class="cookie-banner"
+    role="region"
+    aria-label="Aviso de cookies"
+    aria-live="polite"
+  >
+    <div class="cookie-banner__inner">
+
+      <div class="cookie-banner__text">
+        <h2 class="cookie-banner__title">Usamos cookies</h2>
+        <p class="cookie-banner__description">
+          Utilizamos cookies propias y de terceros para mejorar tu experiencia.
+          Puedes aceptarlas todas o elegir cuáles permites.
+          <a routerLink="/legal/cookies" class="cookie-banner__link">Política de cookies</a>
+        </p>
+      </div>
+
+      @if (isExpanded()) {
+        <div class="cookie-banner__categories" role="group" aria-label="Categorías de cookies">
+
+          <div class="cookie-banner__category">
+            <div class="cookie-banner__category-info">
+              <span class="cookie-banner__category-name">Necesarias</span>
+              <span class="cookie-banner__category-desc">
+                Imprescindibles para el funcionamiento del sitio
+              </span>
+            </div>
+            <input
+              type="checkbox"
+              class="cookie-banner__toggle"
+              checked
+              disabled
+              aria-label="Cookies necesarias — siempre activas"
+            >
+          </div>
+
+          <div class="cookie-banner__category">
+            <div class="cookie-banner__category-info">
+              <span class="cookie-banner__category-name">Analíticas</span>
+              <span class="cookie-banner__category-desc">
+                Nos ayudan a entender cómo se usa el sitio
+              </span>
+            </div>
+            <input
+              type="checkbox"
+              class="cookie-banner__toggle"
+              [checked]="analyticsConsent()"
+              (change)="onCategoryChange($event, 'analytics')"
+              aria-label="Cookies analíticas"
+            >
+          </div>
+
+          <div class="cookie-banner__category">
+            <div class="cookie-banner__category-info">
+              <span class="cookie-banner__category-name">Marketing</span>
+              <span class="cookie-banner__category-desc">
+                Permiten mostrar publicidad relevante
+              </span>
+            </div>
+            <input
+              type="checkbox"
+              class="cookie-banner__toggle"
+              [checked]="marketingConsent()"
+              (change)="onCategoryChange($event, 'marketing')"
+              aria-label="Cookies de marketing"
+            >
+          </div>
+
+        </div>
+      }
+
+      <div class="cookie-banner__actions">
+        <button
+          type="button"
+          class="cookie-banner__btn cookie-banner__btn--reject"
+          (click)="rejectAll()"
+        >
+          Solo necesarias
+        </button>
+
+        @if (isExpanded()) {
+          <button
+            type="button"
+            class="cookie-banner__btn cookie-banner__btn--save"
+            (click)="savePreferences()"
+          >
+            Guardar preferencias
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="cookie-banner__btn cookie-banner__btn--configure"
+            (click)="expand()"
+          >
+            Configurar
+          </button>
+        }
+
+        <button
+          type="button"
+          class="cookie-banner__btn cookie-banner__btn--accept"
+          (click)="acceptAll()"
+        >
+          Aceptar todas
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

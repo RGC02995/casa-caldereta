@@ -1,0 +1,95 @@
+@use '../../../../styles/variables' as *;
+@use '../../../../styles/mixins' as *;
+
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal {
+  padding: 0;
+  border: none;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-xl;
+  background-color: $color-white;
+  max-height: min(90dvh, 800px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: modal-enter $transition-normal ease forwards;
+
+  &::backdrop {
+    background-color: rgba($color-black, 0.55);
+    backdrop-filter: blur(3px);
+  }
+
+  &--sm { width: min(90vw, 400px); }
+  &--md { width: min(90vw, 600px); }
+  &--lg { width: min(90vw, 860px); }
+
+  &__container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: $space-4;
+    padding: $space-5 $space-6;
+    border-bottom: 1px solid $color-neutral-200;
+    flex-shrink: 0;
+  }
+
+  &__title {
+    @include heading-md;
+    color: $color-neutral-800;
+    margin: 0;
+    flex: 1;
+  }
+
+  &__close {
+    @include button-reset;
+    @include flex-center;
+    width: 36px;
+    height: 36px;
+    border-radius: $border-radius-sm;
+    color: $color-neutral-500;
+    font-size: $font-size-xl;
+    line-height: 1;
+    margin-left: auto;
+    flex-shrink: 0;
+    transition:
+      color $transition-fast,
+      background-color $transition-fast;
+
+    &:hover {
+      color: $color-neutral-800;
+      background-color: $color-neutral-100;
+    }
+
+    &:focus-visible {
+      @include focus-visible;
+    }
+  }
+
+  &__body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: $space-6;
+
+    @include respond-to('md') {
+      padding: $space-8;
+    }
+  }
+}

@@ -1,0 +1,33 @@
+<dialog
+  #dialogElem
+  [class]="cssClasses()"
+  (click)="onBackdropClick($event)"
+  (cancel)="onCancel($event)"
+  [attr.aria-labelledby]="title() ? 'modal-title' : null"
+  [attr.aria-label]="title() ? null : 'Diálogo'"
+  aria-modal="true"
+>
+  <div class="modal__container">
+
+    <header class="modal__header">
+      @if (title()) {
+        <h2 id="modal-title" class="modal__title">{{ title() }}</h2>
+      }
+      <button
+        type="button"
+        class="modal__close"
+        (click)="close()"
+        aria-label="Cerrar"
+      >
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </header>
+
+    <div class="modal__body">
+      <ng-content />
+    </div>
+
+    <ng-content select="[modal-footer]" />
+
+  </div>
+</dialog>

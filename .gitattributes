@@ -1,0 +1,14 @@
+# Normaliza saltos de línea a LF en el repositorio en todos los sistemas
+* text=auto eol=lf
+
+# Ficheros binarios — nunca tocar
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.woff binary
+*.woff2 binary
+*.ttf  binary
+*.eot  binary

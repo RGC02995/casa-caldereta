@@ -2,14 +2,14 @@
 
 ## Descripción del proyecto
 Web de alquiler vacacional para Casa Caldereta, Aielo de Rugat (Valencia, España).
-Diseño de lujo estilo boutique. Monorepo con Angular 21 + Node.js/Express + MongoDB.
+Diseño de lujo estilo boutique (inspiración: ritualdeterra.com). Monorepo Angular 21 + Node.js/Express + MongoDB.
 
 ---
 
 ## Stack técnico confirmado
 | Capa | Tecnología | Versión |
 |---|---|---|
-| Frontend | Angular + NgModules, SCSS + BEM estricto | 21.2.0 |
+| Frontend | Angular 21 Standalone, SCSS + BEM estricto | 21.2.0 |
 | Estado | NgRx Store + Effects + Router Store + DevTools | 21.1.0 |
 | i18n | ngx-translate + http-loader | 17.0.0 |
 | Fechas | date-fns | 4.4.0 |
@@ -18,11 +18,16 @@ Diseño de lujo estilo boutique. Monorepo con Angular 21 + Node.js/Express + Mon
 | Imágenes | Cloudinary | latest |
 | Pagos | Stripe | FUTURO — no implementar aún |
 
-## Versiones de entorno
+## Entorno de desarrollo
 - Node.js: 26.3.0
 - npm: 11.16.0
 - Angular CLI: 21.2.14
 - TypeScript backend: 6.0.3
+
+## Repositorio GitHub
+- URL: https://github.com/RGC02995/casa-caldereta.git
+- Rama principal: `main`
+- Estrategia: un commit por fase o bloque significativo
 
 ## Hosting aprobado
 | Servicio | Para qué |
@@ -36,24 +41,66 @@ Diseño de lujo estilo boutique. Monorepo con Angular 21 + Node.js/Express + Mon
 ---
 
 ## Convenciones Angular 21 Standalone (SIEMPRE respetar)
-- Arquitectura: **Standalone puro** — sin NgModules
-- Ficheros componente: `name.component.ts` / `name.component.html` / `name.component.scss`
-- Ficheros rutas de feature: `name.routes.ts` (array de Routes, NO módulos)
-- Clases componente: `NameComponent`; cada una declara sus propios `imports: [...]`
-- Sin `standalone: false` — todos los componentes son standalone por defecto
-- Rutas lazy: `loadComponent()` para un componente, `loadChildren()` para un array de rutas
-- Config global en `app.config.ts` con `ApplicationConfig` y providers funcionales
-- Imports en servicios: rutas RELATIVAS directas (no path aliases — el compilador AOT puede fallar)
-- Interceptores HTTP: `provideHttpClient(withInterceptors([...]))` en `app.config.ts`
-- `TranslateHttpLoader` v17: `provideTranslateService()` + `...provideTranslateHttpLoader()`
-- Scroll: `withInMemoryScrolling({ scrollPositionRestoration: 'top' })` — NO `withScrollPositionRestoration`
+
+### Arquitectura
+- **Standalone puro** — sin NgModules en ningún caso
+- Cada componente declara sus propios `imports: []`
+- Config global en `app.config.ts` con `ApplicationConfig`
+- Rutas lazy: `loadComponent()` para un componente, `loadChildren()` para array de rutas
+- Feature routes en ficheros `*.routes.ts` (array plano, no módulos)
+
+### Nombrado de ficheros
+- Componentes: `name.component.ts` / `name.component.html` / `name.component.scss`
+- Rutas de feature: `name.routes.ts`
+- Servicios: `name.service.ts`
+- Guardas: `name.guard.ts`
+- Interceptores: `name.interceptor.ts`
+- Modelos: `name.model.ts`
+- Pipes: `name.pipe.ts`
+- Directivas: `name.directive.ts`
+
+### Selectores de componentes (SIN prefijo app-)
+- Usar el nombre descriptivo directo: `loading-spinner`, `image-card`, `modal`, `cookie-banner`
+- EXCEPCIÓN: si el nombre coincide con un elemento HTML nativo → usar alternativa (`btn` en lugar de `button`)
+- Directivas: camelCase como atributo (`clickOutside`, `hasPermission`)
+
+### Signals y reactividad
+- `input<T>(default)` en lugar de `@Input()` — forma Angular 21 moderna
+- `input.required<T>()` cuando el valor es obligatorio
+- `output<T>()` en lugar de `@Output() EventEmitter`
+- `computed()` para valores derivados de signals
+- `signal()` para estado local mutable
+
+### HTTP e interceptores
+- `provideHttpClient(withInterceptors([authInterceptor]))` en `app.config.ts`
+- Interceptores funcionales (`HttpInterceptorFn`), nunca class-based
+
+### ngx-translate v17
+- `provideTranslateService({ defaultLanguage })` en `app.config.ts`
+- `...provideTranslateHttpLoader({ prefix, suffix })` en providers
+- En componentes: importar `TranslatePipe` de `@ngx-translate/core`
+
+### Imports en servicios y ficheros TypeScript
+- Rutas RELATIVAS siempre (no path aliases @core/ etc. — el compilador AOT puede fallar)
+- Los path aliases solo funcionan en el IDE para navegación, no en el compilador
+
+### SCSS
+- `@use '../../../styles/variables' as *;` ANTES de `@use '../../../styles/mixins' as *;`
+- Contar niveles correctamente desde la ubicación del fichero hasta `src/`
+  - `src/app/` → `../styles/`
+  - `src/app/core/` → `../../styles/`
+  - `src/app/shared/components/name/` → `../../../../styles/`
+  - `src/app/features/feature/pages/name/` → `../../../../../styles/`
+- BEM estricto: `.bloque__elemento--modificador`
+- Sin estilos inline en HTML nunca
+- Sin `!important` nunca
 
 ---
 
 ## Normas de desarrollo (SIEMPRE respetar)
 1. **Seguridad y legalidad son la máxima prioridad**
 2. Tipado estricto TypeScript — sin `any` explícito nunca
-3. BEM estricto en todos los estilos — sin estilos inline nunca
+3. BEM estricto en todos los estilos
 4. SOLID + DRY — cada lógica separada, sin duplicación
 5. Sin lógica de negocio en componentes Angular
 6. Variables sensibles solo en `.env` — nunca en código
@@ -61,76 +108,86 @@ Diseño de lujo estilo boutique. Monorepo con Angular 21 + Node.js/Express + Mon
 8. Checkbox de aceptación en todos los formularios con datos personales
 9. **No ejecutar ninguna acción sin aprobación explícita del usuario**
 10. Antes de cada acción: explicar QUÉ, POR QUÉ y CÓMO
+11. Mostrar siempre ANTES/DESPUÉS de cada fichero con explicación del código
+12. Ir paso a paso — un fichero / concepto a la vez
 
 ---
 
 ## Estructura de features (rutas)
-| Ruta Angular | Feature module | Descripción |
+| Ruta Angular | Fichero de rutas | Descripción |
 |---|---|---|
-| `/` | HomeModule | Landing page pública |
-| `/reservar` | BookingModule | Calendario y reservas |
-| `/galeria` | GalleryModule | Fotos de la casa |
-| `/rutas` | RoutesModule | Actividades turísticas |
-| `/admin` | AdminModule | Panel propietario (protegido) |
-| `/legal/*` | LegalModule | Páginas legales |
+| `/` | `home.routes.ts` | Landing page pública |
+| `/reservar` | `booking.routes.ts` | Calendario y reservas |
+| `/galeria` | `gallery.routes.ts` | Fotos de la casa |
+| `/rutas` | `routes.routes.ts` | Actividades turísticas |
+| `/admin` | `admin.routes.ts` | Panel propietario (protegido) |
+| `/legal/*` | `legal.routes.ts` | Páginas legales |
 
 ---
 
 ## Estado del proyecto
 
-### Fase 1 — Fundación ✅ COMPLETADA (2026-06-04)
+### Fase 1 — Fundación ✅ COMPLETADA (2026-06-04) — commiteada en main
 - [x] Node.js 26.3.0 + Angular CLI 21.2.14
-- [x] Monorepo raíz (package.json workspaces, .gitignore, .env.example)
-- [x] Angular 21.2.0 en `frontend/` con NgRx 21, ngx-translate 17, date-fns 4
-- [x] ESLint configurado (eslint.config.js flat format)
+- [x] Monorepo raíz (package.json workspaces, .gitignore, .gitattributes, .env.example, CLAUDE.md)
+- [x] Angular 21.2.0 Standalone en `frontend/`
+- [x] ESLint configurado (eslint.config.js flat format, sin prefijo app- en selectores)
 - [x] tsconfig estricto con path aliases (@core, @shared, @features, @store, @environments, @assets)
-- [x] Backend Node.js/Express/TypeScript en `backend/`
+- [x] Backend Node.js/Express/TypeScript en `backend/` (8 directorios de estructura)
 - [x] 52 directorios de estructura en `frontend/src/`
-- [x] 8 directorios de estructura en `backend/src/`
 - [x] Environments (environment.ts + environment.prod.ts) con file replacement en angular.json
+- [x] src/assets/ añadido a angular.json como asset path
 - [x] Estilos globales SCSS (_variables.scss, _mixins.scss, _reset.scss, styles.scss)
+- [x] Design tokens: colores, tipografía, espaciado, breakpoints, sombras, transiciones
 - [x] 5 modelos TypeScript (ApiResponse, User, Booking, Route, Photo)
-- [x] Auth (AuthService con Signals, authGuard funcional, authInterceptor funcional)
-- [x] Servicios core (ApiService, LoggerService, ErrorHandlerService)
-- [x] NgRx global (AppState, appReducers, AppEffects)
-- [x] Módulos feature con lazy loading (Home, Booking, Gallery, Routes, Admin, Legal)
+- [x] Auth: AuthService con Signals, authGuard funcional, authInterceptor funcional con refresh
+- [x] Servicios core: ApiService genérico, LoggerService, ErrorHandlerService
+- [x] NgRx global (AppState con router, appReducers, AppEffects)
+- [x] app.config.ts con todos los providers (NgRx, HTTP, i18n, Auth, DevTools)
+- [x] app.routes.ts con lazy loading a los 6 feature routes
+- [x] 6 feature stubs compilando: Home, Booking, Gallery, Routes, Admin, Legal
+- [x] i18n: es.json + en.json con claves base
 - [x] BUILD exitoso — 0 errores
+- [x] Repositorio GitHub vinculado, rama main, primer commit "first commit"
 
-### Fase 2 — Core & Shared (PENDIENTE)
-- Componentes shared: Button, Modal, CookieBanner, LoadingSpinner, ImageCard
-- Directivas: clickOutside, hasPermission
-- Pipes: dateFormat, truncate
-- Validadores: email
-- SharedModule
+### Fase 2 — Shared Components ✅ COMPLETADA (2026-06-04)
+- [x] ButtonComponent (`btn`) — variantes: primary/secondary/outline/ghost, tamaños: sm/md/lg, loading, disabled
+- [x] LoadingSpinnerComponent (`loading-spinner`) — tamaños: sm/md/lg, role=status, accesible
+- [x] ImageCardComponent (`image-card`) — ratios: landscape/square/portrait, overlay animado, lazy load, teclado
+- [x] ModalComponent (`modal`) — `<dialog>` nativo, focus trap automático, backdrop, animación entrada, slots ng-content
+- [x] CookieBannerComponent (`cookie-banner`) — AEPD-compliant, 3 categorías, toggles, localStorage, expandible
+- [x] Directiva: clickOutside — `@HostListener document:click` + `contains()`
+- [x] Directiva: hasPermission — estructural, `effect()` reactivo a auth + input
+- [x] Pipe: dateFormat — `date-fns` v4, locale español, acepta Date/string/number/null
+- [x] Pipe: truncate — recorte por caracteres, `trimEnd()` antes del trail
+- [x] Validador: email — regex estricta, devuelve `{ invalidEmail: true }`, compatible con Validators.required
 
-### Fase 3 — Layout & Navegación (PENDIENTE)
-- Header con navegación responsive y menú móvil
-- Footer con links legales
-- Layout wrapper (header + router-outlet + footer)
-- Página 404
+### Fase 3 — Layout & Navegación (pendiente)
+- [ ] HeaderComponent con navegación responsive y menú móvil
+- [ ] FooterComponent con links legales y licencia turística
+- [ ] Layout wrapper (header + router-outlet + footer)
+- [ ] Página 404
 
-### Fase 4 — Páginas públicas (PENDIENTE)
-- Home: hero, highlights de la casa, galería preview, rutas preview, CTA reserva
-- Galería completa con lightbox
-- Rutas/actividades con cards y detalle
-- Calendario de reservas con precios
-- Páginas legales completas (Aviso Legal, Privacidad, Cookies, T&C)
-- Banner de cookies AEPD-compliant
+### Fase 4 — Páginas públicas (pendiente)
+- [ ] Home: hero, highlights de la casa, galería preview, rutas preview, CTA reserva
+- [ ] Galería completa con lightbox
+- [ ] Rutas/actividades con cards y detalle
+- [ ] Calendario de reservas con precios
+- [ ] Páginas legales completas (Aviso Legal, Privacidad, Cookies, T&C)
+- [ ] Banner de cookies AEPD-compliant
 
-### Fase 5 — Panel administrador (PENDIENTE)
-- Login seguro (solo propietario)
-- Gestión de fotos (subida a Cloudinary)
-- CRUD de rutas con imágenes
-- Gestión de calendario y precios
+### Fase 5 — Panel administrador (pendiente)
+- [ ] Login seguro (solo propietario)
+- [ ] Gestión de fotos (subida a Cloudinary)
+- [ ] CRUD de rutas con imágenes
+- [ ] Gestión de calendario y precios
 
 ---
 
 ## Datos legales
 - **Municipio:** Aielo de Rugat, Valencia, Comunitat Valenciana
-- **Licencia turística:** [NÚMERO_LICENCIA_TURÍSTICA_CV] — pendiente de recibir esta tarde
+- **Licencia turística:** [NÚMERO_LICENCIA_TURÍSTICA_CV] — pendiente de recibir
 - **Normativa:** LSSI, RGPD, LOPDGDD, Ley 15/2018 Turisme CV, Decreto 92/2009
-
----
 
 ## Pendientes / Preguntas abiertas
 - [ ] Número de licencia turística (el usuario lo compartirá)
@@ -138,7 +195,7 @@ Diseño de lujo estilo boutique. Monorepo con Angular 21 + Node.js/Express + Mon
 
 ---
 
-## Historial de sesiones
-| Fecha | Qué se hizo |
+## Historial de commits
+| Commit | Descripción |
 |---|---|
-| 2026-06-04 | Fase 1 completada: monorepo, Angular 21 + NgRx, backend Node.js/Express, estructura completa, build OK |
+| first commit | Fase 1 completa + Fase 2 shared parcial (Button, Spinner, ImageCard) |
