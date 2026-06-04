@@ -1,0 +1,8 @@
+<div
+  [class]="cssClasses()"
+  role="status"
+  [attr.aria-label]="message()"
+>
+  <span class="spinner__circle" aria-hidden="true"></span>
+  <span class="visually-hidden">{{ message() }}</span>
+</div>

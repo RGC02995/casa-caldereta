@@ -1,0 +1,47 @@
+{
+  "nav": {
+    "home": "Home",
+    "gallery": "Gallery",
+    "routes": "Routes",
+    "booking": "Book",
+    "admin": "Admin"
+  },
+  "home": {
+    "hero": {
+      "title": "Casa Caldereta",
+      "subtitle": "Your retreat in the heart of Valencia",
+      "cta": "Book now"
+    }
+  },
+  "booking": {
+    "title": "Book your stay",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "guests": "Guests",
+    "total": "Total",
+    "perNight": "per night",
+    "book": "Confirm booking"
+  },
+  "legal": {
+    "legalNotice": "Legal Notice",
+    "privacy": "Privacy Policy",
+    "cookies": "Cookie Policy",
+    "terms": "Terms & Conditions"
+  },
+  "cookies": {
+    "message": "We use cookies to improve your experience. You can accept all or manage your preferences.",
+    "accept": "Accept all",
+    "reject": "Reject",
+    "manage": "Manage preferences"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "close": "Close",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit"
+  }
+}

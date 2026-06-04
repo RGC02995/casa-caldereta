@@ -1,0 +1,27 @@
+<article
+  [class]="cssClasses()"
+  (click)="cardClicked.emit()"
+  [attr.aria-label]="title() || alt()"
+  tabindex="0"
+  (keydown.enter)="cardClicked.emit()"
+>
+  <figure class="image-card__figure">
+    <img
+      class="image-card__img"
+      [src]="src()"
+      [alt]="alt()"
+      loading="lazy"
+    />
+
+    @if (hasOverlay()) {
+      <figcaption class="image-card__overlay">
+        @if (title()) {
+          <h3 class="image-card__title">{{ title() }}</h3>
+        }
+        @if (description()) {
+          <p class="image-card__description">{{ description() }}</p>
+        }
+      </figcaption>
+    }
+  </figure>
+</article>
