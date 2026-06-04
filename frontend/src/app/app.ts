@@ -2,6 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
 import { SiteHeaderComponent } from './shared/components/site-header/site-header.component';
 import { SiteFooterComponent } from './shared/components/site-footer/site-footer.component';
 import { CookieBannerComponent } from './shared/components/cookie-banner/cookie-banner.component';
@@ -13,9 +14,9 @@ import { CookieBannerComponent } from './shared/components/cookie-banner/cookie-
   styleUrl: './app.scss',
 })
 export class App {
-  private readonly router = inject(Router);
+  private readonly router           = inject(Router);
+  private readonly translateService = inject(TranslateService);
 
-  // Reacciona a cada NavigationEnd para saber la URL actual
   private readonly currentUrl = toSignal(
     this.router.events.pipe(
       filter((routerEvent): routerEvent is NavigationEnd =>
@@ -26,6 +27,10 @@ export class App {
     { initialValue: this.router.url }
   );
 
-  // El panel admin tiene su propio layout — sin header/footer público
   readonly isAdminRoute = computed(() => this.currentUrl().startsWith('/admin'));
+
+  constructor() {
+    // Español como idioma predeterminado garantizado en el arranque
+    this.translateService.use('es');
+  }
 }

@@ -1,0 +1,52 @@
+<dialog
+  #dialogElem
+  class="gallery-lightbox"
+  (click)="onBackdropClick($event)"
+  (cancel)="onCancel($event)"
+  aria-label="Visor de imágenes"
+  aria-modal="true"
+>
+  <div class="gallery-lightbox__container">
+
+    <!-- Botón cerrar -->
+    <button
+      type="button"
+      class="gallery-lightbox__close"
+      (click)="close()"
+      aria-label="Cerrar visor"
+    >&times;</button>
+
+    <!-- Imagen principal -->
+    @if (currentPhoto(); as photo) {
+      <figure class="gallery-lightbox__figure">
+        <img
+          [src]="photo.src"
+          [alt]="photo.alt"
+          class="gallery-lightbox__img"
+        >
+      </figure>
+    }
+
+    <!-- Navegación -->
+    <nav class="gallery-lightbox__nav" aria-label="Navegación de imágenes">
+      <button
+        type="button"
+        class="gallery-lightbox__arrow gallery-lightbox__arrow--prev"
+        (click)="goPrevious()"
+        [disabled]="isFirst()"
+        aria-label="Imagen anterior"
+      >&#8592;</button>
+
+      <span class="gallery-lightbox__counter" aria-live="polite">{{ counter() }}</span>
+
+      <button
+        type="button"
+        class="gallery-lightbox__arrow gallery-lightbox__arrow--next"
+        (click)="goNext()"
+        [disabled]="isLast()"
+        aria-label="Imagen siguiente"
+      >&#8594;</button>
+    </nav>
+
+  </div>
+</dialog>

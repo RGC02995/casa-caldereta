@@ -168,13 +168,12 @@ Diseño de lujo estilo boutique (inspiración: ritualdeterra.com). Monorepo Angu
 - [x] Layout en AppComponent — site-header + router-outlet + site-footer + cookie-banner, ocultar en /admin con toSignal
 - [x] Página 404 (`not-found-page`) — lazy load en ruta `**`, diseño boutique centrado
 
-### Fase 4 — Páginas públicas (pendiente)
-- [ ] Home: hero, highlights de la casa, galería preview, rutas preview, CTA reserva
-- [ ] Galería completa con lightbox
+### Fase 4 — Páginas públicas 🔄 EN PROGRESO
+- [x] Home: hero, highlights x4 (datos reales), comodidades (6 grupos, chips), galería preview, rutas preview x3, CTA reserva
+- [x] Galería completa con lightbox — grid 2/3/4 cols, GalleryLightboxComponent con ←→ teclado
 - [ ] Rutas/actividades con cards y detalle
 - [ ] Calendario de reservas con precios
 - [ ] Páginas legales completas (Aviso Legal, Privacidad, Cookies, T&C)
-- [ ] Banner de cookies AEPD-compliant
 
 ### Fase 5 — Panel administrador (pendiente)
 - [ ] Login seguro (solo propietario)
@@ -200,3 +199,4 @@ Diseño de lujo estilo boutique (inspiración: ritualdeterra.com). Monorepo Angu
 | first commit | Fase 1 completa + Fase 2 shared parcial (Button, Spinner, ImageCard) |
 | fase 2 completa | Modal, CookieBanner, clickOutside, hasPermission, dateFormat, truncate, emailValidator + fix @use duplicado + .gitattributes |
 | fase 3 completa | SiteHeader, SiteFooter, Layout AppComponent, página 404, logo, i18n footer |
+| fix logo header | Flex alineación logo+texto, tamaño 52px móvil / 90px desktop, header 80/120px |

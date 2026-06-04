@@ -1,0 +1,108 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+.gallery-lightbox {
+  padding: 0;
+  border: none;
+  background: transparent;
+  max-width: 100vw;
+  max-height: 100vh;
+  width: 100vw;
+  height: 100vh;
+
+  &::backdrop {
+    background-color: rgba($color-black, 0.92);
+    backdrop-filter: blur(4px);
+  }
+
+  &__container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: $space-16 $space-8 $space-12;
+  }
+
+  // ── Botón cerrar ─────────────────────────────────────────────────────────────
+  &__close {
+    @include button-reset;
+    position: absolute;
+    top: $space-6;
+    right: $space-6;
+    font-size: $font-size-2xl;
+    color: rgba($color-white, 0.7);
+    line-height: 1;
+    transition: color $transition-fast;
+    z-index: 1;
+
+    &:hover { color: $color-white; }
+    &:focus-visible { @include focus-visible; }
+  }
+
+  // ── Imagen ───────────────────────────────────────────────────────────────────
+  &__figure {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 0;
+    margin: 0;
+  }
+
+  &__img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: $border-radius-sm;
+    box-shadow: $shadow-xl;
+  }
+
+  // ── Navegación ────────────────────────────────────────────────────────────────
+  &__nav {
+    display: flex;
+    align-items: center;
+    gap: $space-8;
+    padding-top: $space-6;
+    flex-shrink: 0;
+  }
+
+  &__arrow {
+    @include button-reset;
+    @include flex-center;
+    width: 48px;
+    height: 48px;
+    border-radius: $border-radius-full;
+    border: 1px solid rgba($color-white, 0.3);
+    color: $color-white;
+    font-size: $font-size-lg;
+    transition:
+      background-color $transition-fast,
+      border-color $transition-fast,
+      opacity $transition-fast;
+
+    &:hover:not(:disabled) {
+      background-color: rgba($color-white, 0.1);
+      border-color: rgba($color-white, 0.6);
+    }
+
+    &:disabled {
+      opacity: 0.2;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible { @include focus-visible; }
+  }
+
+  &__counter {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: rgba($color-white, 0.6);
+    min-width: 60px;
+    text-align: center;
+    letter-spacing: $letter-spacing-wide;
+  }
+}

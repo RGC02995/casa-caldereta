@@ -1,1 +1,37 @@
-<main class="gallery-page"><p>Galería — en construcción</p></main>
+<!-- ── CABECERA DE SECCIÓN ─────────────────────────────────────────────────── -->
+<section class="gallery-hero">
+  <div class="gallery-hero__inner">
+    <p class="gallery-hero__label">Casa Caldereta</p>
+    <h1 class="gallery-hero__title">Galería</h1>
+    <p class="gallery-hero__subtitle">Descubre cada rincón de la casa</p>
+  </div>
+</section>
+
+<!-- ── GRID DE FOTOS ──────────────────────────────────────────────────────── -->
+<section class="gallery-grid-section">
+  <div class="gallery-grid-section__inner">
+    <ul class="gallery-grid">
+      @for (photo of photos; track photo.id; let photoIndex = $index) {
+        <li class="gallery-grid__item">
+          <button
+            type="button"
+            class="gallery-grid__btn"
+            (click)="openLightbox(photoIndex)"
+            [attr.aria-label]="photo.alt"
+          >
+            <!-- Placeholder: sustituir por <img> cuando haya fotos reales -->
+            <div class="gallery-grid__placeholder" [attr.data-index]="photo.id"></div>
+          </button>
+        </li>
+      }
+    </ul>
+  </div>
+</section>
+
+<!-- ── LIGHTBOX ───────────────────────────────────────────────────────────── -->
+<gallery-lightbox
+  [isOpen]="isLightboxOpen()"
+  [photos]="photos"
+  [startIndex]="selectedIndex()"
+  (closed)="closeLightbox()"
+/>

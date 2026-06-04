@@ -1,1 +1,99 @@
-.gallery-page { min-height: 100dvh; }
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+// ── CABECERA ──────────────────────────────────────────────────────────────────
+.gallery-hero {
+  background-color: $color-neutral-800;
+  padding-block: $space-20;
+
+  &__inner {
+    @include container;
+    @include flex-column;
+    align-items: center;
+    text-align: center;
+    gap: $space-4;
+  }
+
+  &__label {
+    @include label-text;
+    color: $color-secondary;
+  }
+
+  &__title {
+    @include heading-xl;
+    color: $color-white;
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: $font-size-md;
+    color: rgba($color-white, 0.65);
+    margin: 0;
+  }
+}
+
+// ── GRID ─────────────────────────────────────────────────────────────────────
+.gallery-grid-section {
+  background-color: $color-neutral-100;
+
+  &__inner {
+    @include container;
+    padding-block: $space-16;
+  }
+}
+
+.gallery-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $space-3;
+
+  @include respond-to('md') { grid-template-columns: repeat(3, 1fr); }
+  @include respond-to('lg') { grid-template-columns: repeat(4, 1fr); }
+
+  &__item {
+    &:nth-child(5),
+    &:nth-child(9) {
+      @include respond-to('md') { grid-column: span 2; }
+    }
+  }
+
+  &__btn {
+    @include button-reset;
+    display: block;
+    width: 100%;
+    cursor: pointer;
+    border-radius: $border-radius-md;
+    overflow: hidden;
+
+    &:focus-visible { @include focus-visible; }
+
+    &:hover .gallery-grid__placeholder {
+      transform: scale(1.04);
+      filter: brightness(0.85);
+    }
+  }
+
+  // Placeholder — sustituir por <img [src]="photo.src" [alt]="photo.alt" class="gallery-grid__img"> con foto real
+  &__placeholder {
+    aspect-ratio: 1 / 1;
+    background-color: $color-neutral-400;
+    transition:
+      transform $transition-slow,
+      filter $transition-normal;
+
+    &[data-index="2"]  { background-color: $color-neutral-300; }
+    &[data-index="3"]  { background-color: $color-neutral-500; }
+    &[data-index="4"]  { background-color: $color-neutral-400; }
+    &[data-index="5"]  { background-color: $color-neutral-300; aspect-ratio: 2 / 1; }
+    &[data-index="6"]  { background-color: $color-neutral-500; }
+    &[data-index="7"]  { background-color: $color-neutral-400; }
+    &[data-index="8"]  { background-color: $color-neutral-300; }
+    &[data-index="9"]  { background-color: $color-neutral-500; aspect-ratio: 2 / 1; }
+    &[data-index="10"] { background-color: $color-neutral-300; }
+    &[data-index="11"] { background-color: $color-neutral-400; }
+    &[data-index="12"] { background-color: $color-neutral-500; }
+  }
+}

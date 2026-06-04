@@ -1,3 +1,120 @@
-<main class="home-page">
-  <p>Home — en construcción</p>
-</main>
+<!-- ── HERO ───────────────────────────────────────────────────────────────── -->
+<section class="home-hero">
+  <div class="home-hero__overlay" aria-hidden="true"></div>
+  <div class="home-hero__content">
+    <p class="home-hero__label">180m² · Hasta 6 personas · Aielo de Rugat, Valencia</p>
+    <h1 class="home-hero__title">{{ 'home.hero.title' | translate }}</h1>
+    <p class="home-hero__subtitle">{{ 'home.hero.subtitle' | translate }}</p>
+    <div class="home-hero__actions">
+      <a routerLink="/reservar" class="home-hero__cta home-hero__cta--primary">
+        {{ 'home.hero.cta' | translate }}
+      </a>
+      <a routerLink="/galeria" class="home-hero__cta home-hero__cta--secondary">
+        Descubrir la casa
+      </a>
+    </div>
+  </div>
+  <div class="home-hero__scroll-indicator" aria-hidden="true">
+    <span class="home-hero__scroll-line"></span>
+  </div>
+</section>
+
+<!-- ── HIGHLIGHTS ─────────────────────────────────────────────────────────── -->
+<section class="home-highlights">
+  <div class="home-highlights__inner">
+    <header class="home-highlights__header">
+      <p class="home-highlights__label">La casa</p>
+      <h2 class="home-highlights__title">Un lugar pensado para ti</h2>
+    </header>
+    <ul class="home-highlights__grid">
+      @for (highlight of highlights; track highlight.label) {
+        <li class="home-highlights__item">
+          <span class="home-highlights__number" aria-hidden="true">{{ highlight.label }}</span>
+          <h3 class="home-highlights__item-title">{{ highlight.title }}</h3>
+          <p class="home-highlights__item-desc">{{ highlight.description }}</p>
+        </li>
+      }
+    </ul>
+  </div>
+</section>
+
+<!-- ── COMODIDADES ────────────────────────────────────────────────────────── -->
+<section class="home-amenities">
+  <div class="home-amenities__inner">
+    <header class="home-amenities__header">
+      <p class="home-amenities__label">Equipamiento</p>
+      <h2 class="home-amenities__title">Todo lo que necesitas</h2>
+    </header>
+    <div class="home-amenities__groups">
+      @for (group of amenityGroups; track group.category) {
+        <div class="home-amenities__group">
+          <h3 class="home-amenities__group-title">{{ group.category }}</h3>
+          <ul class="home-amenities__chips">
+            @for (item of group.items; track item) {
+              <li class="home-amenities__chip">{{ item }}</li>
+            }
+          </ul>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- ── GALERÍA PREVIEW ────────────────────────────────────────────────────── -->
+<section class="home-gallery">
+  <div class="home-gallery__inner">
+    <header class="home-gallery__header">
+      <p class="home-gallery__label">Imágenes</p>
+      <h2 class="home-gallery__title">La casa en imágenes</h2>
+    </header>
+    <div class="home-gallery__grid" aria-label="Vista previa de la galería">
+      <div class="home-gallery__item home-gallery__item--large"></div>
+      <div class="home-gallery__item home-gallery__item--small"></div>
+      <div class="home-gallery__item home-gallery__item--small"></div>
+    </div>
+    <div class="home-gallery__footer">
+      <a routerLink="/galeria" class="home-section-link">
+        Ver galería completa
+        <span class="home-section-link__arrow" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ── RUTAS PREVIEW ──────────────────────────────────────────────────────── -->
+<section class="home-routes">
+  <div class="home-routes__inner">
+    <header class="home-routes__header">
+      <p class="home-routes__label">Alrededores</p>
+      <h2 class="home-routes__title">Qué hacer cerca</h2>
+    </header>
+    <ul class="home-routes__grid">
+      @for (route of routePreviews; track route.title) {
+        <li class="home-routes__card">
+          <span class="home-routes__tag">{{ route.tag }}</span>
+          <h3 class="home-routes__card-title">{{ route.title }}</h3>
+          <p class="home-routes__card-desc">{{ route.description }}</p>
+        </li>
+      }
+    </ul>
+    <div class="home-routes__footer">
+      <a routerLink="/rutas" class="home-section-link">
+        Ver todas las rutas
+        <span class="home-section-link__arrow" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ── BOOKING CTA ────────────────────────────────────────────────────────── -->
+<section class="home-booking-cta">
+  <div class="home-booking-cta__inner">
+    <h2 class="home-booking-cta__title">¿Listo para reservar?</h2>
+    <p class="home-booking-cta__subtitle">
+      Comprueba disponibilidad y reserva tu estancia en Casa Caldereta.
+    </p>
+    <a routerLink="/reservar" class="home-booking-cta__btn">
+      {{ 'home.hero.cta' | translate }}
+    </a>
+  </div>
+</section>
