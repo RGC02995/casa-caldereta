@@ -29,7 +29,8 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: '',
-    pathMatch: 'full',
+    loadComponent: () =>
+      import('./shared/components/not-found-page/not-found-page.component')
+        .then(m => m.NotFoundPageComponent),
   },
 ];

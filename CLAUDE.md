@@ -162,11 +162,11 @@ Diseño de lujo estilo boutique (inspiración: ritualdeterra.com). Monorepo Angu
 - [x] Pipe: truncate — recorte por caracteres, `trimEnd()` antes del trail
 - [x] Validador: email — regex estricta, devuelve `{ invalidEmail: true }`, compatible con Validators.required
 
-### Fase 3 — Layout & Navegación (pendiente)
-- [ ] HeaderComponent con navegación responsive y menú móvil
-- [ ] FooterComponent con links legales y licencia turística
-- [ ] Layout wrapper (header + router-outlet + footer)
-- [ ] Página 404
+### Fase 3 — Layout & Navegación ✅ COMPLETADA (2026-06-04)
+- [x] SiteHeaderComponent (`site-header`) — transparente/scrolled, nav desktop, overlay móvil, i18n, lang toggle, logo
+- [x] SiteFooterComponent (`site-footer`) — 4 columnas, licencia CV-VUT0058371-V, links legales, logo con CSS filter
+- [x] Layout en AppComponent — site-header + router-outlet + site-footer + cookie-banner, ocultar en /admin con toSignal
+- [x] Página 404 (`not-found-page`) — lazy load en ruta `**`, diseño boutique centrado
 
 ### Fase 4 — Páginas públicas (pendiente)
 - [ ] Home: hero, highlights de la casa, galería preview, rutas preview, CTA reserva
@@ -186,11 +186,10 @@ Diseño de lujo estilo boutique (inspiración: ritualdeterra.com). Monorepo Angu
 
 ## Datos legales
 - **Municipio:** Aielo de Rugat, Valencia, Comunitat Valenciana
-- **Licencia turística:** [NÚMERO_LICENCIA_TURÍSTICA_CV] — pendiente de recibir
+- **Licencia turística:** CV-VUT0058371-V ✅
 - **Normativa:** LSSI, RGPD, LOPDGDD, Ley 15/2018 Turisme CV, Decreto 92/2009
 
 ## Pendientes / Preguntas abiertas
-- [ ] Número de licencia turística (el usuario lo compartirá)
 - [ ] Dominio elegido (pendiente)
 
 ---
@@ -199,3 +198,4 @@ Diseño de lujo estilo boutique (inspiración: ritualdeterra.com). Monorepo Angu
 | Commit | Descripción |
 |---|---|
 | first commit | Fase 1 completa + Fase 2 shared parcial (Button, Spinner, ImageCard) |
+| fase 2 completa | Modal, CookieBanner, clickOutside, hasPermission, dateFormat, truncate, emailValidator + fix @use duplicado + .gitattributes |

@@ -1,0 +1,14 @@
+@use '../styles/variables' as *;
+
+.app-main {
+  min-height: 100vh;
+
+  // Empuja el contenido hacia abajo para no quedar bajo el header fijo
+  &--with-header {
+    padding-top: 72px;
+
+    @media (min-width: 992px) {
+      padding-top: 88px;
+    }
+  }
+}

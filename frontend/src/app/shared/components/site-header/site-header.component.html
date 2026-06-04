@@ -1,0 +1,132 @@
+<header [class]="headerClasses()">
+
+  <div class="site-header__inner">
+
+    <!-- Logo -->
+    <a routerLink="/" class="site-header__logo" aria-label="Casa Caldereta — Inicio">
+      <img
+        src="assets/images/logo.png"
+        alt="Casa Caldereta"
+        class="site-header__logo-img"
+        width="40"
+        height="40"
+      >
+      <span class="site-header__logo-name">Casa Caldereta</span>
+    </a>
+
+    <!-- Navegación desktop -->
+    <nav class="site-header__nav" aria-label="Navegación principal">
+      @for (link of navLinks; track link.path) {
+        <a
+          [routerLink]="link.path"
+          routerLinkActive="site-header__nav-link--active"
+          [routerLinkActiveOptions]="{ exact: link.exact }"
+          class="site-header__nav-link"
+        >
+          {{ link.labelKey | translate }}
+        </a>
+      }
+    </nav>
+
+    <!-- Acciones -->
+    <div class="site-header__actions">
+
+      <!-- Toggle de idioma -->
+      <div class="site-header__lang" aria-label="Seleccionar idioma">
+        <button
+          type="button"
+          class="site-header__lang-btn"
+          [class.site-header__lang-btn--active]="currentLang() === 'es'"
+          (click)="setLanguage('es')"
+          aria-label="Español"
+        >ES</button>
+        <span class="site-header__lang-sep" aria-hidden="true">|</span>
+        <button
+          type="button"
+          class="site-header__lang-btn"
+          [class.site-header__lang-btn--active]="currentLang() === 'en'"
+          (click)="setLanguage('en')"
+          aria-label="English"
+        >EN</button>
+      </div>
+
+      <!-- CTA Reservar (desktop) -->
+      <a routerLink="/reservar" class="site-header__cta">
+        {{ 'nav.booking' | translate }}
+      </a>
+
+      <!-- Hamburger (solo móvil, oculto cuando el menú está abierto) -->
+      @if (!isMobileMenuOpen()) {
+        <button
+          type="button"
+          class="site-header__hamburger"
+          (click)="toggleMobileMenu()"
+          aria-expanded="false"
+          aria-label="Abrir menú"
+        >
+          <span class="site-header__hamburger-line"></span>
+          <span class="site-header__hamburger-line"></span>
+          <span class="site-header__hamburger-line"></span>
+        </button>
+      }
+
+    </div>
+  </div>
+
+  <!-- Menú móvil (overlay fullscreen) -->
+  @if (isMobileMenuOpen()) {
+    <div
+      class="site-header__mobile-menu"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Menú de navegación"
+    >
+      <button
+        type="button"
+        class="site-header__mobile-close"
+        (click)="closeMobileMenu()"
+        aria-label="Cerrar menú"
+      >&times;</button>
+
+      <nav class="site-header__mobile-nav" aria-label="Navegación móvil">
+        @for (link of navLinks; track link.path) {
+          <a
+            [routerLink]="link.path"
+            routerLinkActive="site-header__mobile-link--active"
+            [routerLinkActiveOptions]="{ exact: link.exact }"
+            class="site-header__mobile-link"
+            (click)="closeMobileMenu()"
+          >
+            {{ link.labelKey | translate }}
+          </a>
+        }
+        <a
+          routerLink="/reservar"
+          class="site-header__mobile-cta"
+          (click)="closeMobileMenu()"
+        >
+          {{ 'nav.booking' | translate }}
+        </a>
+      </nav>
+
+      <div class="site-header__mobile-lang">
+        <button
+          type="button"
+          class="site-header__lang-btn"
+          [class.site-header__lang-btn--active]="currentLang() === 'es'"
+          (click)="setLanguage('es')"
+          aria-label="Español"
+        >ES</button>
+        <span class="site-header__lang-sep" aria-hidden="true">|</span>
+        <button
+          type="button"
+          class="site-header__lang-btn"
+          [class.site-header__lang-btn--active]="currentLang() === 'en'"
+          (click)="setLanguage('en')"
+          aria-label="English"
+        >EN</button>
+      </div>
+    </div>
+  }
+
+</header>

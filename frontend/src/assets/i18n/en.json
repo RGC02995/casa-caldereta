@@ -34,6 +34,15 @@
     "reject": "Reject",
     "manage": "Manage preferences"
   },
+  "footer": {
+    "tagline": "Your retreat in the heart of Valencia",
+    "navTitle": "Navigation",
+    "legalTitle": "Legal",
+    "contactTitle": "Contact",
+    "location": "Aielo de Rugat, Valencia",
+    "rightsReserved": "All rights reserved.",
+    "licenseLabel": "Tourist licence"
+  },
   "common": {
     "loading": "Loading...",
     "error": "An error occurred",

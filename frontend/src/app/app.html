@@ -1,1 +1,13 @@
-<router-outlet />
+@if (!isAdminRoute()) {
+  <site-header />
+}
+
+<main class="app-main" [class.app-main--with-header]="!isAdminRoute()">
+  <router-outlet />
+</main>
+
+@if (!isAdminRoute()) {
+  <site-footer />
+}
+
+<cookie-banner />

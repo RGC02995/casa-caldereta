@@ -34,6 +34,15 @@
     "reject": "Rechazar",
     "manage": "Gestionar preferencias"
   },
+  "footer": {
+    "tagline": "Tu refugio en el corazón de Valencia",
+    "navTitle": "Navegación",
+    "legalTitle": "Legal",
+    "contactTitle": "Contacto",
+    "location": "Aielo de Rugat, Valencia",
+    "rightsReserved": "Todos los derechos reservados.",
+    "licenseLabel": "Licencia turística"
+  },
   "common": {
     "loading": "Cargando...",
     "error": "Ha ocurrido un error",
