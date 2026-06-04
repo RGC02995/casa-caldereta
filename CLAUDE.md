@@ -199,3 +199,4 @@ Diseño de lujo estilo boutique (inspiración: ritualdeterra.com). Monorepo Angu
 |---|---|
 | first commit | Fase 1 completa + Fase 2 shared parcial (Button, Spinner, ImageCard) |
 | fase 2 completa | Modal, CookieBanner, clickOutside, hasPermission, dateFormat, truncate, emailValidator + fix @use duplicado + .gitattributes |
+| fase 3 completa | SiteHeader, SiteFooter, Layout AppComponent, página 404, logo, i18n footer |
