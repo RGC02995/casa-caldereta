@@ -1,1 +1,244 @@
-<main class="booking-page"><p>Reservas — en construcción</p></main>
+<!-- ── CABECERA ────────────────────────────────────────────────────────────── -->
+<section class="booking-hero">
+  <div class="booking-hero__inner">
+    <p class="booking-hero__label">Casa Caldereta</p>
+    <h1 class="booking-hero__title">Reservar</h1>
+    <p class="booking-hero__subtitle">Selecciona tus fechas y envíanos tu solicitud</p>
+  </div>
+</section>
+
+<!-- ── CONTENIDO PRINCIPAL ───────────────────────────────────────────────── -->
+<section class="booking-main">
+  <div class="booking-main__inner">
+
+    <!-- ── CALENDARIO ──────────────────────────────────────────────────────── -->
+    <div class="booking-cal">
+
+      <div class="booking-cal__header">
+        <button
+          type="button"
+          class="booking-cal__nav"
+          (click)="goToPreviousMonth()"
+          [disabled]="isPrevMonthDisabled()"
+          aria-label="Mes anterior"
+        >&#8592;</button>
+
+        <span class="booking-cal__month">{{ monthLabel() }}</span>
+
+        <button
+          type="button"
+          class="booking-cal__nav"
+          (click)="goToNextMonth()"
+          aria-label="Mes siguiente"
+        >&#8594;</button>
+      </div>
+
+      <div class="booking-cal__grid" role="grid" [attr.aria-label]="monthLabel()">
+
+        <!-- Cabeceras de día -->
+        @for (dayName of weekDays; track dayName) {
+          <div class="booking-cal__weekday" role="columnheader" aria-readonly="true">
+            {{ dayName }}
+          </div>
+        }
+
+        <!-- Días del mes -->
+        @for (day of calendarDays(); track $index) {
+          @if (day.date) {
+            <button
+              type="button"
+              role="gridcell"
+              class="booking-cal__day"
+              [class.booking-cal__day--today]="day.isToday"
+              [class.booking-cal__day--check-in]="day.isCheckIn"
+              [class.booking-cal__day--check-out]="day.isCheckOut"
+              [class.booking-cal__day--in-range]="day.isInRange"
+              [class.booking-cal__day--past]="day.isPast"
+              [disabled]="day.isDisabled"
+              (click)="onDayClick(day)"
+              [attr.aria-label]="day.dayNumber + ' ' + monthLabel()"
+              [attr.aria-pressed]="day.isCheckIn || day.isCheckOut"
+            >{{ day.dayNumber }}</button>
+          } @else {
+            <div class="booking-cal__day-empty" role="gridcell" aria-hidden="true"></div>
+          }
+        }
+
+      </div>
+
+      <div class="booking-cal__legend" aria-hidden="true">
+        <div class="booking-cal__legend-item">
+          <span class="booking-cal__legend-dot booking-cal__legend-dot--selected"></span>
+          Entrada / Salida
+        </div>
+        <div class="booking-cal__legend-item">
+          <span class="booking-cal__legend-dot booking-cal__legend-dot--range"></span>
+          Estancia
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── RESUMEN + FORMULARIO ─────────────────────────────────────────────── -->
+    <div class="booking-side">
+
+      <!-- Resumen de fechas y precio -->
+      <div class="booking-summary">
+        <h2 class="booking-summary__title">Tu reserva</h2>
+
+        <div class="booking-summary__dates">
+          <div class="booking-summary__date">
+            <span class="booking-summary__date-label">Entrada</span>
+            <span class="booking-summary__date-value">
+              @if (checkIn()) { {{ checkIn() | dateFormat:'d MMM yyyy' }} }
+              @else { — }
+            </span>
+          </div>
+          <span class="booking-summary__arrow" aria-hidden="true">&#8594;</span>
+          <div class="booking-summary__date">
+            <span class="booking-summary__date-label">Salida</span>
+            <span class="booking-summary__date-value">
+              @if (checkOut()) { {{ checkOut() | dateFormat:'d MMM yyyy' }} }
+              @else { — }
+            </span>
+          </div>
+        </div>
+
+        @if (nights() > 0) {
+          <div class="booking-summary__price">
+            <span class="booking-summary__price-detail">
+              {{ nights() }} {{ nights() === 1 ? 'noche' : 'noches' }} × €{{ PRICE_PER_NIGHT }}
+            </span>
+            <strong class="booking-summary__price-total">€{{ totalPrice() }}</strong>
+          </div>
+          <p class="booking-summary__note">* Precio orientativo — sujeto a confirmación</p>
+        }
+      </div>
+
+      <!-- Formulario de solicitud / Mensaje de éxito -->
+      @if (isSubmitted()) {
+
+        <div class="booking-success" role="alert">
+          <span class="booking-success__icon" aria-hidden="true">✓</span>
+          <h3 class="booking-success__title">¡Solicitud recibida!</h3>
+          <p class="booking-success__text">
+            Nos pondremos en contacto contigo en breve para confirmar tu reserva en Casa Caldereta.
+          </p>
+          <button
+            type="button"
+            class="booking-success__btn"
+            (click)="resetBooking()"
+          >
+            Nueva solicitud
+          </button>
+        </div>
+
+      } @else {
+
+        <form
+          [formGroup]="bookingForm"
+          (ngSubmit)="submitBooking()"
+          class="booking-form"
+          novalidate
+          aria-label="Formulario de solicitud de reserva"
+        >
+
+          <div class="booking-form__field">
+            <label for="booking-name" class="booking-form__label">Nombre *</label>
+            <input
+              id="booking-name"
+              type="text"
+              formControlName="name"
+              class="booking-form__input"
+              [class.booking-form__input--error]="bookingForm.get('name')?.invalid && bookingForm.get('name')?.touched"
+              autocomplete="name"
+              placeholder="Tu nombre completo"
+            >
+            @if (bookingForm.get('name')?.invalid && bookingForm.get('name')?.touched) {
+              <span class="booking-form__error" role="alert">El nombre es obligatorio</span>
+            }
+          </div>
+
+          <div class="booking-form__field">
+            <label for="booking-email" class="booking-form__label">Email *</label>
+            <input
+              id="booking-email"
+              type="email"
+              formControlName="email"
+              class="booking-form__input"
+              [class.booking-form__input--error]="bookingForm.get('email')?.invalid && bookingForm.get('email')?.touched"
+              autocomplete="email"
+              placeholder="tu@email.com"
+            >
+            @if (bookingForm.get('email')?.invalid && bookingForm.get('email')?.touched) {
+              @if (bookingForm.get('email')?.hasError('required')) {
+                <span class="booking-form__error" role="alert">El email es obligatorio</span>
+              } @else if (bookingForm.get('email')?.hasError('invalidEmail')) {
+                <span class="booking-form__error" role="alert">Introduce un email válido</span>
+              }
+            }
+          </div>
+
+          <div class="booking-form__field">
+            <label for="booking-phone" class="booking-form__label">Teléfono</label>
+            <input
+              id="booking-phone"
+              type="tel"
+              formControlName="phone"
+              class="booking-form__input"
+              autocomplete="tel"
+              placeholder="+34 600 000 000"
+            >
+          </div>
+
+          <div class="booking-form__field">
+            <label for="booking-message" class="booking-form__label">Mensaje</label>
+            <textarea
+              id="booking-message"
+              formControlName="message"
+              class="booking-form__textarea"
+              rows="3"
+              placeholder="Número de huéspedes, mascotas, peticiones especiales..."
+            ></textarea>
+          </div>
+
+          <div class="booking-form__field booking-form__field--checkbox">
+            <label class="booking-form__checkbox-label">
+              <input
+                type="checkbox"
+                formControlName="privacy"
+                class="booking-form__checkbox"
+              >
+              <span>
+                He leído y acepto la
+                <a routerLink="/legal/privacidad" class="booking-form__link">
+                  Política de Privacidad
+                </a>
+              </span>
+            </label>
+            @if (bookingForm.get('privacy')?.invalid && bookingForm.get('privacy')?.touched) {
+              <span class="booking-form__error" role="alert">
+                Debes aceptar la política de privacidad
+              </span>
+            }
+          </div>
+
+          <button
+            type="submit"
+            class="booking-form__submit"
+            [class.booking-form__submit--no-dates]="!checkIn() || !checkOut()"
+          >
+            @if (!checkIn() || !checkOut()) {
+              Selecciona las fechas primero
+            } @else {
+              Solicitar reserva
+            }
+          </button>
+
+        </form>
+
+      }
+    </div>
+
+  </div>
+</section>

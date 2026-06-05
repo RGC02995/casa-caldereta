@@ -1,1 +1,427 @@
-.booking-page { min-height: 100dvh; }
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+// ── CABECERA ──────────────────────────────────────────────────────────────────
+.booking-hero {
+  background-color: $color-neutral-800;
+  padding-block: $space-20;
+
+  &__inner {
+    @include container;
+    @include flex-column;
+    align-items: center;
+    text-align: center;
+    gap: $space-4;
+  }
+
+  &__label    { @include label-text; color: $color-secondary; }
+  &__title    { @include heading-xl; color: $color-white; margin: 0; }
+  &__subtitle { font-size: $font-size-md; color: rgba($color-white, 0.65); margin: 0; }
+}
+
+// ── LAYOUT PRINCIPAL ──────────────────────────────────────────────────────────
+.booking-main {
+  background-color: $color-neutral-100;
+
+  &__inner {
+    @include container;
+    padding-block: $space-16;
+    display: flex;
+    flex-direction: column;
+    gap: $space-10;
+
+    @include respond-to('lg') {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: $space-12;
+    }
+  }
+}
+
+// ── CALENDARIO ────────────────────────────────────────────────────────────────
+.booking-cal {
+  background-color: $color-white;
+  border-radius: $border-radius-lg;
+  padding: $space-6;
+  box-shadow: $shadow-sm;
+  flex-shrink: 0;
+
+  @include respond-to('lg') { width: 380px; }
+
+  // ── Cabecera del mes ──────────────────────────────────────────────────────
+  &__header {
+    @include flex-between;
+    margin-bottom: $space-6;
+    align-items: center;
+  }
+
+  &__nav {
+    @include button-reset;
+    @include flex-center;
+    width: 36px;
+    height: 36px;
+    border-radius: $border-radius-sm;
+    color: $color-neutral-600;
+    font-size: $font-size-md;
+    transition: background-color $transition-fast, color $transition-fast;
+
+    &:hover:not(:disabled) {
+      background-color: $color-neutral-100;
+      color: $color-primary;
+    }
+
+    &:disabled { opacity: 0.3; cursor: not-allowed; }
+    &:focus-visible { @include focus-visible; }
+  }
+
+  &__month {
+    font-family: $font-family-heading;
+    font-size: $font-size-md;
+    font-weight: $font-weight-regular;
+    color: $color-neutral-800;
+    text-transform: capitalize;
+  }
+
+  // ── Grid de días ──────────────────────────────────────────────────────────
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: $space-5;
+  }
+
+  &__weekday {
+    @include flex-center;
+    height: 36px;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    letter-spacing: $letter-spacing-wide;
+    color: $color-neutral-400;
+    text-transform: uppercase;
+  }
+
+  &__day-empty {
+    aspect-ratio: 1 / 1;
+  }
+
+  &__day {
+    @include button-reset;
+    @include flex-center;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: $border-radius-full;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-700;
+    transition:
+      background-color $transition-fast,
+      color $transition-fast;
+
+    &:not(:disabled):not(.booking-cal__day--check-in):not(.booking-cal__day--check-out):hover {
+      background-color: $color-neutral-100;
+      cursor: pointer;
+    }
+
+    &:focus-visible { @include focus-visible; }
+
+    &--today {
+      font-weight: $font-weight-bold;
+      color: $color-primary;
+    }
+
+    // --today viene antes, --check-in/out vienen después → ganan en cascada
+    &--check-in,
+    &--check-out {
+      background-color: $color-secondary;
+      color: $color-white;
+      font-weight: $font-weight-semibold;
+    }
+
+    &--in-range {
+      background-color: rgba($color-secondary, 0.15);
+      border-radius: $border-radius-sm;
+      color: $color-neutral-700;
+    }
+
+    &--past,
+    &:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+  }
+
+  // ── Leyenda ───────────────────────────────────────────────────────────────
+  &__legend {
+    display: flex;
+    gap: $space-6;
+    justify-content: center;
+    padding-top: $space-4;
+    border-top: 1px solid $color-neutral-100;
+  }
+
+  &__legend-item {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    font-size: $font-size-xs;
+    color: $color-neutral-500;
+  }
+
+  &__legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: $border-radius-full;
+
+    &--selected { background-color: $color-secondary; }
+    &--range    { background-color: rgba($color-secondary, 0.3); }
+  }
+}
+
+// ── COLUMNA DERECHA ───────────────────────────────────────────────────────────
+.booking-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: $space-6;
+}
+
+// ── RESUMEN ───────────────────────────────────────────────────────────────────
+.booking-summary {
+  background-color: $color-white;
+  border-radius: $border-radius-lg;
+  padding: $space-6;
+  box-shadow: $shadow-sm;
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+
+  &__title {
+    @include heading-md;
+    color: $color-neutral-800;
+    margin: 0;
+  }
+
+  &__dates {
+    display: flex;
+    align-items: center;
+    gap: $space-4;
+  }
+
+  &__date {
+    @include flex-column;
+    gap: $space-1;
+    flex: 1;
+  }
+
+  &__date-label {
+    @include label-text;
+    font-size: $font-size-xs;
+    color: $color-neutral-400;
+  }
+
+  &__date-value {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-neutral-800;
+  }
+
+  &__arrow {
+    color: $color-neutral-300;
+    font-size: $font-size-lg;
+  }
+
+  &__price {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: $space-4;
+    border-top: 1px solid $color-neutral-100;
+  }
+
+  &__price-detail {
+    font-size: $font-size-sm;
+    color: $color-neutral-500;
+  }
+
+  &__price-total {
+    font-family: $font-family-heading;
+    font-size: $font-size-2xl;
+    font-weight: $font-weight-regular;
+    color: $color-primary;
+  }
+
+  &__note {
+    font-size: $font-size-xs;
+    color: $color-neutral-400;
+    margin: 0;
+    font-style: italic;
+  }
+}
+
+// ── FORMULARIO ────────────────────────────────────────────────────────────────
+.booking-form {
+  background-color: $color-white;
+  border-radius: $border-radius-lg;
+  padding: $space-6;
+  box-shadow: $shadow-sm;
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+
+  &__field {
+    @include flex-column;
+    gap: $space-2;
+
+    &--checkbox { gap: $space-3; }
+  }
+
+  &__label {
+    @include label-text;
+    font-size: $font-size-xs;
+    color: $color-neutral-600;
+  }
+
+  &__input,
+  &__textarea {
+    padding: $space-3 $space-4;
+    border: 1px solid $color-neutral-300;
+    border-radius: $border-radius-sm;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-800;
+    background-color: $color-white;
+    transition: border-color $transition-fast;
+    width: 100%;
+
+    &::placeholder { color: $color-neutral-400; }
+
+    &:focus {
+      outline: none;
+      border-color: $color-secondary;
+    }
+
+    &--error { border-color: $color-error; }
+  }
+
+  &__textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  &__error {
+    font-size: $font-size-xs;
+    color: $color-error;
+  }
+
+  &__checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: $space-3;
+    cursor: pointer;
+    font-size: $font-size-sm;
+    color: $color-neutral-600;
+    line-height: $line-height-relaxed;
+  }
+
+  &__checkbox {
+    margin-top: 3px;
+    flex-shrink: 0;
+    accent-color: $color-secondary;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+
+  &__link {
+    color: $color-secondary;
+    text-decoration: underline;
+
+    &:hover { color: $color-secondary-dark; }
+  }
+
+  &__submit {
+    @include button-reset;
+    width: 100%;
+    padding: $space-4;
+    background-color: $color-primary;
+    color: $color-white;
+    border-radius: $border-radius-sm;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    letter-spacing: $letter-spacing-wider;
+    text-transform: uppercase;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color $transition-fast;
+
+    &:hover { background-color: $color-primary-light; }
+    &:focus-visible { @include focus-visible; }
+
+    &--no-dates {
+      background-color: $color-neutral-300;
+      color: $color-neutral-600;
+      cursor: default;
+    }
+  }
+}
+
+// ── ÉXITO ─────────────────────────────────────────────────────────────────────
+.booking-success {
+  background-color: $color-white;
+  border-radius: $border-radius-lg;
+  padding: $space-10 $space-6;
+  box-shadow: $shadow-sm;
+  @include flex-column;
+  align-items: center;
+  text-align: center;
+  gap: $space-4;
+  @include fade-in;
+
+  &__icon {
+    @include flex-center;
+    width: 64px;
+    height: 64px;
+    border-radius: $border-radius-full;
+    background-color: rgba($color-success, 0.12);
+    color: $color-success;
+    font-size: $font-size-2xl;
+  }
+
+  &__title {
+    @include heading-md;
+    color: $color-neutral-800;
+    margin: 0;
+  }
+
+  &__text {
+    font-size: $font-size-sm;
+    color: $color-neutral-500;
+    line-height: $line-height-relaxed;
+    margin: 0;
+    max-width: 360px;
+  }
+
+  &__btn {
+    @include button-reset;
+    margin-top: $space-2;
+    padding: $space-3 $space-8;
+    border: 1px solid $color-neutral-300;
+    border-radius: $border-radius-sm;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-neutral-600;
+    cursor: pointer;
+    transition:
+      border-color $transition-fast,
+      color $transition-fast;
+
+    &:hover {
+      border-color: $color-primary;
+      color: $color-primary;
+    }
+
+    &:focus-visible { @include focus-visible; }
+  }
+}

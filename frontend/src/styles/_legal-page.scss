@@ -1,0 +1,203 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.legal-page {
+  min-height: 100vh;
+  background-color: $color-neutral-100;
+
+  &__hero {
+    background-color: $color-primary-dark;
+    padding: $space-20 0 $space-16;
+    text-align: center;
+
+    @include respond-below('md') {
+      padding: $space-12 0 $space-10;
+    }
+  }
+
+  &__hero-inner {
+    @include container;
+  }
+
+  &__title {
+    font-family: $font-family-heading;
+    font-size: $font-size-3xl;
+    font-weight: $font-weight-light;
+    line-height: $line-height-tight;
+    color: $color-white;
+    margin-bottom: $space-4;
+
+    @include respond-below('md') {
+      font-size: $font-size-2xl;
+    }
+  }
+
+  &__subtitle {
+    font-family: $font-family-body;
+    font-size: $font-size-base;
+    color: rgba($color-white, 0.65);
+    line-height: $line-height-normal;
+  }
+
+  &__nav {
+    background-color: $color-white;
+    border-bottom: 1px solid $color-neutral-300;
+    position: sticky;
+    top: 80px;
+    z-index: $z-sticky;
+    overflow-x: auto;
+
+    @include respond-to('md') {
+      top: 120px;
+    }
+  }
+
+  &__nav-inner {
+    @include container;
+    display: flex;
+    gap: $space-1;
+    padding-block: $space-3;
+  }
+
+  &__nav-link {
+    @include label-text;
+    color: $color-neutral-600;
+    text-decoration: none;
+    padding: $space-2 $space-4;
+    border-radius: $border-radius-sm;
+    transition: color $transition-fast, background-color $transition-fast;
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &:hover {
+      color: $color-primary;
+      background-color: $color-neutral-200;
+    }
+
+    &--active {
+      color: $color-primary-dark;
+      background-color: $color-neutral-200;
+      font-weight: $font-weight-semibold;
+    }
+
+    &:focus-visible {
+      @include focus-visible;
+    }
+  }
+
+  &__body {
+    @include container;
+    padding-block: $space-16;
+    max-width: 860px;
+
+    @include respond-below('md') {
+      padding-block: $space-10;
+    }
+  }
+
+  &__section {
+    margin-bottom: $space-12;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &__section-title {
+    @include heading-md;
+    color: $color-primary-dark;
+    margin-bottom: $space-6;
+    padding-bottom: $space-3;
+    border-bottom: 2px solid $color-secondary;
+  }
+
+  &__text {
+    font-family: $font-family-body;
+    font-size: $font-size-base;
+    line-height: $line-height-relaxed;
+    color: $color-neutral-700;
+    margin-bottom: $space-4;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    a {
+      color: $color-primary;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+
+      &:hover {
+        color: $color-primary-dark;
+      }
+    }
+  }
+
+  &__list {
+    font-family: $font-family-body;
+    font-size: $font-size-base;
+    line-height: $line-height-relaxed;
+    color: $color-neutral-700;
+    padding-left: $space-6;
+    margin-bottom: $space-4;
+
+    li {
+      margin-bottom: $space-2;
+    }
+  }
+
+  &__highlight {
+    background-color: $color-neutral-200;
+    border-left: 3px solid $color-secondary;
+    padding: $space-4 $space-6;
+    border-radius: 0 $border-radius-sm $border-radius-sm 0;
+    margin-bottom: $space-6;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-700;
+    line-height: $line-height-relaxed;
+  }
+
+  &__table-wrapper {
+    overflow-x: auto;
+    margin-bottom: $space-6;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+
+    th {
+      background-color: $color-primary-dark;
+      color: $color-white;
+      padding: $space-3 $space-4;
+      text-align: left;
+      font-weight: $font-weight-semibold;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: $space-3 $space-4;
+      border-bottom: 1px solid $color-neutral-300;
+      color: $color-neutral-700;
+      vertical-align: top;
+      line-height: $line-height-relaxed;
+    }
+
+    tr:nth-child(even) td {
+      background-color: rgba($color-neutral-200, 0.5);
+    }
+  }
+
+  &__update {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-500;
+    text-align: center;
+    margin-top: $space-16;
+    padding-top: $space-8;
+    border-top: 1px solid $color-neutral-300;
+  }
+}

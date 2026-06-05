@@ -1,1 +1,48 @@
-<main class="routes-page"><p>Rutas — en construcción</p></main>
+<!-- ── CABECERA ────────────────────────────────────────────────────────────── -->
+<section class="routes-hero">
+  <div class="routes-hero__inner">
+    <p class="routes-hero__label">Aielo de Rugat · Vall d'Albaida</p>
+    <h1 class="routes-hero__title">Rutas y actividades</h1>
+    <p class="routes-hero__subtitle">Descubre los alrededores de Casa Caldereta</p>
+  </div>
+</section>
+
+<!-- ── GRID DE RUTAS ───────────────────────────────────────────────────────── -->
+<section class="routes-grid-section">
+  <div class="routes-grid-section__inner">
+    <ul class="routes-grid">
+      @for (route of routes; track route.id) {
+        <li class="routes-card">
+
+          <!-- Imagen placeholder -->
+          <div class="routes-card__img-wrapper">
+            <div class="routes-card__placeholder"></div>
+            <span class="routes-card__tag">{{ route.tag }}</span>
+          </div>
+
+          <!-- Contenido -->
+          <div class="routes-card__body">
+            <h2 class="routes-card__title">{{ route.title }}</h2>
+            <p class="routes-card__desc">{{ route.description }}</p>
+
+            <!-- Badges de información -->
+            <ul class="routes-card__badges" aria-label="Información de la ruta">
+              <li class="routes-card__badge routes-card__badge--info">
+                <span class="routes-card__badge-icon" aria-hidden="true">⏱</span>
+                {{ route.duration }}
+              </li>
+              <li class="routes-card__badge routes-card__badge--info">
+                <span class="routes-card__badge-icon" aria-hidden="true">📍</span>
+                {{ route.distance }}
+              </li>
+              <li class="routes-card__badge" [class]="difficultyClass[route.difficulty]">
+                {{ route.difficulty }}
+              </li>
+            </ul>
+          </div>
+
+        </li>
+      }
+    </ul>
+  </div>
+</section>
