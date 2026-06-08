@@ -17,7 +17,7 @@ export interface IUpdateStatusData {
 
 class BookingService {
   async getAll(): Promise<IBookingDocument[]> {
-    return BookingModel.find().sort({ checkIn: -1 }).lean<IBookingDocument[]>();
+    return BookingModel.find().sort({ checkIn: -1 }).lean<IBookingDocument[]>({ virtuals: true });
   }
 
   async getUpcoming(): Promise<IBookingDocument[]> {
@@ -29,11 +29,11 @@ class BookingService {
       status:  { $in: ['pending', 'confirmed'] },
     })
       .sort({ checkIn: 1 })
-      .lean<IBookingDocument[]>();
+      .lean<IBookingDocument[]>({ virtuals: true });
   }
 
   async getById(id: string): Promise<IBookingDocument | null> {
-    return BookingModel.findById(id).lean<IBookingDocument>();
+    return BookingModel.findById(id).lean<IBookingDocument>({ virtuals: true });
   }
 
   async create(data: ICreateBookingData): Promise<IBookingDocument> {
@@ -63,7 +63,7 @@ class BookingService {
       id,
       { status },
       { new: true, runValidators: true },
-    ).lean<IBookingDocument>();
+    ).lean<IBookingDocument>({ virtuals: true });
   }
 
   async delete(id: string): Promise<boolean> {

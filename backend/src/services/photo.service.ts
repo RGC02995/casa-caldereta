@@ -11,11 +11,11 @@ export interface IUploadPhotoData {
 
 class PhotoService {
   async getAll(): Promise<IPhotoDocument[]> {
-    return PhotoModel.find().sort({ category: 1, order: 1 }).lean<IPhotoDocument[]>();
+    return PhotoModel.find().sort({ category: 1, order: 1 }).lean<IPhotoDocument[]>({ virtuals: true });
   }
 
   async getByCategory(category: PhotoCategory): Promise<IPhotoDocument[]> {
-    return PhotoModel.find({ category }).sort({ order: 1 }).lean<IPhotoDocument[]>();
+    return PhotoModel.find({ category }).sort({ order: 1 }).lean<IPhotoDocument[]>({ virtuals: true });
   }
 
   async upload(data: IUploadPhotoData): Promise<IPhotoDocument> {
@@ -54,11 +54,11 @@ class PhotoService {
       id,
       { order },
       { new: true, runValidators: true },
-    ).lean<IPhotoDocument>();
+    ).lean<IPhotoDocument>({ virtuals: true });
   }
 
   async delete(id: string): Promise<boolean> {
-    const photo = await PhotoModel.findById(id).lean<IPhotoDocument>();
+    const photo = await PhotoModel.findById(id).lean<IPhotoDocument>({ virtuals: true });
     if (!photo) return false;
 
     await cloudinary.uploader.destroy(photo.publicId);
