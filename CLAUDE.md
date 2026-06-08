@@ -175,8 +175,28 @@ Diseño de lujo estilo boutique (inspiración: ritualdeterra.com). Monorepo Angu
 - [x] Calendario de reservas con precios — selección rango fechas, €150/noche placeholder, formulario solicitud + RGPD
 - [x] Páginas legales completas — Aviso Legal, Privacidad, Cookies, T&C — SCSS compartido BEM, sub-nav sticky, contenido real RGPD/LSSI/CV-VUT0058371-V
 
-### Fase 5 — Panel administrador (pendiente)
-- [ ] Login seguro (solo propietario)
+### Fase 5a — Backend Auth ✅ COMPLETADA (2026-06-08)
+- [x] backend/.env con JWT secrets, ADMIN_EMAIL, ADMIN_PASSWORD_HASH (bcrypt), MONGODB_URI
+- [x] backend/scripts/generate-admin.js — helper para generar hash bcrypt
+- [x] src/types/auth.types.ts — ILoginRequest, IAuthTokenPair, ITokenPayload, IApiResponse
+- [x] src/config/environment.ts — variables de entorno con validación en arranque
+- [x] src/config/database.ts — conexión Mongoose con reconexión automática
+- [x] src/utils/jwt.util.ts — sign/verify accessToken y refreshToken
+- [x] src/utils/password.util.ts — hashPassword y verifyPassword con bcryptjs
+- [x] src/middleware/rate-limit.middleware.ts — authRateLimiter (5/15min) + globalRateLimiter
+- [x] src/middleware/require-auth.middleware.ts — Bearer token, AuthenticatedRequest
+- [x] src/services/auth.service.ts — login, refresh (rotación), logout con Set en memoria
+- [x] src/controllers/auth.controller.ts — loginHandler, refreshHandler, logoutHandler con try/catch
+- [x] src/routes/auth.routes.ts — POST /login (rate limited), POST /refresh, POST /logout
+- [x] src/routes/index.ts — apiRouter con health check y montaje de authRouter
+- [x] src/server.ts — Express + Helmet + CORS + Morgan + rate limit global + MongoDB
+
+### Fase 5b — Frontend Admin (pendiente)
+- [ ] Página login `/admin/login` en Angular
+- [ ] Admin layout con sidebar
+- [ ] Dashboard inicial
+
+### Fase 5c — Gestión de contenido (pendiente)
 - [ ] Gestión de fotos (subida a Cloudinary)
 - [ ] CRUD de rutas con imágenes
 - [ ] Gestión de calendario y precios
@@ -202,3 +222,4 @@ Diseño de lujo estilo boutique (inspiración: ritualdeterra.com). Monorepo Angu
 | fix logo header | Flex alineación logo+texto, tamaño 52px móvil / 90px desktop, header 80/120px |
 | fase 4 parcial  | Home completa (datos reales) + Galería con lightbox ←→ teclado + español por defecto |
 | fase 4 completa | Páginas legales: Aviso Legal, Privacidad, Cookies, T&C + SCSS compartido BEM |
+| fase 5a completa | Backend auth: JWT + bcrypt + rate limiting + MongoDB Atlas + Express server |

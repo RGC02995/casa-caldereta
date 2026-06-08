@@ -1,0 +1,24 @@
+import 'dotenv/config';
+
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(`Variable de entorno requerida no encontrada: ${name}`);
+  return value;
+}
+
+export const env = {
+  nodeEnv:             process.env['NODE_ENV'] ?? 'development',
+  port:                parseInt(process.env['PORT'] ?? '3000', 10),
+  apiVersion:          process.env['API_VERSION'] ?? 'v1',
+  mongodbUri:          requireEnv('MONGODB_URI'),
+  jwtSecret:           requireEnv('JWT_SECRET'),
+  jwtExpiresIn:        process.env['JWT_EXPIRES_IN'] ?? '15m',
+  jwtRefreshSecret:    requireEnv('JWT_REFRESH_SECRET'),
+  jwtRefreshExpiresIn: process.env['JWT_REFRESH_EXPIRES_IN'] ?? '7d',
+  adminEmail:          requireEnv('ADMIN_EMAIL'),
+  adminPasswordHash:   requireEnv('ADMIN_PASSWORD_HASH'),
+  corsOriginDev:       process.env['CORS_ORIGIN_DEV'] ?? 'http://localhost:4200',
+  corsOriginProd:      process.env['CORS_ORIGIN_PROD'] ?? '',
+  rateLimitWindowMs:   parseInt(process.env['RATE_LIMIT_WINDOW_MS'] ?? '900000', 10),
+  rateLimitMax:        parseInt(process.env['RATE_LIMIT_MAX_REQUESTS'] ?? '100', 10),
+} as const;

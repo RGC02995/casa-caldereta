@@ -1,0 +1,35 @@
+import express from 'express';
+import helmet from 'helmet';
+import cors from 'cors';
+import morgan from 'morgan';
+import { env } from './config/environment';
+import { connectDatabase } from './config/database';
+import { globalRateLimiter } from './middleware/rate-limit.middleware';
+import apiRouter from './routes/index';
+
+const app = express();
+
+app.use(helmet());
+
+app.use(cors({
+  origin: env.nodeEnv === 'production' ? env.corsOriginProd : env.corsOriginDev,
+  credentials: true,
+}));
+
+if (env.nodeEnv !== 'production') {
+  app.use(morgan('dev'));
+}
+
+app.use(express.json({ limit: '10kb' }));
+app.use(globalRateLimiter);
+
+app.use(`/api/${env.apiVersion}`, apiRouter);
+
+async function bootstrap(): Promise<void> {
+  await connectDatabase();
+  app.listen(env.port, () => {
+    console.log(`✔ Servidor arrancado en puerto ${env.port} [${env.nodeEnv}]`);
+  });
+}
+
+bootstrap();
