@@ -1,0 +1,200 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+$sidebar-width: 240px;
+
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: $color-neutral-100;
+
+  &__sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: $sidebar-width;
+    height: 100vh;
+    background-color: $color-neutral-800;
+    display: flex;
+    flex-direction: column;
+    z-index: $z-sticky;
+    transform: translateX(-100%);
+    transition: transform $transition-normal;
+
+    @include respond-to('lg') {
+      transform: translateX(0);
+    }
+  }
+
+  &--sidebar-open &__sidebar {
+    transform: translateX(0);
+  }
+
+  &__brand {
+    padding: $space-6 $space-6 $space-4;
+    border-bottom: 1px solid rgba($color-white, 0.08);
+  }
+
+  &__brand-name {
+    display: block;
+    font-family: $font-family-heading;
+    font-size: $font-size-md;
+    color: $color-secondary;
+    letter-spacing: 0.06em;
+  }
+
+  &__brand-sub {
+    display: block;
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    color: $color-neutral-400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: $space-1;
+  }
+
+  &__nav {
+    flex: 1;
+    padding: $space-4 0;
+    display: flex;
+    flex-direction: column;
+    gap: $space-1;
+  }
+
+  &__nav-link {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-3 $space-6;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-400;
+    text-decoration: none;
+    transition: color $transition-fast, background-color $transition-fast;
+    border-left: 3px solid transparent;
+
+    &:hover {
+      color: $color-white;
+      background-color: rgba($color-white, 0.05);
+    }
+
+    &--active {
+      color: $color-secondary;
+      border-left-color: $color-secondary;
+      background-color: rgba($color-secondary, 0.08);
+    }
+  }
+
+  &__nav-icon {
+    font-size: $font-size-base;
+    width: 20px;
+    text-align: center;
+  }
+
+  &__sidebar-footer {
+    padding: $space-4 $space-6;
+    border-top: 1px solid rgba($color-white, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+  }
+
+  &__user-email {
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    color: $color-neutral-500;
+    word-break: break-all;
+  }
+
+  &__logout {
+    padding: $space-2 $space-4;
+    background-color: transparent;
+    border: 1px solid rgba($color-white, 0.2);
+    border-radius: $border-radius-sm;
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    color: $color-neutral-400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color $transition-fast, border-color $transition-fast;
+
+    &:hover {
+      color: $color-white;
+      border-color: rgba($color-white, 0.4);
+    }
+  }
+
+  &__backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: rgba($color-black, 0.5);
+    z-index: $z-sticky - 1;
+
+    @include respond-to('lg') {
+      display: none;
+    }
+  }
+
+  &--sidebar-open &__backdrop {
+    display: block;
+
+    @include respond-to('lg') {
+      display: none;
+    }
+  }
+
+  &__body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+
+    @include respond-to('lg') {
+      margin-left: $sidebar-width;
+    }
+  }
+
+  &__topbar {
+    height: 56px;
+    background-color: $color-white;
+    border-bottom: 1px solid $border-color;
+    display: flex;
+    align-items: center;
+    padding: 0 $space-4;
+
+    @include respond-to('lg') {
+      display: none;
+    }
+  }
+
+  &__menu-toggle {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: $space-2;
+  }
+
+  &__menu-toggle-bar {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background-color: $color-neutral-700;
+    border-radius: 2px;
+    transition: background-color $transition-fast;
+  }
+
+  &__menu-toggle:hover &__menu-toggle-bar {
+    background-color: $color-accent;
+  }
+
+  &__content {
+    flex: 1;
+    padding: $space-8 $space-6;
+  }
+}

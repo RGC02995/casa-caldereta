@@ -1,0 +1,53 @@
+<div class="admin-layout" [class.admin-layout--sidebar-open]="isSidebarOpen()">
+
+  <aside class="admin-layout__sidebar">
+    <div class="admin-layout__brand">
+      <span class="admin-layout__brand-name">Casa Caldereta</span>
+      <span class="admin-layout__brand-sub">Panel admin</span>
+    </div>
+
+    <nav class="admin-layout__nav" aria-label="Navegación admin">
+      <a
+        class="admin-layout__nav-link"
+        routerLink="/admin"
+        routerLinkActive="admin-layout__nav-link--active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        (click)="isSidebarOpen.set(false)"
+      >
+        <span class="admin-layout__nav-icon" aria-hidden="true">▦</span>
+        Dashboard
+      </a>
+    </nav>
+
+    <div class="admin-layout__sidebar-footer">
+      @if (currentUser()) {
+        <span class="admin-layout__user-email">{{ currentUser()!.email }}</span>
+      }
+      <button class="admin-layout__logout" type="button" (click)="logout()">
+        Cerrar sesión
+      </button>
+    </div>
+  </aside>
+
+  <div class="admin-layout__backdrop" (click)="isSidebarOpen.set(false)" aria-hidden="true"></div>
+
+  <div class="admin-layout__body">
+    <header class="admin-layout__topbar">
+      <button
+        class="admin-layout__menu-toggle"
+        type="button"
+        (click)="toggleSidebar()"
+        aria-label="Abrir menú"
+      >
+        <span class="admin-layout__menu-toggle-bar"></span>
+        <span class="admin-layout__menu-toggle-bar"></span>
+        <span class="admin-layout__menu-toggle-bar"></span>
+      </button>
+    </header>
+
+    <main class="admin-layout__content">
+      <router-outlet />
+    </main>
+  </div>
+
+</div>
