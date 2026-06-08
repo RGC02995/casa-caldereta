@@ -1,38 +1,61 @@
-import { Component, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../../core/auth/auth.service';
 
 @Component({
-  selector: 'admin-login',
-  imports: [ReactiveFormsModule],
+  selector:    'admin-login',
+  imports:     [],
   templateUrl: './admin-login.component.html',
-  styleUrl: './admin-login.component.scss',
+  styleUrl:    './admin-login.component.scss',
 })
 export class AdminLoginComponent {
-  private readonly formBuilder = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router      = inject(Router);
 
-  readonly isLoading    = signal(false);
-  readonly errorMessage = signal('');
+  readonly emailValue      = signal('');
+  readonly passwordValue   = signal('');
+  readonly emailTouched    = signal(false);
+  readonly passwordTouched = signal(false);
+  readonly isLoading       = signal(false);
+  readonly errorMessage    = signal('');
 
-  readonly loginForm = this.formBuilder.nonNullable.group({
-    email:    ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]],
+  readonly emailError = computed(() => {
+    if (!this.emailTouched()) return '';
+    const trimmedEmail = this.emailValue().trim();
+    if (!trimmedEmail) return 'El correo es obligatorio.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) return 'Introduce un correo válido.';
+    return '';
   });
 
-  get emailControl()    { return this.loginForm.controls.email; }
-  get passwordControl() { return this.loginForm.controls.password; }
+  readonly passwordError = computed(() => {
+    if (!this.passwordTouched()) return '';
+    if (!this.passwordValue()) return 'La contraseña es obligatoria.';
+    if (this.passwordValue().length < 8) return 'Mínimo 8 caracteres.';
+    return '';
+  });
 
-  onSubmit(): void {
-    if (this.loginForm.invalid || this.isLoading()) return;
+  readonly isFormValid = computed(() => {
+    const trimmedEmail = this.emailValue().trim();
+    const emailValid   = trimmedEmail !== '' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail);
+    const passwordValid = this.passwordValue().length >= 8;
+    return emailValid && passwordValid;
+  });
+
+  onSubmit(event: Event): void {
+    event.preventDefault();
+    this.emailTouched.set(true);
+    this.passwordTouched.set(true);
+
+    if (!this.isFormValid() || this.isLoading()) return;
 
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    this.authService.login(this.loginForm.getRawValue()).subscribe({
+    this.authService.login({
+      email:    this.emailValue().trim(),
+      password: this.passwordValue(),
+    }).subscribe({
       next: () => {
         void this.router.navigate(['/admin']);
       },

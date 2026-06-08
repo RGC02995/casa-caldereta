@@ -84,7 +84,8 @@ export class AdminGalleryComponent {
     this.previewUrl.set(file ? URL.createObjectURL(file) : null);
   }
 
-  onUploadSubmit(): void {
+  onUploadSubmit(event: Event): void {
+    event.preventDefault();
     const file = this.selectedFile();
     const alt  = this.uploadAlt().trim();
 

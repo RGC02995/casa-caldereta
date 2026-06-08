@@ -7,7 +7,7 @@
   <section class="admin-gallery__upload-section">
     <h2 class="admin-gallery__section-title">Subir nueva foto</h2>
 
-    <form class="admin-gallery__upload-form" (ngSubmit)="onUploadSubmit()">
+    <form class="admin-gallery__upload-form" (submit)="onUploadSubmit($event)">
 
       <div class="admin-gallery__upload-dropzone" [class.admin-gallery__upload-dropzone--has-preview]="previewUrl()">
         @if (previewUrl()) {

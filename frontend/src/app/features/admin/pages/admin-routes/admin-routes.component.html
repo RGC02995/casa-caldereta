@@ -1,0 +1,298 @@
+<div class="admin-routes">
+
+  <header class="admin-routes__header">
+    <h1 class="admin-routes__title">Rutas y actividades</h1>
+    @if (formMode() === 'hidden') {
+      <button class="admin-routes__new-btn" type="button" (click)="openCreateForm()">
+        + Nueva ruta
+      </button>
+    }
+  </header>
+
+  @if (actionError()) {
+    <p class="admin-routes__action-error">{{ actionError() }}</p>
+  }
+
+  @if (formMode() !== 'hidden') {
+    <section class="admin-routes__form-section">
+      <h2 class="admin-routes__section-title">
+        {{ formMode() === 'create' ? 'Nueva ruta' : 'Editar ruta' }}
+      </h2>
+
+      <form class="admin-routes__form" (submit)="onFormSubmit($event)">
+
+        <div class="admin-routes__form-grid">
+
+          <div class="admin-routes__field admin-routes__field--full">
+            <label class="admin-routes__label" for="route-title">Título *</label>
+            <input
+              class="admin-routes__input"
+              id="route-title"
+              type="text"
+              placeholder="Ej: Ruta por el Barranc de l'Encantada"
+              [value]="formData().title"
+              (input)="updateFormField('title', $any($event.target).value)"
+            />
+          </div>
+
+          <div class="admin-routes__field admin-routes__field--full">
+            <label class="admin-routes__label" for="route-description">Descripción *</label>
+            <textarea
+              class="admin-routes__textarea"
+              id="route-description"
+              rows="4"
+              placeholder="Descripción detallada de la ruta..."
+              [value]="formData().description"
+              (input)="updateFormField('description', $any($event.target).value)"
+            ></textarea>
+          </div>
+
+          <div class="admin-routes__field">
+            <label class="admin-routes__label" for="route-distance">Distancia (km)</label>
+            <input
+              class="admin-routes__input"
+              id="route-distance"
+              type="number"
+              min="0"
+              step="0.1"
+              [value]="formData().distance"
+              (input)="updateFormField('distance', +$any($event.target).value)"
+            />
+          </div>
+
+          <div class="admin-routes__field">
+            <label class="admin-routes__label" for="route-duration">Duración (min)</label>
+            <input
+              class="admin-routes__input"
+              id="route-duration"
+              type="number"
+              min="0"
+              [value]="formData().duration"
+              (input)="updateFormField('duration', +$any($event.target).value)"
+            />
+          </div>
+
+          <div class="admin-routes__field">
+            <label class="admin-routes__label" for="route-difficulty">Dificultad</label>
+            <select
+              class="admin-routes__select"
+              id="route-difficulty"
+              [value]="formData().difficulty"
+              (change)="updateFormField('difficulty', $any($event.target).value)"
+            >
+              @for (difficultyOption of difficulties; track difficultyOption.value) {
+                <option [value]="difficultyOption.value">{{ difficultyOption.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="admin-routes__field">
+            <label class="admin-routes__label" for="route-type">Tipo</label>
+            <select
+              class="admin-routes__select"
+              id="route-type"
+              [value]="formData().type"
+              (change)="updateFormField('type', $any($event.target).value)"
+            >
+              @for (typeOption of types; track typeOption.value) {
+                <option [value]="typeOption.value">{{ typeOption.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="admin-routes__field">
+            <label class="admin-routes__label" for="route-order">Orden</label>
+            <input
+              class="admin-routes__input"
+              id="route-order"
+              type="number"
+              min="0"
+              [value]="formData().order"
+              (input)="updateFormField('order', +$any($event.target).value)"
+            />
+          </div>
+
+          <div class="admin-routes__field admin-routes__field--full">
+            <label class="admin-routes__label" for="route-cover">URL imagen portada *</label>
+            <input
+              class="admin-routes__input"
+              id="route-cover"
+              type="text"
+              placeholder="https://res.cloudinary.com/..."
+              [value]="formData().coverImageUrl"
+              (input)="updateFormField('coverImageUrl', $any($event.target).value)"
+            />
+            @if (formData().coverImageUrl) {
+              <img
+                class="admin-routes__cover-preview"
+                [src]="formData().coverImageUrl"
+                alt="Vista previa portada"
+              />
+            }
+          </div>
+
+        </div>
+
+        <div class="admin-routes__points-section">
+          <div class="admin-routes__points-header">
+            <h3 class="admin-routes__points-title">Puntos de interés</h3>
+            <button class="admin-routes__add-point-btn" type="button" (click)="addPoint()">
+              + Añadir punto
+            </button>
+          </div>
+
+          @if (formData().points.length === 0) {
+            <p class="admin-routes__points-empty">Sin puntos de interés. Puedes añadirlos con el botón de arriba.</p>
+          }
+
+          @for (point of formData().points; track $index) {
+            <div class="admin-routes__point-row">
+              <div class="admin-routes__point-fields">
+                <input
+                  class="admin-routes__input"
+                  type="text"
+                  placeholder="Nombre del punto"
+                  [value]="point.name"
+                  (input)="updatePointField($index, 'name', $any($event.target).value)"
+                />
+                <input
+                  class="admin-routes__input"
+                  type="text"
+                  placeholder="Descripción del punto"
+                  [value]="point.description"
+                  (input)="updatePointField($index, 'description', $any($event.target).value)"
+                />
+              </div>
+              <button
+                class="admin-routes__remove-point-btn"
+                type="button"
+                (click)="removePoint($index)"
+                aria-label="Eliminar punto"
+              >
+                ✕
+              </button>
+            </div>
+          }
+        </div>
+
+        <div class="admin-routes__form-actions">
+          <button
+            class="admin-routes__cancel-btn"
+            type="button"
+            [disabled]="isSubmitting()"
+            (click)="closeForm()"
+          >
+            Cancelar
+          </button>
+          <button
+            class="admin-routes__submit-btn"
+            type="submit"
+            [disabled]="isSubmitting()"
+          >
+            {{ isSubmitting() ? 'Guardando...' : (formMode() === 'create' ? 'Crear ruta' : 'Guardar cambios') }}
+          </button>
+        </div>
+
+      </form>
+    </section>
+  }
+
+  <section class="admin-routes__list-section">
+    <h2 class="admin-routes__section-title">
+      Rutas ({{ allRoutes().length }})
+    </h2>
+
+    @if (loadError()) {
+      <p class="admin-routes__load-error">{{ loadError() }}</p>
+    } @else if (allRoutes().length === 0 && formMode() === 'hidden') {
+      <p class="admin-routes__empty">No hay rutas creadas todavía.</p>
+    } @else {
+      <div class="admin-routes__table-wrapper">
+        <table class="admin-routes__table">
+          <thead>
+            <tr>
+              <th class="admin-routes__th">Título</th>
+              <th class="admin-routes__th">Tipo</th>
+              <th class="admin-routes__th">Dificultad</th>
+              <th class="admin-routes__th">Km / min</th>
+              <th class="admin-routes__th">Orden</th>
+              <th class="admin-routes__th">Estado</th>
+              <th class="admin-routes__th">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (route of sortedRoutes(); track route.id) {
+              <tr class="admin-routes__tr" [class.admin-routes__tr--processing]="processingId() === route.id">
+                <td class="admin-routes__td admin-routes__td--title">
+                  <span class="admin-routes__route-title">{{ route.title }}</span>
+                  @if (route.points.length > 0) {
+                    <span class="admin-routes__points-count">{{ route.points.length }} puntos</span>
+                  }
+                </td>
+                <td class="admin-routes__td">
+                  <span class="admin-routes__badge admin-routes__badge--type">
+                    {{ getTypeLabel(route.type) }}
+                  </span>
+                </td>
+                <td class="admin-routes__td">
+                  <span
+                    class="admin-routes__badge"
+                    [class.admin-routes__badge--easy]="route.difficulty === 'easy'"
+                    [class.admin-routes__badge--moderate]="route.difficulty === 'moderate'"
+                    [class.admin-routes__badge--hard]="route.difficulty === 'hard'"
+                  >
+                    {{ getDifficultyLabel(route.difficulty) }}
+                  </span>
+                </td>
+                <td class="admin-routes__td admin-routes__td--meta">
+                  {{ route.distance }} km / {{ route.duration }} min
+                </td>
+                <td class="admin-routes__td admin-routes__td--order">
+                  {{ route.order }}
+                </td>
+                <td class="admin-routes__td">
+                  <span
+                    class="admin-routes__status"
+                    [class.admin-routes__status--published]="route.isPublished"
+                    [class.admin-routes__status--draft]="!route.isPublished"
+                  >
+                    {{ route.isPublished ? 'Publicada' : 'Borrador' }}
+                  </span>
+                </td>
+                <td class="admin-routes__td admin-routes__td--actions">
+                  <button
+                    class="admin-routes__action-btn admin-routes__action-btn--edit"
+                    type="button"
+                    [disabled]="processingId() !== null"
+                    (click)="openEditForm(route)"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    class="admin-routes__action-btn"
+                    [class.admin-routes__action-btn--publish]="!route.isPublished"
+                    [class.admin-routes__action-btn--unpublish]="route.isPublished"
+                    type="button"
+                    [disabled]="processingId() !== null"
+                    (click)="togglePublished(route)"
+                  >
+                    {{ route.isPublished ? 'Despublicar' : 'Publicar' }}
+                  </button>
+                  <button
+                    class="admin-routes__action-btn admin-routes__action-btn--delete"
+                    type="button"
+                    [disabled]="processingId() !== null"
+                    (click)="deleteRoute(route)"
+                  >
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+</div>

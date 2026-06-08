@@ -1,0 +1,448 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+@use 'sass:color';
+
+.admin-routes {
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: $space-4;
+    margin-bottom: $space-8;
+  }
+
+  &__title {
+    font-family: $font-family-heading;
+    font-size: $font-size-2xl;
+    color: $color-neutral-800;
+    font-weight: $font-weight-semibold;
+  }
+
+  &__section-title {
+    font-family: $font-family-heading;
+    font-size: $font-size-lg;
+    color: $color-neutral-700;
+    font-weight: $font-weight-semibold;
+    margin-bottom: $space-6;
+  }
+
+  &__new-btn {
+    padding: $space-3 $space-6;
+    background-color: $color-primary;
+    color: $color-white;
+    border: none;
+    border-radius: $border-radius-sm;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+    transition: background-color $transition-fast;
+
+    &:hover {
+      background-color: color.adjust($color-primary, $lightness: -5%);
+    }
+  }
+
+  &__action-error,
+  &__load-error {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-error;
+    padding: $space-4;
+    background-color: color.adjust($color-error, $lightness: 42%);
+    border-radius: $border-radius-sm;
+    margin-bottom: $space-6;
+  }
+
+  &__form-section {
+    background-color: $color-white;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-md;
+    padding: $space-6;
+    margin-bottom: $space-8;
+  }
+
+  &__form-grid {
+    display: grid;
+    gap: $space-4;
+    grid-template-columns: 1fr;
+
+    @include respond-to('md') {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+
+    &--full {
+      @include respond-to('md') {
+        grid-column: 1 / -1;
+      }
+    }
+  }
+
+  &__label {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-neutral-700;
+  }
+
+  &__input,
+  &__select,
+  &__textarea {
+    padding: $space-3 $space-4;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-sm;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-800;
+    background-color: $color-white;
+    transition: border-color $transition-fast;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+    }
+  }
+
+  &__textarea {
+    resize: vertical;
+    min-height: 100px;
+  }
+
+  &__cover-preview {
+    width: 100%;
+    max-height: 180px;
+    object-fit: cover;
+    border-radius: $border-radius-sm;
+    margin-top: $space-2;
+  }
+
+  &__points-section {
+    margin-top: $space-6;
+    padding-top: $space-6;
+    border-top: 1px solid $border-color;
+  }
+
+  &__points-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $space-4;
+  }
+
+  &__points-title {
+    font-family: $font-family-body;
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-700;
+  }
+
+  &__add-point-btn {
+    padding: $space-2 $space-4;
+    background-color: $color-neutral-100;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-sm;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-700;
+    cursor: pointer;
+    transition: background-color $transition-fast;
+
+    &:hover {
+      background-color: $color-neutral-200;
+    }
+  }
+
+  &__points-empty {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-400;
+    padding: $space-4 0;
+  }
+
+  &__point-row {
+    display: flex;
+    gap: $space-3;
+    align-items: flex-start;
+    margin-bottom: $space-3;
+  }
+
+  &__point-fields {
+    flex: 1;
+    display: grid;
+    gap: $space-3;
+
+    @include respond-to('md') {
+      grid-template-columns: 1fr 2fr;
+    }
+  }
+
+  &__remove-point-btn {
+    flex-shrink: 0;
+    width: 32px;
+    height: 38px;
+    background-color: transparent;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-sm;
+    font-size: $font-size-sm;
+    color: $color-neutral-500;
+    cursor: pointer;
+    transition: background-color $transition-fast, color $transition-fast;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background-color: color.adjust($color-error, $lightness: 42%);
+      color: $color-error;
+      border-color: $color-error;
+    }
+  }
+
+  &__form-actions {
+    display: flex;
+    gap: $space-4;
+    justify-content: flex-end;
+    margin-top: $space-6;
+    padding-top: $space-6;
+    border-top: 1px solid $border-color;
+  }
+
+  &__cancel-btn {
+    padding: $space-3 $space-6;
+    background-color: $color-white;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-sm;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-600;
+    cursor: pointer;
+    transition: background-color $transition-fast;
+
+    &:hover:not(:disabled) {
+      background-color: $color-neutral-100;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__submit-btn {
+    padding: $space-3 $space-6;
+    background-color: $color-primary;
+    color: $color-white;
+    border: none;
+    border-radius: $border-radius-sm;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+    transition: background-color $transition-fast;
+
+    &:hover:not(:disabled) {
+      background-color: color.adjust($color-primary, $lightness: -5%);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__list-section {
+    background-color: $color-white;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-md;
+    padding: $space-6;
+  }
+
+  &__empty {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-500;
+    padding: $space-6 0;
+  }
+
+  &__table-wrapper {
+    overflow-x: auto;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+  }
+
+  &__th {
+    padding: $space-3 $space-4;
+    text-align: left;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-600;
+    border-bottom: 2px solid $border-color;
+    white-space: nowrap;
+  }
+
+  &__tr {
+    border-bottom: 1px solid $border-color;
+    transition: background-color $transition-fast;
+
+    &:hover {
+      background-color: $color-neutral-100;
+    }
+
+    &--processing {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+  }
+
+  &__td {
+    padding: $space-3 $space-4;
+    color: $color-neutral-700;
+    vertical-align: middle;
+
+    &--title {
+      min-width: 200px;
+    }
+
+    &--meta {
+      white-space: nowrap;
+      color: $color-neutral-500;
+    }
+
+    &--order {
+      text-align: center;
+      color: $color-neutral-500;
+    }
+
+    &--actions {
+      white-space: nowrap;
+    }
+  }
+
+  &__route-title {
+    display: block;
+    font-weight: $font-weight-medium;
+    color: $color-neutral-800;
+  }
+
+  &__points-count {
+    display: block;
+    font-size: $font-size-xs;
+    color: $color-neutral-400;
+    margin-top: 2px;
+  }
+
+  &__badge {
+    display: inline-block;
+    padding: $space-1 $space-2;
+    border-radius: $border-radius-sm;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    white-space: nowrap;
+
+    &--type {
+      background-color: $color-neutral-100;
+      color: $color-neutral-600;
+    }
+
+    &--easy {
+      background-color: color.adjust($color-success, $lightness: 38%);
+      color: color.adjust($color-success, $lightness: -10%);
+    }
+
+    &--moderate {
+      background-color: color.adjust($color-secondary, $lightness: 35%);
+      color: color.adjust($color-secondary, $lightness: -15%);
+    }
+
+    &--hard {
+      background-color: color.adjust($color-error, $lightness: 40%);
+      color: color.adjust($color-error, $lightness: -10%);
+    }
+  }
+
+  &__status {
+    display: inline-block;
+    padding: $space-1 $space-3;
+    border-radius: $border-radius-sm;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+
+    &--published {
+      background-color: color.adjust($color-success, $lightness: 38%);
+      color: color.adjust($color-success, $lightness: -10%);
+    }
+
+    &--draft {
+      background-color: $color-neutral-100;
+      color: $color-neutral-500;
+    }
+  }
+
+  &__action-btn {
+    padding: $space-1 $space-3;
+    border: none;
+    border-radius: $border-radius-sm;
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+    transition: background-color $transition-fast;
+    margin-right: $space-2;
+
+    &:last-child {
+      margin-right: 0;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    &--edit {
+      background-color: $color-neutral-100;
+      color: $color-neutral-700;
+
+      &:hover:not(:disabled) {
+        background-color: $color-neutral-200;
+      }
+    }
+
+    &--publish {
+      background-color: color.adjust($color-success, $lightness: 38%);
+      color: color.adjust($color-success, $lightness: -10%);
+
+      &:hover:not(:disabled) {
+        background-color: color.adjust($color-success, $lightness: 30%);
+      }
+    }
+
+    &--unpublish {
+      background-color: color.adjust($color-secondary, $lightness: 35%);
+      color: color.adjust($color-secondary, $lightness: -15%);
+
+      &:hover:not(:disabled) {
+        background-color: color.adjust($color-secondary, $lightness: 25%);
+      }
+    }
+
+    &--delete {
+      background-color: color.adjust($color-error, $lightness: 40%);
+      color: color.adjust($color-error, $lightness: -10%);
+
+      &:hover:not(:disabled) {
+        background-color: color.adjust($color-error, $lightness: 30%);
+      }
+    }
+  }
+}

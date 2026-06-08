@@ -199,12 +199,15 @@ Diseño de lujo estilo boutique (inspiración: ritualdeterra.com). Monorepo Angu
 - [x] Admin layout con sidebar — navegación, logout, responsive con backdrop móvil
 - [x] Dashboard conectado al backend — próximas reservas via `GET /bookings/upcoming`, estado casa derivado, accesos rápidos
 
-### Fase 5c — Gestión de contenido (pendiente)
+### Fase 5c — Gestión de contenido ✅ COMPLETADA (2026-06-08)
 - [x] Backend reservas: modelo Mongoose, servicio, controlador, rutas (con requireAuth)
 - [x] Frontend `BookingService` — getAll, getUpcoming, getById, create, updateStatus, delete
-- [ ] Página admin reservas — lista completa, cambio de estado, eliminación
-- [ ] Gestión de fotos (subida a Cloudinary)
-- [ ] CRUD de rutas con imágenes
+- [x] Página admin reservas — lista completa, filtros por estado, cambio de estado (máquina de estados), eliminación
+- [x] Backend fotos: modelo Mongoose, servicio Cloudinary (upload_stream), controlador, rutas (multer memoryStorage, JPEG/PNG/WebP, 10MB)
+- [x] Página admin fotos — subida con preview local, grid por categoría, eliminación (Cloudinary + MongoDB)
+- [x] Backend rutas: modelo Mongoose (slug auto-generado), servicio, controlador, rutas (GET público, resto requireAuth)
+- [x] Frontend `RouteService` Angular — getAll, getPublished, getBySlug, create, update, togglePublished, delete
+- [x] Página admin rutas — tabla ordenada, formulario create/edit inline, puntos de ruta dinámicos, publicar/despublicar, eliminar
 - [ ] Gestión de calendario y precios
 
 ---
@@ -230,3 +233,4 @@ Diseño de lujo estilo boutique (inspiración: ritualdeterra.com). Monorepo Angu
 | fase 4 completa | Páginas legales: Aviso Legal, Privacidad, Cookies, T&C + SCSS compartido BEM |
 | fase 5a completa | Backend auth: JWT + bcrypt + rate limiting + MongoDB Atlas + Express server |
 | fase 5b+5c parcial | Admin login + noAuthGuard + layout sidebar + dashboard + backend reservas + BookingService |
+| fase 5c completa | Admin reservas + fotos (Cloudinary) + rutas CRUD con slug y puntos dinámicos |

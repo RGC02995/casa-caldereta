@@ -136,9 +136,8 @@
       } @else {
 
         <form
-          [formGroup]="bookingForm"
-          (ngSubmit)="submitBooking()"
           class="booking-form"
+          (submit)="submitBooking($event)"
           novalidate
           aria-label="Formulario de solicitud de reserva"
         >
@@ -148,14 +147,16 @@
             <input
               id="booking-name"
               type="text"
-              formControlName="name"
               class="booking-form__input"
-              [class.booking-form__input--error]="bookingForm.get('name')?.invalid && bookingForm.get('name')?.touched"
+              [class.booking-form__input--error]="!!nameError()"
               autocomplete="name"
               placeholder="Tu nombre completo"
-            >
-            @if (bookingForm.get('name')?.invalid && bookingForm.get('name')?.touched) {
-              <span class="booking-form__error" role="alert">El nombre es obligatorio</span>
+              [value]="nameValue()"
+              (input)="nameValue.set($any($event.target).value)"
+              (blur)="nameTouched.set(true)"
+            />
+            @if (nameError()) {
+              <span class="booking-form__error" role="alert">{{ nameError() }}</span>
             }
           </div>
 
@@ -164,18 +165,16 @@
             <input
               id="booking-email"
               type="email"
-              formControlName="email"
               class="booking-form__input"
-              [class.booking-form__input--error]="bookingForm.get('email')?.invalid && bookingForm.get('email')?.touched"
+              [class.booking-form__input--error]="!!emailError()"
               autocomplete="email"
               placeholder="tu@email.com"
-            >
-            @if (bookingForm.get('email')?.invalid && bookingForm.get('email')?.touched) {
-              @if (bookingForm.get('email')?.hasError('required')) {
-                <span class="booking-form__error" role="alert">El email es obligatorio</span>
-              } @else if (bookingForm.get('email')?.hasError('invalidEmail')) {
-                <span class="booking-form__error" role="alert">Introduce un email válido</span>
-              }
+              [value]="emailValue()"
+              (input)="emailValue.set($any($event.target).value)"
+              (blur)="emailTouched.set(true)"
+            />
+            @if (emailError()) {
+              <span class="booking-form__error" role="alert">{{ emailError() }}</span>
             }
           </div>
 
@@ -184,21 +183,23 @@
             <input
               id="booking-phone"
               type="tel"
-              formControlName="phone"
               class="booking-form__input"
               autocomplete="tel"
               placeholder="+34 600 000 000"
-            >
+              [value]="phoneValue()"
+              (input)="phoneValue.set($any($event.target).value)"
+            />
           </div>
 
           <div class="booking-form__field">
             <label for="booking-message" class="booking-form__label">Mensaje</label>
             <textarea
               id="booking-message"
-              formControlName="message"
               class="booking-form__textarea"
               rows="3"
               placeholder="Número de huéspedes, mascotas, peticiones especiales..."
+              [value]="messageValue()"
+              (input)="messageValue.set($any($event.target).value)"
             ></textarea>
           </div>
 
@@ -206,9 +207,10 @@
             <label class="booking-form__checkbox-label">
               <input
                 type="checkbox"
-                formControlName="privacy"
                 class="booking-form__checkbox"
-              >
+                [checked]="privacyChecked()"
+                (change)="privacyChecked.set($any($event.target).checked); privacyTouched.set(true)"
+              />
               <span>
                 He leído y acepto la
                 <a routerLink="/legal/privacidad" class="booking-form__link">
@@ -216,10 +218,8 @@
                 </a>
               </span>
             </label>
-            @if (bookingForm.get('privacy')?.invalid && bookingForm.get('privacy')?.touched) {
-              <span class="booking-form__error" role="alert">
-                Debes aceptar la política de privacidad
-              </span>
+            @if (privacyError()) {
+              <span class="booking-form__error" role="alert">{{ privacyError() }}</span>
             }
           </div>
 

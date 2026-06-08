@@ -1,6 +1,5 @@
 import { Component, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
 import {
   addDays, addMonths, differenceInCalendarDays,
   endOfMonth, format, getDate, getDay,
@@ -9,7 +8,8 @@ import {
 } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { DateFormatPipe } from '../../../../shared/pipes/date-format.pipe';
-import { emailValidator } from '../../../../shared/validators/email.validator';
+
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
 
 interface CalendarDay {
   readonly date:       Date | null;
@@ -25,7 +25,7 @@ interface CalendarDay {
 @Component({
   selector: 'booking-page',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, DateFormatPipe],
+  imports: [RouterLink, DateFormatPipe],
   templateUrl: './booking-page.component.html',
   styleUrl: './booking-page.component.scss',
 })
@@ -60,13 +60,42 @@ export class BookingPageComponent {
 
   readonly totalPrice = computed(() => this.nights() * this.PRICE_PER_NIGHT);
 
-  // ── Formulario ────────────────────────────────────────────────────────────
-  readonly bookingForm = new FormGroup({
-    name:    new FormControl('', [Validators.required, Validators.minLength(2)]),
-    email:   new FormControl('', [Validators.required, emailValidator]),
-    phone:   new FormControl(''),
-    message: new FormControl(''),
-    privacy: new FormControl(false, [Validators.requiredTrue]),
+  // ── Estado del formulario ─────────────────────────────────────────────────
+  readonly nameValue      = signal('');
+  readonly emailValue     = signal('');
+  readonly phoneValue     = signal('');
+  readonly messageValue   = signal('');
+  readonly privacyChecked = signal(false);
+
+  readonly nameTouched    = signal(false);
+  readonly emailTouched   = signal(false);
+  readonly privacyTouched = signal(false);
+
+  readonly nameError = computed(() => {
+    if (!this.nameTouched()) return '';
+    if (this.nameValue().trim().length < 2) return 'El nombre es obligatorio';
+    return '';
+  });
+
+  readonly emailError = computed(() => {
+    if (!this.emailTouched()) return '';
+    const trimmedEmail = this.emailValue().trim();
+    if (!trimmedEmail) return 'El email es obligatorio';
+    if (!EMAIL_REGEX.test(trimmedEmail)) return 'Introduce un email válido';
+    return '';
+  });
+
+  readonly privacyError = computed(() => {
+    if (!this.privacyTouched()) return '';
+    if (!this.privacyChecked()) return 'Debes aceptar la política de privacidad';
+    return '';
+  });
+
+  readonly isFormValid = computed(() => {
+    const nameValid    = this.nameValue().trim().length >= 2;
+    const emailValid   = EMAIL_REGEX.test(this.emailValue().trim());
+    const privacyValid = this.privacyChecked();
+    return nameValid && emailValid && privacyValid;
   });
 
   // ── Navegación del calendario ─────────────────────────────────────────────
@@ -86,32 +115,38 @@ export class BookingPageComponent {
     const currentCheckIn = this.checkIn();
 
     if (!currentCheckIn || this.checkOut() !== null) {
-      // Iniciar nueva selección
       this.checkIn.set(day.date);
       this.checkOut.set(null);
     } else if (isAfter(day.date, currentCheckIn)) {
-      // Confirmar checkout
       this.checkOut.set(day.date);
     } else {
-      // Reemplazar checkin
       this.checkIn.set(day.date);
       this.checkOut.set(null);
     }
   }
 
   // ── Envío del formulario ──────────────────────────────────────────────────
-  submitBooking(): void {
-    if (this.bookingForm.invalid || !this.checkIn() || !this.checkOut()) {
-      this.bookingForm.markAllAsTouched();
-      return;
-    }
+  submitBooking(event: Event): void {
+    event.preventDefault();
+    this.nameTouched.set(true);
+    this.emailTouched.set(true);
+    this.privacyTouched.set(true);
+
+    if (!this.isFormValid() || !this.checkIn() || !this.checkOut()) return;
     this.isSubmitted.set(true);
   }
 
   resetBooking(): void {
     this.checkIn.set(null);
     this.checkOut.set(null);
-    this.bookingForm.reset();
+    this.nameValue.set('');
+    this.emailValue.set('');
+    this.phoneValue.set('');
+    this.messageValue.set('');
+    this.privacyChecked.set(false);
+    this.nameTouched.set(false);
+    this.emailTouched.set(false);
+    this.privacyTouched.set(false);
     this.isSubmitted.set(false);
   }
 
@@ -124,18 +159,16 @@ export class BookingPageComponent {
     const monthStart   = startOfMonth(month);
     const monthEnd     = endOfMonth(month);
     const today        = startOfDay(new Date());
-    const startWeekDay = getDay(monthStart);              // 0=Dom, 1=Lun...
+    const startWeekDay = getDay(monthStart);
     const leadingDays  = startWeekDay === 0 ? 6 : startWeekDay - 1;
 
     const days: CalendarDay[] = [];
 
-    // Celdas vacías al inicio
     for (let i = 0; i < leadingDays; i++) {
       days.push({ date: null, dayNumber: 0, isToday: false, isPast: false,
                   isCheckIn: false, isCheckOut: false, isInRange: false, isDisabled: true });
     }
 
-    // Días del mes
     let current = monthStart;
     while (!isAfter(current, monthEnd)) {
       const isPast = isBefore(startOfDay(current), today);
