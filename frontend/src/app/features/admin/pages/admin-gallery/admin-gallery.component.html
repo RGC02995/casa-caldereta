@@ -1,0 +1,122 @@
+<div class="admin-gallery">
+
+  <header class="admin-gallery__header">
+    <h1 class="admin-gallery__title">Fotos</h1>
+  </header>
+
+  <section class="admin-gallery__upload-section">
+    <h2 class="admin-gallery__section-title">Subir nueva foto</h2>
+
+    <form class="admin-gallery__upload-form" (ngSubmit)="onUploadSubmit()">
+
+      <div class="admin-gallery__upload-dropzone" [class.admin-gallery__upload-dropzone--has-preview]="previewUrl()">
+        @if (previewUrl()) {
+          <img class="admin-gallery__upload-preview" [src]="previewUrl()!" alt="Vista previa" />
+        } @else {
+          <span class="admin-gallery__upload-placeholder">Haz clic para seleccionar una imagen</span>
+        }
+        <input
+          #fileInput
+          class="admin-gallery__upload-input"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          (change)="onFileSelected($event)"
+        />
+      </div>
+
+      <div class="admin-gallery__upload-fields">
+        <div class="admin-gallery__field">
+          <label class="admin-gallery__label" for="upload-alt">Texto alternativo (alt)</label>
+          <input
+            class="admin-gallery__input"
+            id="upload-alt"
+            type="text"
+            placeholder="Ej: Salón principal con chimenea"
+            [value]="uploadAlt()"
+            (input)="uploadAlt.set($any($event.target).value)"
+          />
+        </div>
+
+        <div class="admin-gallery__field">
+          <label class="admin-gallery__label" for="upload-category">Categoría</label>
+          <select
+            class="admin-gallery__select"
+            id="upload-category"
+            [value]="uploadCategory()"
+            (change)="uploadCategory.set($any($event.target).value)"
+          >
+            @for (categoryOption of categories; track categoryOption.value) {
+              <option [value]="categoryOption.value">{{ categoryOption.label }}</option>
+            }
+          </select>
+        </div>
+
+        <button
+          class="admin-gallery__upload-btn"
+          type="submit"
+          [disabled]="isUploading() || !selectedFile()"
+        >
+          {{ isUploading() ? 'Subiendo...' : 'Subir foto' }}
+        </button>
+      </div>
+
+    </form>
+
+    @if (actionError()) {
+      <p class="admin-gallery__action-error">{{ actionError() }}</p>
+    }
+  </section>
+
+  <section class="admin-gallery__list-section">
+    <h2 class="admin-gallery__section-title">Fotos subidas</h2>
+
+    @if (loadError()) {
+      <p class="admin-gallery__load-error">{{ loadError() }}</p>
+    } @else {
+
+      <div class="admin-gallery__filters">
+        @for (filterOption of filters; track filterOption.value) {
+          <button
+            class="admin-gallery__filter-btn"
+            [class.admin-gallery__filter-btn--active]="activeFilter() === filterOption.value"
+            type="button"
+            (click)="activeFilter.set(filterOption.value)"
+          >
+            {{ filterOption.label }}
+          </button>
+        }
+      </div>
+
+      @if (filteredPhotos().length === 0) {
+        <p class="admin-gallery__empty">No hay fotos en esta categoría.</p>
+      } @else {
+        <div class="admin-gallery__grid">
+          @for (photo of filteredPhotos(); track photo.id) {
+            <div class="admin-gallery__item"
+                 [class.admin-gallery__item--processing]="processingId() === photo.id">
+              <img
+                class="admin-gallery__img"
+                [src]="photo.url"
+                [alt]="photo.alt"
+                loading="lazy"
+              />
+              <div class="admin-gallery__item-overlay">
+                <span class="admin-gallery__item-category">{{ getCategoryLabel(photo.category) }}</span>
+                <span class="admin-gallery__item-alt">{{ photo.alt }}</span>
+                <button
+                  class="admin-gallery__delete-btn"
+                  type="button"
+                  [disabled]="processingId() !== null"
+                  (click)="deletePhoto(photo.id)"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+  </section>
+
+</div>

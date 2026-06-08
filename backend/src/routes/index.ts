@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import authRouter   from './auth.routes';
+import authRouter    from './auth.routes';
 import bookingRouter from './booking.routes';
+import photoRouter   from './photo.routes';
 
 const apiRouter = Router();
 
@@ -10,5 +11,6 @@ apiRouter.get('/health', (_req, res) => {
 
 apiRouter.use('/auth',     authRouter);
 apiRouter.use('/bookings', bookingRouter);
+apiRouter.use('/photos',   photoRouter);
 
 export default apiRouter;

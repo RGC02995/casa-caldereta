@@ -1,0 +1,300 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+@use 'sass:color';
+
+.admin-gallery {
+  &__header {
+    margin-bottom: $space-8;
+  }
+
+  &__title {
+    font-family: $font-family-heading;
+    font-size: $font-size-2xl;
+    color: $color-neutral-800;
+    font-weight: $font-weight-semibold;
+  }
+
+  &__section-title {
+    font-family: $font-family-heading;
+    font-size: $font-size-lg;
+    color: $color-neutral-700;
+    font-weight: $font-weight-semibold;
+    margin-bottom: $space-4;
+  }
+
+  &__upload-section {
+    background-color: $color-white;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-md;
+    padding: $space-6;
+    margin-bottom: $space-8;
+  }
+
+  &__upload-form {
+    display: grid;
+    gap: $space-6;
+
+    @include respond-to('md') {
+      grid-template-columns: 220px 1fr;
+      align-items: start;
+    }
+  }
+
+  &__upload-dropzone {
+    position: relative;
+    height: 180px;
+    border: 2px dashed $border-color;
+    border-radius: $border-radius-md;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    transition: border-color $transition-fast;
+
+    &:hover {
+      border-color: $color-primary;
+    }
+
+    &--has-preview {
+      border-style: solid;
+      border-color: $color-primary;
+    }
+  }
+
+  &__upload-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__upload-placeholder {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-400;
+    text-align: center;
+    padding: $space-4;
+    pointer-events: none;
+  }
+
+  &__upload-input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  &__upload-fields {
+    display: flex;
+    flex-direction: column;
+    gap: $space-4;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+  }
+
+  &__label {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-neutral-700;
+  }
+
+  &__input,
+  &__select {
+    padding: $space-3 $space-4;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-sm;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-800;
+    background-color: $color-white;
+    transition: border-color $transition-fast;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+    }
+  }
+
+  &__upload-btn {
+    padding: $space-3 $space-6;
+    background-color: $color-primary;
+    color: $color-white;
+    border: none;
+    border-radius: $border-radius-sm;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+    transition: background-color $transition-fast;
+    align-self: flex-end;
+
+    &:hover:not(:disabled) {
+      background-color: color.adjust($color-primary, $lightness: -5%);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__load-error,
+  &__action-error {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-error;
+    padding: $space-4;
+    background-color: color.adjust($color-error, $lightness: 42%);
+    border-radius: $border-radius-sm;
+    margin-top: $space-4;
+  }
+
+  &__list-section {
+    background-color: $color-white;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-md;
+    padding: $space-6;
+  }
+
+  &__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2;
+    margin-bottom: $space-6;
+  }
+
+  &__filter-btn {
+    padding: $space-2 $space-4;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-sm;
+    background-color: $color-white;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-600;
+    cursor: pointer;
+    transition: border-color $transition-fast, background-color $transition-fast, color $transition-fast;
+
+    &:hover {
+      border-color: $color-primary;
+      color: $color-primary;
+    }
+
+    &--active {
+      background-color: $color-primary;
+      border-color: $color-primary;
+      color: $color-white;
+
+      &:hover {
+        background-color: color.adjust($color-primary, $lightness: -5%);
+        color: $color-white;
+      }
+    }
+  }
+
+  &__empty {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-500;
+    padding: $space-6 0;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: $space-4;
+
+    @include respond-to('md') {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    @include respond-to('lg') {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  &__item {
+    position: relative;
+    border-radius: $border-radius-sm;
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    background-color: $color-neutral-200;
+
+    &--processing {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    &:hover &-overlay {
+      opacity: 1;
+    }
+  }
+
+  &__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &__item-overlay {
+    position: absolute;
+    inset: 0;
+    background-color: rgba($color-black, 0.6);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: $space-3;
+    opacity: 0;
+    transition: opacity $transition-normal;
+  }
+
+  &__item-category {
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    color: $color-secondary;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: $space-1;
+  }
+
+  &__item-alt {
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    color: $color-neutral-300;
+    margin-bottom: $space-3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__delete-btn {
+    align-self: flex-start;
+    padding: $space-1 $space-3;
+    background-color: color.adjust($color-error, $lightness: -5%);
+    color: $color-white;
+    border: none;
+    border-radius: $border-radius-sm;
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+    transition: background-color $transition-fast;
+
+    &:hover:not(:disabled) {
+      background-color: color.adjust($color-error, $lightness: -15%);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+}

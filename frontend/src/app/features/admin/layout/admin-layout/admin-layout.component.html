@@ -26,6 +26,15 @@
         <span class="admin-layout__nav-icon" aria-hidden="true">📅</span>
         Reservas
       </a>
+      <a
+        class="admin-layout__nav-link"
+        routerLink="/admin/fotos"
+        routerLinkActive="admin-layout__nav-link--active"
+        (click)="isSidebarOpen.set(false)"
+      >
+        <span class="admin-layout__nav-icon" aria-hidden="true">🖼</span>
+        Fotos
+      </a>
     </nav>
 
     <div class="admin-layout__sidebar-footer">
