@@ -17,6 +17,10 @@ export const adminRoutes: Routes = [
         path: '',
         loadComponent: () => import('./pages/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
       },
+      {
+        path: 'reservas',
+        loadComponent: () => import('./pages/admin-bookings/admin-bookings.component').then(m => m.AdminBookingsComponent),
+      },
     ],
   },
 ];

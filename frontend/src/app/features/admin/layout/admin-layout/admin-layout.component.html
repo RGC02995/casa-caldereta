@@ -17,6 +17,15 @@
         <span class="admin-layout__nav-icon" aria-hidden="true">▦</span>
         Dashboard
       </a>
+      <a
+        class="admin-layout__nav-link"
+        routerLink="/admin/reservas"
+        routerLinkActive="admin-layout__nav-link--active"
+        (click)="isSidebarOpen.set(false)"
+      >
+        <span class="admin-layout__nav-icon" aria-hidden="true">📅</span>
+        Reservas
+      </a>
     </nav>
 
     <div class="admin-layout__sidebar-footer">

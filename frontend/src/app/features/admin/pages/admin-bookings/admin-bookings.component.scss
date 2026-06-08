@@ -1,0 +1,210 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+@use 'sass:color';
+
+.admin-bookings {
+  &__header {
+    margin-bottom: $space-6;
+  }
+
+  &__title {
+    font-family: $font-family-heading;
+    font-size: $font-size-2xl;
+    color: $color-neutral-800;
+    font-weight: $font-weight-semibold;
+  }
+
+  &__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2;
+    margin-bottom: $space-6;
+  }
+
+  &__filter-btn {
+    padding: $space-2 $space-4;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-sm;
+    background-color: $color-white;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-600;
+    cursor: pointer;
+    transition: border-color $transition-fast, background-color $transition-fast, color $transition-fast;
+
+    &:hover {
+      border-color: $color-primary;
+      color: $color-primary;
+    }
+
+    &--active {
+      background-color: $color-primary;
+      border-color: $color-primary;
+      color: $color-white;
+
+      &:hover {
+        background-color: color.adjust($color-primary, $lightness: -5%);
+        color: $color-white;
+      }
+    }
+  }
+
+  &__load-error,
+  &__action-error {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-error;
+    padding: $space-4;
+    background-color: color.adjust($color-error, $lightness: 42%);
+    border-radius: $border-radius-sm;
+    margin-bottom: $space-4;
+  }
+
+  &__empty {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-500;
+    padding: $space-6 0;
+  }
+
+  &__table-wrapper {
+    overflow-x: auto;
+    background-color: $color-white;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-md;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+  }
+
+  &__table-head {
+    border-bottom: 2px solid $border-color;
+    background-color: $color-neutral-100;
+  }
+
+  &__table-th {
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: $space-3 $space-4;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  &__table-row {
+    border-bottom: 1px solid $border-color;
+    transition: background-color $transition-fast;
+
+    &:hover {
+      background-color: $color-neutral-100;
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &--processing {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+  }
+
+  &__table-td {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-700;
+    padding: $space-3 $space-4;
+    white-space: nowrap;
+
+    &--name {
+      font-weight: $font-weight-medium;
+      color: $color-neutral-800;
+    }
+
+    &--center {
+      text-align: center;
+    }
+  }
+
+  &__badge {
+    display: inline-block;
+    padding: $space-1 $space-2;
+    border-radius: $border-radius-sm;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+
+    &--pending {
+      background-color: color.adjust($color-warning, $lightness: 30%);
+      color: color.adjust($color-warning, $lightness: -20%);
+    }
+
+    &--confirmed {
+      background-color: color.adjust($color-success, $lightness: 40%);
+      color: color.adjust($color-success, $lightness: -20%);
+    }
+
+    &--cancelled {
+      background-color: color.adjust($color-error, $lightness: 40%);
+      color: color.adjust($color-error, $lightness: -10%);
+    }
+
+    &--completed {
+      background-color: $color-neutral-200;
+      color: $color-neutral-600;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: $space-2;
+    flex-wrap: wrap;
+  }
+
+  &__action-btn {
+    padding: $space-1 $space-3;
+    border-radius: $border-radius-sm;
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: opacity $transition-fast, background-color $transition-fast;
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    &--confirmed {
+      background-color: color.adjust($color-success, $lightness: 40%);
+      color: color.adjust($color-success, $lightness: -20%);
+      border-color: color.adjust($color-success, $lightness: 20%);
+    }
+
+    &--completed {
+      background-color: $color-neutral-200;
+      color: $color-neutral-700;
+      border-color: $color-neutral-300;
+    }
+
+    &--cancelled {
+      background-color: color.adjust($color-warning, $lightness: 30%);
+      color: color.adjust($color-warning, $lightness: -20%);
+      border-color: color.adjust($color-warning, $lightness: 15%);
+    }
+
+    &--delete {
+      background-color: color.adjust($color-error, $lightness: 40%);
+      color: color.adjust($color-error, $lightness: -10%);
+      border-color: color.adjust($color-error, $lightness: 25%);
+    }
+  }
+}
