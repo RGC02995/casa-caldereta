@@ -78,7 +78,8 @@ class RouteService {
       order:         data.order    ?? 0,
     });
 
-    return routeDocument.save();
+    const savedDoc = await routeDocument.save();
+    return (await RouteModel.findById(savedDoc._id).lean<IRouteDocument>({ virtuals: true }))!;
   }
 
   async update(id: string, data: IUpdateRouteData): Promise<IRouteDocument | null> {
@@ -103,11 +104,14 @@ class RouteService {
   }
 
   async togglePublished(id: string): Promise<IRouteDocument | null> {
-    const existingRoute = await RouteModel.findById(id);
-    if (!existingRoute) return null;
+    const currentRoute = await RouteModel.findById(id).lean<IRouteDocument>({ virtuals: true });
+    if (!currentRoute) return null;
 
-    existingRoute.isPublished = !existingRoute.isPublished;
-    return existingRoute.save();
+    return RouteModel.findByIdAndUpdate(
+      id,
+      { $set: { isPublished: !currentRoute.isPublished } },
+      { new: true, runValidators: true },
+    ).lean<IRouteDocument>({ virtuals: true });
   }
 
   async delete(id: string): Promise<boolean> {

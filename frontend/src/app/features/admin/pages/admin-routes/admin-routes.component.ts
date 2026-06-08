@@ -224,6 +224,8 @@ export class AdminRoutesComponent {
           this.isSubmitting.set(false);
         },
       });
+    } else {
+      this.isSubmitting.set(false);
     }
   }
 

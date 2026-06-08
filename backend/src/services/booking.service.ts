@@ -55,7 +55,8 @@ class BookingService {
       status: 'pending',
     });
 
-    return booking.save();
+    const savedDoc = await booking.save();
+    return (await BookingModel.findById(savedDoc._id).lean<IBookingDocument>({ virtuals: true }))!;
   }
 
   async updateStatus(id: string, status: BookingStatus): Promise<IBookingDocument | null> {

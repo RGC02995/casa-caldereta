@@ -46,7 +46,8 @@ class PhotoService {
       height:   uploadResult.height,
     });
 
-    return photo.save();
+    const savedDoc = await photo.save();
+    return (await PhotoModel.findById(savedDoc._id).lean<IPhotoDocument>({ virtuals: true }))!;
   }
 
   async updateOrder(id: string, order: number): Promise<IPhotoDocument | null> {

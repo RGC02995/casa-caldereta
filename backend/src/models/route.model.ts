@@ -101,7 +101,7 @@ const routeSchema = new Schema<IRouteDocument>(
       min:     0,
     },
   },
-  { timestamps: true },
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } },
 );
 
 function generateSlug(title: string): string {

@@ -67,7 +67,7 @@ const bookingSchema = new Schema<IBookingDocument>(
       maxlength: 500,
     },
   },
-  { timestamps: true },
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } },
 );
 
 bookingSchema.index({ checkIn: 1, checkOut: 1 });

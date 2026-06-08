@@ -54,7 +54,7 @@ const photoSchema = new Schema<IPhotoDocument>(
       min:      1,
     },
   },
-  { timestamps: true },
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } },
 );
 
 photoSchema.index({ category: 1, order: 1 });
