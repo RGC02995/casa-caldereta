@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../../core/auth/auth.service';
 
 @Component({
@@ -35,8 +36,14 @@ export class AdminLoginComponent {
       next: () => {
         void this.router.navigate(['/admin']);
       },
-      error: () => {
-        this.errorMessage.set('Credenciales incorrectas. Inténtalo de nuevo.');
+      error: (err: HttpErrorResponse) => {
+        if (err.status === 401) {
+          this.errorMessage.set('Credenciales incorrectas. Inténtalo de nuevo.');
+        } else if (err.status === 429) {
+          this.errorMessage.set('Demasiados intentos fallidos. Espera 15 minutos.');
+        } else {
+          this.errorMessage.set('Error del servidor. Inténtalo más tarde.');
+        }
         this.isLoading.set(false);
       },
     });

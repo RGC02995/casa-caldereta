@@ -62,6 +62,7 @@ export class AuthService {
   private restoreSession(): void {
     const token = this.getAccessToken();
     if (!token) return;
+    if (this.isTokenExpired(token)) { this.clearTokens(); return; }
     const user = this.decodeUser(token);
     if (user) this._currentUser.set(user);
   }
@@ -74,6 +75,18 @@ export class AuthService {
       return { id: payload.sub, email: payload.sub, role: payload.role as UserRole };
     } catch {
       return null;
+    }
+  }
+
+  private isTokenExpired(token: string): boolean {
+    try {
+      const part = token.split('.')[1];
+      if (!part) return true;
+      const payload = JSON.parse(atob(part)) as { exp?: number };
+      if (!payload.exp) return true;
+      return Date.now() / 1000 > payload.exp;
+    } catch {
+      return true;
     }
   }
 

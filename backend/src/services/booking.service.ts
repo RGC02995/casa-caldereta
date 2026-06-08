@@ -1,0 +1,75 @@
+import { BookingModel, BookingStatus, IBookingDocument } from '../models/booking.model';
+
+export interface ICreateBookingData {
+  checkIn:    string;
+  checkOut:   string;
+  guestName:  string;
+  guestEmail: string;
+  guestPhone: string;
+  guests:     number;
+  totalPrice: number;
+  notes?:     string | undefined;
+}
+
+export interface IUpdateStatusData {
+  status: BookingStatus;
+}
+
+class BookingService {
+  async getAll(): Promise<IBookingDocument[]> {
+    return BookingModel.find().sort({ checkIn: -1 }).lean<IBookingDocument[]>();
+  }
+
+  async getUpcoming(): Promise<IBookingDocument[]> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return BookingModel.find({
+      checkIn: { $gte: today },
+      status:  { $in: ['pending', 'confirmed'] },
+    })
+      .sort({ checkIn: 1 })
+      .lean<IBookingDocument[]>();
+  }
+
+  async getById(id: string): Promise<IBookingDocument | null> {
+    return BookingModel.findById(id).lean<IBookingDocument>();
+  }
+
+  async create(data: ICreateBookingData): Promise<IBookingDocument> {
+    const checkIn  = new Date(data.checkIn);
+    const checkOut = new Date(data.checkOut);
+
+    if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) {
+      throw new Error('Fechas no válidas');
+    }
+
+    if (checkOut <= checkIn) {
+      throw new Error('La fecha de salida debe ser posterior a la de entrada');
+    }
+
+    const booking = new BookingModel({
+      ...data,
+      checkIn,
+      checkOut,
+      status: 'pending',
+    });
+
+    return booking.save();
+  }
+
+  async updateStatus(id: string, status: BookingStatus): Promise<IBookingDocument | null> {
+    return BookingModel.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true, runValidators: true },
+    ).lean<IBookingDocument>();
+  }
+
+  async delete(id: string): Promise<boolean> {
+    const result = await BookingModel.findByIdAndDelete(id);
+    return result !== null;
+  }
+}
+
+export const bookingService = new BookingService();

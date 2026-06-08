@@ -1,9 +1,11 @@
 import { Routes } from '@angular/router';
 import { authGuard } from '../../core/auth/auth.guard';
+import { noAuthGuard } from '../../core/auth/no-auth.guard';
 
 export const adminRoutes: Routes = [
   {
     path: 'login',
+    canActivate: [noAuthGuard],
     loadComponent: () => import('./pages/admin-login/admin-login.component').then(m => m.AdminLoginComponent),
   },
   {

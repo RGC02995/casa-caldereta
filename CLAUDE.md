@@ -191,12 +191,18 @@ Diseño de lujo estilo boutique (inspiración: ritualdeterra.com). Monorepo Angu
 - [x] src/routes/index.ts — apiRouter con health check y montaje de authRouter
 - [x] src/server.ts — Express + Helmet + CORS + Morgan + rate limit global + MongoDB
 
-### Fase 5b — Frontend Admin (pendiente)
-- [ ] Página login `/admin/login` en Angular
-- [ ] Admin layout con sidebar
-- [ ] Dashboard inicial
+### Fase 5b — Frontend Admin ✅ COMPLETADA (2026-06-08)
+- [x] Página login `/admin/login` — formulario reactivo, errores granulares (401/429/5xx), conectado al backend
+- [x] `noAuthGuard` — redirige a `/admin` si ya hay sesión activa
+- [x] `authGuard` — protege layout admin, redirige a `/admin/login` si no autenticado
+- [x] `isTokenExpired()` en AuthService — valida claim `exp` del JWT al restaurar sesión
+- [x] Admin layout con sidebar — navegación, logout, responsive con backdrop móvil
+- [x] Dashboard conectado al backend — próximas reservas via `GET /bookings/upcoming`, estado casa derivado, accesos rápidos
 
 ### Fase 5c — Gestión de contenido (pendiente)
+- [x] Backend reservas: modelo Mongoose, servicio, controlador, rutas (con requireAuth)
+- [x] Frontend `BookingService` — getAll, getUpcoming, getById, create, updateStatus, delete
+- [ ] Página admin reservas — lista completa, cambio de estado, eliminación
 - [ ] Gestión de fotos (subida a Cloudinary)
 - [ ] CRUD de rutas con imágenes
 - [ ] Gestión de calendario y precios
@@ -223,3 +229,4 @@ Diseño de lujo estilo boutique (inspiración: ritualdeterra.com). Monorepo Angu
 | fase 4 parcial  | Home completa (datos reales) + Galería con lightbox ←→ teclado + español por defecto |
 | fase 4 completa | Páginas legales: Aviso Legal, Privacidad, Cookies, T&C + SCSS compartido BEM |
 | fase 5a completa | Backend auth: JWT + bcrypt + rate limiting + MongoDB Atlas + Express server |
+| fase 5b+5c parcial | Admin login + noAuthGuard + layout sidebar + dashboard + backend reservas + BookingService |

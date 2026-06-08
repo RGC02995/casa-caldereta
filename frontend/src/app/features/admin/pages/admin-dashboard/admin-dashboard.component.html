@@ -1,1 +1,73 @@
-<main class="admin-dashboard"><p>Panel Admin — en construcción</p></main>
+<div class="admin-dashboard">
+
+  <header class="admin-dashboard__header">
+    <h1 class="admin-dashboard__title">Dashboard</h1>
+  </header>
+
+  <div class="admin-dashboard__grid">
+
+    <section class="admin-dashboard__card admin-dashboard__card--status">
+      <h2 class="admin-dashboard__card-title">Estado de la casa</h2>
+      <div class="admin-dashboard__status"
+           [class.admin-dashboard__status--occupied]="houseStatus() === 'occupied'">
+        <span class="admin-dashboard__status-dot"></span>
+        <span class="admin-dashboard__status-label">
+          {{ houseStatus() === 'occupied' ? 'Ocupada' : 'Libre' }}
+        </span>
+      </div>
+    </section>
+
+    <section class="admin-dashboard__card admin-dashboard__card--bookings">
+      <h2 class="admin-dashboard__card-title">Próximas reservas</h2>
+
+      @if (bookingsError()) {
+        <p class="admin-dashboard__error">{{ bookingsError() }}</p>
+      } @else if (upcomingBookings().length === 0) {
+        <p class="admin-dashboard__empty">No hay reservas próximas.</p>
+      } @else {
+        <div class="admin-dashboard__table-wrapper">
+          <table class="admin-dashboard__table">
+            <thead class="admin-dashboard__table-head">
+              <tr>
+                <th class="admin-dashboard__table-th">Huésped</th>
+                <th class="admin-dashboard__table-th">Entrada</th>
+                <th class="admin-dashboard__table-th">Salida</th>
+                <th class="admin-dashboard__table-th">Noches</th>
+                <th class="admin-dashboard__table-th">Estado</th>
+              </tr>
+            </thead>
+            <tbody class="admin-dashboard__table-body">
+              @for (booking of upcomingBookings(); track booking.id) {
+                <tr class="admin-dashboard__table-row">
+                  <td class="admin-dashboard__table-td">{{ booking.guestName }}</td>
+                  <td class="admin-dashboard__table-td">{{ booking.checkIn | date: 'dd/MM/yyyy' }}</td>
+                  <td class="admin-dashboard__table-td">{{ booking.checkOut | date: 'dd/MM/yyyy' }}</td>
+                  <td class="admin-dashboard__table-td">{{ booking.guests }}</td>
+                  <td class="admin-dashboard__table-td">
+                    <span class="admin-dashboard__badge admin-dashboard__badge--{{ booking.status }}">
+                      {{ booking.status }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    <section class="admin-dashboard__card admin-dashboard__card--links">
+      <h2 class="admin-dashboard__card-title">Accesos rápidos</h2>
+      <div class="admin-dashboard__links">
+        @for (link of quickLinks; track link.route) {
+          <a class="admin-dashboard__link" [routerLink]="link.route">
+            <span class="admin-dashboard__link-icon" aria-hidden="true">{{ link.icon }}</span>
+            <span class="admin-dashboard__link-label">{{ link.label }}</span>
+          </a>
+        }
+      </div>
+    </section>
+
+  </div>
+
+</div>
