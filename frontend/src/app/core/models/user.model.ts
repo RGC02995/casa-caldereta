@@ -4,7 +4,6 @@ export interface IUser {
   readonly id: string;
   readonly email: string;
   readonly role: UserRole;
-  readonly createdAt: string;
 }
 
 export interface IAuthTokens {
