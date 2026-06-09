@@ -61,11 +61,10 @@ class RouteService {
   }
 
   async create(data: ICreateRouteData): Promise<IRouteDocument> {
-    const slug          = generateSlug(data.title);
-    const existingRoute = await RouteModel.findOne({ slug }).lean();
-
-    if (existingRoute) {
-      throw new Error(`Ya existe una ruta con el título "${data.title}"`);
+    let slug    = generateSlug(data.title);
+    let counter = 1;
+    while (await RouteModel.findOne({ slug }).lean()) {
+      slug = `${generateSlug(data.title)}-${counter++}`;
     }
 
     const routeDocument = new RouteModel({
@@ -92,13 +91,11 @@ class RouteService {
     const updatePayload: Partial<IRouteDocument> = { ...data } as Partial<IRouteDocument>;
 
     if (data.title) {
-      const newSlug          = generateSlug(data.title);
-      const conflictingRoute = await RouteModel.findOne({ slug: newSlug, _id: { $ne: id } }).lean();
-
-      if (conflictingRoute) {
-        throw new Error(`Ya existe otra ruta con el título "${data.title}"`);
+      let newSlug    = generateSlug(data.title);
+      let counter    = 1;
+      while (await RouteModel.findOne({ slug: newSlug, _id: { $ne: id } }).lean()) {
+        newSlug = `${generateSlug(data.title)}-${counter++}`;
       }
-
       (updatePayload as Record<string, unknown>)['slug'] = newSlug;
     }
 
