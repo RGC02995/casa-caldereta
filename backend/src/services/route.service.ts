@@ -105,7 +105,7 @@ class RouteService {
     const doc = await RouteModel.findByIdAndUpdate(
       id,
       { $set: updatePayload },
-      { new: true, runValidators: true },
+      { returnDocument: 'after', runValidators: true },
     ).lean<IRouteDocument>();
 
     return doc ? withId(doc) : null;
@@ -118,7 +118,7 @@ class RouteService {
     const doc = await RouteModel.findByIdAndUpdate(
       id,
       { $set: { isPublished: !current.isPublished } },
-      { new: true, runValidators: true },
+      { returnDocument: 'after', runValidators: true },
     ).lean<IRouteDocument>();
 
     return doc ? withId(doc) : null;

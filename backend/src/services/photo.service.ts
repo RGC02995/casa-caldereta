@@ -57,7 +57,7 @@ class PhotoService {
     const doc = await PhotoModel.findByIdAndUpdate(
       id,
       { order },
-      { new: true, runValidators: true },
+      { returnDocument: 'after', runValidators: true },
     ).lean<IPhotoDocument>();
     return doc ? withId(doc) : null;
   }

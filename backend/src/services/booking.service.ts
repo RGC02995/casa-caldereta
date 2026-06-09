@@ -63,7 +63,7 @@ class BookingService {
     const doc = await BookingModel.findByIdAndUpdate(
       id,
       { status },
-      { new: true, runValidators: true },
+      { returnDocument: 'after', runValidators: true },
     ).lean<IBookingDocument>();
     return doc ? withId(doc) : null;
   }
