@@ -29,11 +29,13 @@
     "typescript": "^6.0.3"
   },
   "dependencies": {
+    "@types/cookie-parser": "^1.4.10",
     "bcryptjs": "^3.0.3",
-    "express": "^5.1.0",
     "cloudinary": "^2.10.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
+    "express": "^5.1.0",
     "express-rate-limit": "^8.5.2",
     "express-validator": "^7.3.2",
     "helmet": "^8.2.0",

@@ -8,7 +8,6 @@ export interface IUser {
 
 export interface IAuthTokens {
   readonly accessToken: string;
-  readonly refreshToken: string;
 }
 
 export interface ILoginCredentials {

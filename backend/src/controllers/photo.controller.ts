@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { isValidObjectId } from 'mongoose';
 import { photoService } from '../services/photo.service';
 import { PhotoCategory } from '../models/photo.model';
 
@@ -32,20 +33,31 @@ export async function uploadPhotoHandler(req: Request, res: Response): Promise<v
     return;
   }
 
+  const parsedOrder = order !== undefined ? parseInt(order, 10) : 0;
+
   try {
     const photo = await photoService.upload({
       buffer:   req.file.buffer,
       alt:      alt.trim(),
       category: photoCategory,
-      order:    order ? parseInt(order, 10) : 0,
+      order:    isNaN(parsedOrder) ? 0 : parsedOrder,
     });
     res.status(201).json({ success: true, data: photo, message: 'Foto subida correctamente' });
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.name === 'ValidationError') {
+      res.status(400).json({ success: false, message: error.message });
+      return;
+    }
     res.status(500).json({ success: false, message: 'Error al subir la foto' });
   }
 }
 
 export async function updatePhotoOrderHandler(req: Request<{ id: string }>, res: Response): Promise<void> {
+  if (!isValidObjectId(req.params.id)) {
+    res.status(400).json({ success: false, message: 'ID no válido' });
+    return;
+  }
+
   const { order } = req.body as { order?: number };
 
   if (order === undefined || typeof order !== 'number' || order < 0) {
@@ -66,6 +78,10 @@ export async function updatePhotoOrderHandler(req: Request<{ id: string }>, res:
 }
 
 export async function deletePhotoHandler(req: Request<{ id: string }>, res: Response): Promise<void> {
+  if (!isValidObjectId(req.params.id)) {
+    res.status(400).json({ success: false, message: 'ID no válido' });
+    return;
+  }
   try {
     const deleted = await photoService.delete(req.params.id);
     if (!deleted) {

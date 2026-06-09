@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { isValidObjectId } from 'mongoose';
 import { routeService } from '../services/route.service';
 import { RouteDifficulty, RouteType, IRoutePoint } from '../models/route.model';
 
@@ -115,16 +116,16 @@ export async function createRouteHandler(req: Request, res: Response): Promise<v
     });
 
     res.status(201).json({ success: true, data: route });
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('Ya existe')) {
-      res.status(409).json({ success: false, message: error.message });
-      return;
-    }
+  } catch {
     res.status(500).json({ success: false, message: 'Error al crear la ruta' });
   }
 }
 
 export async function updateRouteHandler(req: Request<{ id: string }>, res: Response): Promise<void> {
+  if (!isValidObjectId(req.params.id)) {
+    res.status(400).json({ success: false, message: 'ID no válido' });
+    return;
+  }
   try {
     const { id } = req.params;
     const { title, description, distance, duration, difficulty, type, coverImageUrl, images, points, order } = req.body as Record<string, unknown>;
@@ -171,16 +172,16 @@ export async function updateRouteHandler(req: Request<{ id: string }>, res: Resp
     }
 
     res.status(200).json({ success: true, data: updatedRoute });
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('Ya existe')) {
-      res.status(409).json({ success: false, message: error.message });
-      return;
-    }
+  } catch {
     res.status(500).json({ success: false, message: 'Error al actualizar la ruta' });
   }
 }
 
 export async function toggleRoutePublishedHandler(req: Request<{ id: string }>, res: Response): Promise<void> {
+  if (!isValidObjectId(req.params.id)) {
+    res.status(400).json({ success: false, message: 'ID no válido' });
+    return;
+  }
   try {
     const { id } = req.params;
     const updatedRoute = await routeService.togglePublished(id);
@@ -197,6 +198,10 @@ export async function toggleRoutePublishedHandler(req: Request<{ id: string }>, 
 }
 
 export async function deleteRouteHandler(req: Request<{ id: string }>, res: Response): Promise<void> {
+  if (!isValidObjectId(req.params.id)) {
+    res.status(400).json({ success: false, message: 'ID no válido' });
+    return;
+  }
   try {
     const { id } = req.params;
     const deleted = await routeService.delete(id);

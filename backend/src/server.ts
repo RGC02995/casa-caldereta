@@ -2,6 +2,7 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
 import { env } from './config/environment';
 import { connectDatabase } from './config/database';
 import { globalRateLimiter } from './middleware/rate-limit.middleware';
@@ -12,7 +13,7 @@ const app = express();
 app.use(helmet());
 
 app.use(cors({
-  origin: env.nodeEnv === 'production' ? env.corsOriginProd : env.corsOriginDev,
+  origin:      env.nodeEnv === 'production' ? env.corsOriginProd : env.corsOriginDev,
   credentials: true,
 }));
 
@@ -21,6 +22,7 @@ if (env.nodeEnv !== 'production') {
 }
 
 app.use(express.json({ limit: '10kb' }));
+app.use(cookieParser());
 app.use(globalRateLimiter);
 
 app.use(`/api/${env.apiVersion}`, apiRouter);

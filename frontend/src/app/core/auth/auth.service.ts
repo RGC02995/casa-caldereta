@@ -7,8 +7,7 @@ import { IUser, IAuthTokens, ILoginCredentials, UserRole } from '../models/user.
 import { ApiResponse } from '../models/api-response.model';
 import { LoggerService } from '../services/logger.service';
 
-const ACCESS_TOKEN_KEY  = 'cc_access_token';
-const REFRESH_TOKEN_KEY = 'cc_refresh_token';
+const ACCESS_TOKEN_KEY = 'cc_access_token';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -29,7 +28,7 @@ export class AuthService {
 
   login(credentials: ILoginCredentials): Observable<ApiResponse<IAuthTokens>> {
     return this.http
-      .post<ApiResponse<IAuthTokens>>(`${this.apiUrl}/auth/login`, credentials)
+      .post<ApiResponse<IAuthTokens>>(`${this.apiUrl}/auth/login`, credentials, { withCredentials: true })
       .pipe(tap(response => {
         if (response.success) {
           this.storeTokens(response.data);
@@ -41,28 +40,31 @@ export class AuthService {
   }
 
   logout(): void {
-    const refreshToken = this.getRefreshToken();
-    if (refreshToken) {
-      this.http.post(`${this.apiUrl}/auth/logout`, { refreshToken }).subscribe();
-    }
-    this.clearTokens();
-    this._currentUser.set(null);
+    this.http
+      .post(`${this.apiUrl}/auth/logout`, {}, { withCredentials: true })
+      .subscribe();
+    this.clearSession();
     void this.router.navigate(['/admin/login']);
   }
 
-  getAccessToken():  string | null { return sessionStorage.getItem(ACCESS_TOKEN_KEY); }
-  getRefreshToken(): string | null { return localStorage.getItem(REFRESH_TOKEN_KEY); }
+  getAccessToken(): string | null { return sessionStorage.getItem(ACCESS_TOKEN_KEY); }
 
   refreshTokens(): Observable<ApiResponse<IAuthTokens>> {
     return this.http
-      .post<ApiResponse<IAuthTokens>>(`${this.apiUrl}/auth/refresh`, { refreshToken: this.getRefreshToken() })
-      .pipe(tap(r => { if (r.success) this.storeTokens(r.data); }));
+      .post<ApiResponse<IAuthTokens>>(`${this.apiUrl}/auth/refresh`, {}, { withCredentials: true })
+      .pipe(tap(response => {
+        if (response.success) {
+          this.storeTokens(response.data);
+          const user = this.decodeUser(response.data.accessToken);
+          this._currentUser.set(user);
+        }
+      }));
   }
 
   private restoreSession(): void {
     const token = this.getAccessToken();
     if (!token) return;
-    if (this.isTokenExpired(token)) { this.clearTokens(); return; }
+    if (this.isTokenExpired(token)) { this.clearSession(); return; }
     const user = this.decodeUser(token);
     if (user) this._currentUser.set(user);
   }
@@ -78,7 +80,7 @@ export class AuthService {
     }
   }
 
-  private isTokenExpired(token: string): boolean {
+  isTokenExpired(token: string): boolean {
     try {
       const part = token.split('.')[1];
       if (!part) return true;
@@ -92,11 +94,10 @@ export class AuthService {
 
   private storeTokens(tokens: IAuthTokens): void {
     sessionStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
-    localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
   }
 
-  private clearTokens(): void {
+  clearSession(): void {
     sessionStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    this._currentUser.set(null);
   }
 }

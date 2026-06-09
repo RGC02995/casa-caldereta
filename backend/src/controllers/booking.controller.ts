@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { isValidObjectId } from 'mongoose';
 import { bookingService, ICreateBookingData } from '../services/booking.service';
 import { BookingStatus } from '../models/booking.model';
 
@@ -23,6 +24,10 @@ export async function getUpcomingBookingsHandler(_req: Request, res: Response): 
 }
 
 export async function getBookingByIdHandler(req: Request<{ id: string }>, res: Response): Promise<void> {
+  if (!isValidObjectId(req.params.id)) {
+    res.status(400).json({ success: false, message: 'ID no válido' });
+    return;
+  }
   try {
     const booking = await bookingService.getById(req.params.id);
     if (!booking) {
@@ -55,15 +60,22 @@ export async function createBookingHandler(req: Request, res: Response): Promise
     const booking = await bookingService.create(bookingData);
     res.status(201).json({ success: true, data: booking, message: 'Reserva creada correctamente' });
   } catch (error) {
-    if (error instanceof Error && (error.message.includes('fecha') || error.message.includes('válid'))) {
-      res.status(400).json({ success: false, message: error.message });
-      return;
+    if (error instanceof Error) {
+      if (error.name === 'ValidationError' || error.message.includes('fecha') || error.message.includes('válid')) {
+        res.status(400).json({ success: false, message: error.message });
+        return;
+      }
     }
     res.status(500).json({ success: false, message: 'Error al crear la reserva' });
   }
 }
 
 export async function updateBookingStatusHandler(req: Request<{ id: string }>, res: Response): Promise<void> {
+  if (!isValidObjectId(req.params.id)) {
+    res.status(400).json({ success: false, message: 'ID no válido' });
+    return;
+  }
+
   const { status } = req.body as { status?: BookingStatus };
 
   if (!status || !VALID_STATUSES.includes(status)) {
@@ -84,6 +96,10 @@ export async function updateBookingStatusHandler(req: Request<{ id: string }>, r
 }
 
 export async function deleteBookingHandler(req: Request<{ id: string }>, res: Response): Promise<void> {
+  if (!isValidObjectId(req.params.id)) {
+    res.status(400).json({ success: false, message: 'ID no válido' });
+    return;
+  }
   try {
     const deleted = await bookingService.delete(req.params.id);
     if (!deleted) {
