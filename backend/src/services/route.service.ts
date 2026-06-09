@@ -1,4 +1,5 @@
 import { RouteModel, IRouteDocument, RouteDifficulty, RouteType, IRoutePoint } from '../models/route.model';
+import { withId } from '../utils/mongoose.util';
 
 export interface ICreateRouteData {
   title:         string;
@@ -40,19 +41,23 @@ function generateSlug(title: string): string {
 
 class RouteService {
   async getAll(): Promise<IRouteDocument[]> {
-    return RouteModel.find().sort({ order: 1, createdAt: -1 }).lean<IRouteDocument[]>({ virtuals: true });
+    const docs = await RouteModel.find().sort({ order: 1, createdAt: -1 }).lean<IRouteDocument[]>();
+    return docs.map(withId);
   }
 
   async getPublished(): Promise<IRouteDocument[]> {
-    return RouteModel.find({ isPublished: true }).sort({ order: 1 }).lean<IRouteDocument[]>({ virtuals: true });
+    const docs = await RouteModel.find({ isPublished: true }).sort({ order: 1 }).lean<IRouteDocument[]>();
+    return docs.map(withId);
   }
 
   async getBySlug(slug: string): Promise<IRouteDocument | null> {
-    return RouteModel.findOne({ slug }).lean<IRouteDocument>({ virtuals: true });
+    const doc = await RouteModel.findOne({ slug }).lean<IRouteDocument>();
+    return doc ? withId(doc) : null;
   }
 
   async getById(id: string): Promise<IRouteDocument | null> {
-    return RouteModel.findById(id).lean<IRouteDocument>({ virtuals: true });
+    const doc = await RouteModel.findById(id).lean<IRouteDocument>();
+    return doc ? withId(doc) : null;
   }
 
   async create(data: ICreateRouteData): Promise<IRouteDocument> {
@@ -79,7 +84,8 @@ class RouteService {
     });
 
     const savedDoc = await routeDocument.save();
-    return (await RouteModel.findById(savedDoc._id).lean<IRouteDocument>({ virtuals: true }))!;
+    const result   = await RouteModel.findById(savedDoc._id).lean<IRouteDocument>();
+    return withId(result!);
   }
 
   async update(id: string, data: IUpdateRouteData): Promise<IRouteDocument | null> {
@@ -96,27 +102,31 @@ class RouteService {
       (updatePayload as Record<string, unknown>)['slug'] = newSlug;
     }
 
-    return RouteModel.findByIdAndUpdate(
+    const doc = await RouteModel.findByIdAndUpdate(
       id,
       { $set: updatePayload },
       { new: true, runValidators: true },
-    ).lean<IRouteDocument>({ virtuals: true });
+    ).lean<IRouteDocument>();
+
+    return doc ? withId(doc) : null;
   }
 
   async togglePublished(id: string): Promise<IRouteDocument | null> {
-    const currentRoute = await RouteModel.findById(id).lean<IRouteDocument>({ virtuals: true });
-    if (!currentRoute) return null;
+    const current = await RouteModel.findById(id).lean<IRouteDocument>();
+    if (!current) return null;
 
-    return RouteModel.findByIdAndUpdate(
+    const doc = await RouteModel.findByIdAndUpdate(
       id,
-      { $set: { isPublished: !currentRoute.isPublished } },
+      { $set: { isPublished: !current.isPublished } },
       { new: true, runValidators: true },
-    ).lean<IRouteDocument>({ virtuals: true });
+    ).lean<IRouteDocument>();
+
+    return doc ? withId(doc) : null;
   }
 
   async delete(id: string): Promise<boolean> {
-    const deletedRoute = await RouteModel.findByIdAndDelete(id).lean();
-    return deletedRoute !== null;
+    const result = await RouteModel.findByIdAndDelete(id).lean();
+    return result !== null;
   }
 }
 

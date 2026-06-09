@@ -1,4 +1,5 @@
 import { BookingModel, BookingStatus, IBookingDocument } from '../models/booking.model';
+import { withId } from '../utils/mongoose.util';
 
 export interface ICreateBookingData {
   checkIn:    string;
@@ -17,23 +18,27 @@ export interface IUpdateStatusData {
 
 class BookingService {
   async getAll(): Promise<IBookingDocument[]> {
-    return BookingModel.find().sort({ checkIn: -1 }).lean<IBookingDocument[]>({ virtuals: true });
+    const docs = await BookingModel.find().sort({ checkIn: -1 }).lean<IBookingDocument[]>();
+    return docs.map(withId);
   }
 
   async getUpcoming(): Promise<IBookingDocument[]> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    return BookingModel.find({
+    const docs = await BookingModel.find({
       checkIn: { $gte: today },
       status:  { $in: ['pending', 'confirmed'] },
     })
       .sort({ checkIn: 1 })
-      .lean<IBookingDocument[]>({ virtuals: true });
+      .lean<IBookingDocument[]>();
+
+    return docs.map(withId);
   }
 
   async getById(id: string): Promise<IBookingDocument | null> {
-    return BookingModel.findById(id).lean<IBookingDocument>({ virtuals: true });
+    const doc = await BookingModel.findById(id).lean<IBookingDocument>();
+    return doc ? withId(doc) : null;
   }
 
   async create(data: ICreateBookingData): Promise<IBookingDocument> {
@@ -48,23 +53,19 @@ class BookingService {
       throw new Error('La fecha de salida debe ser posterior a la de entrada');
     }
 
-    const booking = new BookingModel({
-      ...data,
-      checkIn,
-      checkOut,
-      status: 'pending',
-    });
-
+    const booking  = new BookingModel({ ...data, checkIn, checkOut, status: 'pending' });
     const savedDoc = await booking.save();
-    return (await BookingModel.findById(savedDoc._id).lean<IBookingDocument>({ virtuals: true }))!;
+    const result   = await BookingModel.findById(savedDoc._id).lean<IBookingDocument>();
+    return withId(result!);
   }
 
   async updateStatus(id: string, status: BookingStatus): Promise<IBookingDocument | null> {
-    return BookingModel.findByIdAndUpdate(
+    const doc = await BookingModel.findByIdAndUpdate(
       id,
       { status },
       { new: true, runValidators: true },
-    ).lean<IBookingDocument>({ virtuals: true });
+    ).lean<IBookingDocument>();
+    return doc ? withId(doc) : null;
   }
 
   async delete(id: string): Promise<boolean> {

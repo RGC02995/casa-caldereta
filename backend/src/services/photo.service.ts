@@ -1,6 +1,7 @@
 import { UploadApiResponse } from 'cloudinary';
 import { cloudinary } from '../config/cloudinary';
 import { PhotoModel, PhotoCategory, IPhotoDocument } from '../models/photo.model';
+import { withId } from '../utils/mongoose.util';
 
 export interface IUploadPhotoData {
   buffer:   Buffer;
@@ -11,11 +12,13 @@ export interface IUploadPhotoData {
 
 class PhotoService {
   async getAll(): Promise<IPhotoDocument[]> {
-    return PhotoModel.find().sort({ category: 1, order: 1 }).lean<IPhotoDocument[]>({ virtuals: true });
+    const docs = await PhotoModel.find().sort({ category: 1, order: 1 }).lean<IPhotoDocument[]>();
+    return docs.map(withId);
   }
 
   async getByCategory(category: PhotoCategory): Promise<IPhotoDocument[]> {
-    return PhotoModel.find({ category }).sort({ order: 1 }).lean<IPhotoDocument[]>({ virtuals: true });
+    const docs = await PhotoModel.find({ category }).sort({ order: 1 }).lean<IPhotoDocument[]>();
+    return docs.map(withId);
   }
 
   async upload(data: IUploadPhotoData): Promise<IPhotoDocument> {
@@ -36,7 +39,7 @@ class PhotoService {
       ).end(data.buffer);
     });
 
-    const photo = new PhotoModel({
+    const photo    = new PhotoModel({
       url:      uploadResult.secure_url,
       publicId: uploadResult.public_id,
       alt:      data.alt,
@@ -45,21 +48,22 @@ class PhotoService {
       width:    uploadResult.width,
       height:   uploadResult.height,
     });
-
     const savedDoc = await photo.save();
-    return (await PhotoModel.findById(savedDoc._id).lean<IPhotoDocument>({ virtuals: true }))!;
+    const result   = await PhotoModel.findById(savedDoc._id).lean<IPhotoDocument>();
+    return withId(result!);
   }
 
   async updateOrder(id: string, order: number): Promise<IPhotoDocument | null> {
-    return PhotoModel.findByIdAndUpdate(
+    const doc = await PhotoModel.findByIdAndUpdate(
       id,
       { order },
       { new: true, runValidators: true },
-    ).lean<IPhotoDocument>({ virtuals: true });
+    ).lean<IPhotoDocument>();
+    return doc ? withId(doc) : null;
   }
 
   async delete(id: string): Promise<boolean> {
-    const photo = await PhotoModel.findById(id).lean<IPhotoDocument>({ virtuals: true });
+    const photo = await PhotoModel.findById(id).lean<IPhotoDocument>();
     if (!photo) return false;
 
     await cloudinary.uploader.destroy(photo.publicId);
