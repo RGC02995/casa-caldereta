@@ -98,8 +98,9 @@ export class AdminGalleryComponent {
     this.actionError.set('');
 
     this.photoService.upload(file, alt, this.uploadCategory()).subscribe({
-      next: response => {
-        this.allPhotos.update(photos => [response.data, ...photos]);
+      next: () => {
+        this.activeFilter.set('all');
+        this.loadPhotos();
         this.resetUploadForm();
         this.isUploading.set(false);
       },
