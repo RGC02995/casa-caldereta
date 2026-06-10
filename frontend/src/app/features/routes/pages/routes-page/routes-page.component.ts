@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { SeoService } from '../../../../core/services/seo.service';
 
 type Difficulty = 'Fácil' | 'Moderada' | 'Difícil';
 
@@ -20,6 +21,15 @@ interface TouristRoute {
   styleUrl: './routes-page.component.scss',
 })
 export class RoutesPageComponent {
+  constructor() {
+    inject(SeoService).setPage({
+      title:         'Rutas y Actividades',
+      description:   'Descubre las mejores rutas de senderismo, cicloturismo y turismo cultural alrededor de Aielo de Rugat. Naturaleza, historia y gastronomía de la Vall d\'Albaida.',
+      canonicalPath: '/rutas',
+      keywords:      'rutas senderismo Valencia, Benicadell, Vall d\'Albaida, actividades rurales Valencia, turismo Aielo de Rugat',
+    });
+  }
+
   // Sustituir con datos reales cuando estén disponibles
   readonly routes: TouristRoute[] = [
     {

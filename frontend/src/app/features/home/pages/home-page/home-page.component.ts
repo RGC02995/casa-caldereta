@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { SeoService } from '../../../../core/services/seo.service';
 
 interface Highlight {
   readonly label:       string;
@@ -21,6 +22,15 @@ interface AmenityGroup {
   styleUrl: './home-page.component.scss',
 })
 export class HomePageComponent {
+  constructor() {
+    inject(SeoService).setPage({
+      title:         'Alojamiento Rural de Lujo en Valencia',
+      description:   'Casa Caldereta en Aielo de Rugat, Valencia. 180m² de uso exclusivo con jacuzzi, terraza privada, barbacoa y vistas a la montaña. Hasta 6 personas. Mascotas bienvenidas.',
+      canonicalPath: '/',
+      keywords:      'casa rural Valencia, alojamiento exclusivo Aielo de Rugat, jacuzzi rural Valencia, casa vacaciones montaña Valencia',
+    });
+  }
+
   readonly highlights: Highlight[] = [
     {
       label: '01',

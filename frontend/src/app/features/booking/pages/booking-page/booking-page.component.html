@@ -193,16 +193,21 @@
           </div>
 
           <div class="booking-form__field">
-            <label for="booking-phone" class="booking-form__label">Teléfono</label>
+            <label for="booking-phone" class="booking-form__label">Teléfono *</label>
             <input
               id="booking-phone"
               type="tel"
               class="booking-form__input"
+              [class.booking-form__input--error]="!!phoneError()"
               autocomplete="tel"
               placeholder="+34 600 000 000"
               [value]="phoneValue()"
               (input)="phoneValue.set($any($event.target).value)"
+              (blur)="phoneTouched.set(true)"
             />
+            @if (phoneError()) {
+              <span class="booking-form__error" role="alert">{{ phoneError() }}</span>
+            }
           </div>
 
           <div class="booking-form__field">

@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, ElementRef, viewChild } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { BehaviorSubject, switchMap, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
 import { PhotoService } from '../../../../core/services/photo.service';
 import { IPhoto, PhotoCategory } from '../../../../core/models/photo.model';
 
@@ -27,16 +28,30 @@ export class AdminGalleryComponent {
 
   readonly fileInputRef = viewChild.required<ElementRef<HTMLInputElement>>('fileInput');
 
-  readonly loadError     = signal('');
-  readonly actionError   = signal('');
+  readonly loadError      = signal('');
+  readonly actionError    = signal('');
   readonly uploadAlt      = signal('');
   readonly uploadCategory = signal<PhotoCategory>('otros');
   readonly isUploading    = signal(false);
   readonly processingId   = signal<string | null>(null);
   readonly activeFilter   = signal<CategoryFilter>('all');
-  readonly allPhotos      = signal<IPhoto[]>([]);
   readonly selectedFile   = signal<File | null>(null);
   readonly previewUrl     = signal<string | null>(null);
+
+  private readonly refresh$ = new BehaviorSubject<void>(undefined);
+
+  readonly allPhotos = toSignal(
+    this.refresh$.pipe(
+      switchMap(() => this.photoService.getAll().pipe(
+        map(response => response.data),
+        catchError(() => {
+          this.loadError.set('No se pudieron cargar las fotos.');
+          return of([] as IPhoto[]);
+        }),
+      )),
+    ),
+    { initialValue: [] as IPhoto[] },
+  );
 
   readonly filteredPhotos = computed(() => {
     const filter = this.activeFilter();
@@ -69,10 +84,6 @@ export class AdminGalleryComponent {
     return CATEGORY_LABELS[category];
   }
 
-  constructor() {
-    this.loadPhotos();
-  }
-
   onFileSelected(event: Event): void {
     const inputElement = event.target as HTMLInputElement;
     const file = inputElement.files?.[0] ?? null;
@@ -99,10 +110,10 @@ export class AdminGalleryComponent {
 
     this.photoService.upload(file, alt, this.uploadCategory()).subscribe({
       next: () => {
-        this.activeFilter.set('all');
-        this.loadPhotos();
-        this.resetUploadForm();
         this.isUploading.set(false);
+        this.activeFilter.set('all');
+        this.resetUploadForm();
+        this.refresh$.next();
       },
       error: () => {
         this.actionError.set('No se pudo subir la foto. Inténtalo de nuevo.');
@@ -120,24 +131,14 @@ export class AdminGalleryComponent {
 
     this.photoService.delete(photoId).subscribe({
       next: () => {
-        this.allPhotos.update(photos => photos.filter(photo => photo.id !== photoId));
         this.processingId.set(null);
+        this.refresh$.next();
       },
       error: () => {
         this.actionError.set('No se pudo eliminar la foto. Inténtalo de nuevo.');
         this.processingId.set(null);
       },
     });
-  }
-
-  private loadPhotos(): void {
-    this.photoService.getAll().pipe(
-      map(response => response.data),
-      catchError(() => {
-        this.loadError.set('No se pudieron cargar las fotos.');
-        return of([] as IPhoto[]);
-      }),
-    ).subscribe(photos => this.allPhotos.set(photos));
   }
 
   private resetUploadForm(): void {

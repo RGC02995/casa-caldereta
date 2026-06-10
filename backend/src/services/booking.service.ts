@@ -10,7 +10,7 @@ export interface ICreateBookingData {
   checkOut:    string;
   guestName:   string;
   guestEmail:  string;
-  guestPhone?: string | undefined;
+  guestPhone: string;
   guests:      number;
   notes?:      string | undefined;
 }
@@ -69,6 +69,16 @@ class BookingService {
       throw new Error('La fecha de salida debe ser posterior a la de entrada');
     }
 
+    const conflict = await BookingModel.findOne({
+      status:  { $in: ['pending', 'confirmed'] },
+      checkIn: { $lt: checkOut },
+      checkOut: { $gt: checkIn },
+    });
+
+    if (conflict) {
+      throw Object.assign(new Error('Las fechas seleccionadas ya no están disponibles'), { code: 'DATE_CONFLICT' });
+    }
+
     const rules      = await pricingRuleService.getOverlapping(checkIn, checkOut);
     const totalPrice = this.calculateTotalPrice(checkIn, checkOut, rules);
 
@@ -77,13 +87,13 @@ class BookingService {
       checkOut,
       guestName:  data.guestName,
       guestEmail: data.guestEmail,
+      guestPhone: data.guestPhone,
       guests:     data.guests,
       totalPrice,
       status:     'pending',
     };
 
-    if (data.guestPhone) bookingData['guestPhone'] = data.guestPhone;
-    if (data.notes)      bookingData['notes']      = data.notes;
+    if (data.notes) bookingData['notes'] = data.notes;
 
     const booking  = new BookingModel(bookingData);
     const savedDoc = await booking.save();

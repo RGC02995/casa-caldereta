@@ -7,7 +7,7 @@ export interface IBookingDocument extends Document {
   checkOut:   Date;
   guestName:  string;
   guestEmail: string;
-  guestPhone?: string;
+  guestPhone: string;
   guests:      number;
   totalPrice: number;
   status:     BookingStatus;
@@ -41,7 +41,7 @@ const bookingSchema = new Schema<IBookingDocument>(
     },
     guestPhone: {
       type:      String,
-      required:  false,
+      required:  true,
       trim:      true,
       maxlength: 20,
     },

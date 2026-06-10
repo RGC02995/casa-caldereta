@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { BehaviorSubject, switchMap, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
 import { RouteService } from '../../../../core/services/route.service';
 import { IRoute, IRoutePoint, RouteDifficulty, RouteType } from '../../../../core/models/route.model';
 
@@ -61,10 +62,24 @@ export class AdminRoutesComponent {
   readonly actionError  = signal('');
   readonly isSubmitting = signal(false);
   readonly processingId = signal<string | null>(null);
-  readonly allRoutes    = signal<IRoute[]>([]);
   readonly formMode     = signal<FormMode>('hidden');
   readonly editingId    = signal<string | null>(null);
   readonly formData     = signal<IRouteForm>({ ...EMPTY_FORM });
+
+  private readonly refresh$ = new BehaviorSubject<void>(undefined);
+
+  readonly allRoutes = toSignal(
+    this.refresh$.pipe(
+      switchMap(() => this.routeService.getAll().pipe(
+        map(response => response.data),
+        catchError(() => {
+          this.loadError.set('No se pudieron cargar las rutas.');
+          return of([] as IRoute[]);
+        }),
+      )),
+    ),
+    { initialValue: [] as IRoute[] },
+  );
 
   readonly sortedRoutes = computed(() =>
     [...this.allRoutes()].sort((routeA, routeB) => routeA.order - routeB.order),
@@ -89,10 +104,6 @@ export class AdminRoutesComponent {
 
   getTypeLabel(type: RouteType): string {
     return TYPE_LABELS[type];
-  }
-
-  constructor() {
-    this.loadRoutes();
   }
 
   openCreateForm(): void {
@@ -200,10 +211,10 @@ export class AdminRoutesComponent {
 
     if (this.formMode() === 'create') {
       this.routeService.create({ ...routePayload, isPublished: false }).subscribe({
-        next: response => {
-          this.allRoutes.update(routes => [response.data, ...routes]);
-          this.closeForm();
+        next: () => {
           this.isSubmitting.set(false);
+          this.closeForm();
+          this.refresh$.next();
         },
         error: () => {
           this.actionError.set('No se pudo guardar la ruta. Inténtalo de nuevo.');
@@ -212,12 +223,10 @@ export class AdminRoutesComponent {
       });
     } else if (this.formMode() === 'edit' && currentEditingId) {
       this.routeService.update(currentEditingId, routePayload).subscribe({
-        next: response => {
-          this.allRoutes.update(routes =>
-            routes.map(route => route.id === currentEditingId ? response.data : route),
-          );
-          this.closeForm();
+        next: () => {
           this.isSubmitting.set(false);
+          this.closeForm();
+          this.refresh$.next();
         },
         error: () => {
           this.actionError.set('No se pudo actualizar la ruta. Inténtalo de nuevo.');
@@ -236,11 +245,9 @@ export class AdminRoutesComponent {
     this.actionError.set('');
 
     this.routeService.togglePublished(route.id).subscribe({
-      next: response => {
-        this.allRoutes.update(routes =>
-          routes.map(existingRoute => existingRoute.id === route.id ? response.data : existingRoute),
-        );
+      next: () => {
         this.processingId.set(null);
+        this.refresh$.next();
       },
       error: () => {
         this.actionError.set('No se pudo cambiar el estado de publicación.');
@@ -258,8 +265,8 @@ export class AdminRoutesComponent {
 
     this.routeService.delete(route.id).subscribe({
       next: () => {
-        this.allRoutes.update(routes => routes.filter(existingRoute => existingRoute.id !== route.id));
         this.processingId.set(null);
+        this.refresh$.next();
       },
       error: () => {
         this.actionError.set('No se pudo eliminar la ruta. Inténtalo de nuevo.');
@@ -268,13 +275,4 @@ export class AdminRoutesComponent {
     });
   }
 
-  private loadRoutes(): void {
-    this.routeService.getAll().pipe(
-      map(response => response.data),
-      catchError(() => {
-        this.loadError.set('No se pudieron cargar las rutas.');
-        return of([] as IRoute[]);
-      }),
-    ).subscribe(routes => this.allRoutes.set(routes));
-  }
 }

@@ -1,7 +1,8 @@
 import { Component, inject, signal, computed } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { DatePipe, CurrencyPipe } from '@angular/common';
+import { BehaviorSubject, switchMap, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
 import { BookingService } from '../../../../core/services/booking.service';
 import { IBooking, BookingStatus } from '../../../../core/models/booking.model';
 
@@ -32,7 +33,21 @@ export class AdminBookingsComponent {
   readonly actionError  = signal('');
   readonly activeFilter = signal<StatusFilter>('all');
   readonly processingId = signal<string | null>(null);
-  readonly allBookings  = signal<IBooking[]>([]);
+
+  private readonly refresh$ = new BehaviorSubject<void>(undefined);
+
+  readonly allBookings = toSignal(
+    this.refresh$.pipe(
+      switchMap(() => this.bookingService.getAll().pipe(
+        map(response => response.data),
+        catchError(() => {
+          this.loadError.set('No se pudieron cargar las reservas.');
+          return of([] as IBooking[]);
+        }),
+      )),
+    ),
+    { initialValue: [] as IBooking[] },
+  );
 
   readonly filteredBookings = computed(() => {
     const filter = this.activeFilter();
@@ -48,10 +63,6 @@ export class AdminBookingsComponent {
     { label: 'Completadas', value: 'completed' },
   ];
 
-  constructor() {
-    this.loadBookings();
-  }
-
   getTransitions(status: BookingStatus): IStatusTransition[] {
     return STATUS_TRANSITIONS[status];
   }
@@ -62,11 +73,9 @@ export class AdminBookingsComponent {
     this.actionError.set('');
 
     this.bookingService.updateStatus(bookingId, newStatus).subscribe({
-      next: response => {
-        this.allBookings.update(bookings =>
-          bookings.map(booking => booking.id === bookingId ? response.data : booking),
-        );
+      next: () => {
         this.processingId.set(null);
+        this.refresh$.next();
       },
       error: () => {
         this.actionError.set('No se pudo actualizar el estado. Inténtalo de nuevo.');
@@ -84,23 +93,13 @@ export class AdminBookingsComponent {
 
     this.bookingService.delete(bookingId).subscribe({
       next: () => {
-        this.allBookings.update(bookings => bookings.filter(booking => booking.id !== bookingId));
         this.processingId.set(null);
+        this.refresh$.next();
       },
       error: () => {
         this.actionError.set('No se pudo eliminar la reserva. Inténtalo de nuevo.');
         this.processingId.set(null);
       },
     });
-  }
-
-  private loadBookings(): void {
-    this.bookingService.getAll().pipe(
-      map(response => response.data),
-      catchError(() => {
-        this.loadError.set('No se pudieron cargar las reservas.');
-        return of([] as IBooking[]);
-      }),
-    ).subscribe(bookings => this.allBookings.set(bookings));
   }
 }

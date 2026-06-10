@@ -1,0 +1,289 @@
+import { Resend } from 'resend';
+import { env } from '../config/environment';
+import { IBookingDocument, BookingStatus } from '../models/booking.model';
+
+interface ISendOptions {
+  readonly to:      string;
+  readonly subject: string;
+  readonly html:    string;
+  readonly text:    string;
+}
+
+interface ITemplateData {
+  readonly booking:  IBookingDocument;
+  readonly checkIn:  string;
+  readonly checkOut: string;
+}
+
+interface IStatusTemplateData extends ITemplateData {
+  readonly newStatus: 'confirmed' | 'cancelled';
+}
+
+// ─── Utilidades de formato ────────────────────────────────────────────────────
+
+function formatDate(date: Date | string): string {
+  return new Date(date).toLocaleDateString('es-ES', {
+    weekday: 'long',
+    year:    'numeric',
+    month:   'long',
+    day:     'numeric',
+  });
+}
+
+function formatDateTime(): string {
+  return new Date().toLocaleDateString('es-ES', {
+    year:   'numeric',
+    month:  'long',
+    day:    'numeric',
+    hour:   '2-digit',
+    minute: '2-digit',
+  });
+}
+
+// ─── Bloques de HTML reutilizables ───────────────────────────────────────────
+
+function emailWrapper(title: string, bodyHtml: string): string {
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title}</title>
+</head>
+<body style="margin:0;padding:0;background:#F5F3EF;font-family:Georgia,serif;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+  <tr>
+    <td align="center" style="padding:40px 16px;">
+      <table role="presentation" width="580" style="max-width:580px;width:100%;background:#FFF;border-radius:4px;">
+        <tr>
+          <td style="background:#2C2C2C;padding:32px 40px;text-align:center;">
+            <p style="margin:0;color:#C9A96E;font-size:10px;letter-spacing:4px;font-family:Arial,sans-serif;text-transform:uppercase;">Vivienda Tur&#237;stica</p>
+            <h1 style="margin:8px 0 0;color:#FFF;font-size:26px;font-weight:400;letter-spacing:2px;">Casa Caldereta</h1>
+            <p style="margin:6px 0 0;color:#888;font-size:10px;letter-spacing:2px;font-family:Arial,sans-serif;">Aielo de Rugat &middot; Valencia</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 40px;">
+            ${bodyHtml}
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#F5F3EF;border-top:1px solid #E8E4DC;padding:20px 40px;">
+            <p style="margin:0;color:#AAA;font-size:10px;text-align:center;line-height:1.8;font-family:Arial,sans-serif;">
+              Casa Caldereta &middot; Aielo de Rugat, Valencia<br>
+              Licencia tur&#237;stica CV-VUT0058371-V<br>
+              Mensaje generado autom&#225;ticamente &mdash; no responder a este correo.
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>`;
+}
+
+function detailsTable({ booking, checkIn, checkOut }: ITemplateData): string {
+  const guests = `${booking.guests} persona${booking.guests === 1 ? '' : 's'}`;
+  const price  = `${booking.totalPrice.toLocaleString('es-ES')} &#8364;`;
+  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:20px;border-top:1px solid #F0EDE8;">
+    <tr>
+      <td style="padding:10px 0;border-bottom:1px solid #F0EDE8;font-family:Arial,sans-serif;font-size:12px;color:#999;width:40%;">Check-in</td>
+      <td style="padding:10px 0;border-bottom:1px solid #F0EDE8;font-family:Arial,sans-serif;font-size:13px;color:#2C2C2C;">${checkIn}</td>
+    </tr>
+    <tr>
+      <td style="padding:10px 0;border-bottom:1px solid #F0EDE8;font-family:Arial,sans-serif;font-size:12px;color:#999;">Check-out</td>
+      <td style="padding:10px 0;border-bottom:1px solid #F0EDE8;font-family:Arial,sans-serif;font-size:13px;color:#2C2C2C;">${checkOut}</td>
+    </tr>
+    <tr>
+      <td style="padding:10px 0;border-bottom:1px solid #F0EDE8;font-family:Arial,sans-serif;font-size:12px;color:#999;">Hu&#233;spedes</td>
+      <td style="padding:10px 0;border-bottom:1px solid #F0EDE8;font-family:Arial,sans-serif;font-size:13px;color:#2C2C2C;">${guests}</td>
+    </tr>
+    <tr>
+      <td style="padding:10px 0;font-family:Arial,sans-serif;font-size:12px;color:#999;">Importe estimado</td>
+      <td style="padding:10px 0;font-family:Arial,sans-serif;font-size:15px;font-weight:700;color:#C9A96E;">${price}</td>
+    </tr>
+  </table>`;
+}
+
+// ─── Templates de email ──────────────────────────────────────────────────────
+
+function ownerNewBookingHtml(data: ITemplateData): string {
+  const { booking } = data;
+  const notesBlock  = booking.notes
+    ? `<div style="margin-top:20px;padding:16px;background:#F9F7F4;border-left:3px solid #C9A96E;">
+        <p style="margin:0;font-family:Arial,sans-serif;font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;">Notas del hu&#233;sped</p>
+        <p style="margin:8px 0 0;font-family:Arial,sans-serif;font-size:13px;color:#555;">${booking.notes}</p>
+       </div>`
+    : '';
+
+  return emailWrapper(
+    'Nueva solicitud de reserva',
+    `<h2 style="margin:0 0 4px;font-size:20px;font-weight:400;color:#2C2C2C;">Nueva solicitud de reserva</h2>
+    <p style="margin:0 0 24px;font-size:12px;color:#999;font-family:Arial,sans-serif;">Recibida el ${formatDateTime()}</p>
+    <p style="margin:0 0 4px;font-size:16px;color:#2C2C2C;"><strong>${booking.guestName}</strong></p>
+    <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:13px;color:#666;">
+      <a href="mailto:${booking.guestEmail}" style="color:#C9A96E;text-decoration:none;">${booking.guestEmail}</a>
+    </p>
+    <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:13px;color:#666;">${booking.guestPhone}</p>
+    ${detailsTable(data)}
+    ${notesBlock}`,
+  );
+}
+
+function guestBookingReceivedHtml(data: ITemplateData): string {
+  const { booking } = data;
+  return emailWrapper(
+    'Hemos recibido tu solicitud',
+    `<h2 style="margin:0 0 16px;font-size:20px;font-weight:400;color:#2C2C2C;">Hola, ${booking.guestName}</h2>
+    <p style="margin:0 0 20px;font-size:14px;color:#555;font-family:Arial,sans-serif;line-height:1.7;">
+      Hemos recibido correctamente tu solicitud de reserva en <strong>Casa Caldereta</strong>.
+      Revisaremos la disponibilidad y nos pondremos en contacto contigo en las pr&#243;ximas horas para confirmar.
+    </p>
+    ${detailsTable(data)}
+    <p style="margin:28px 0 0;font-size:13px;color:#888;font-family:Arial,sans-serif;line-height:1.6;">
+      Si tienes alguna pregunta o necesitas modificar la solicitud, no dudes en contactarnos.<br>
+      &#161;Gracias por elegir Casa Caldereta!
+    </p>`,
+  );
+}
+
+function guestStatusUpdateHtml(data: IStatusTemplateData): string {
+  const { booking, newStatus } = data;
+
+  if (newStatus === 'confirmed') {
+    return emailWrapper(
+      'Reserva confirmada',
+      `<h2 style="margin:0 0 16px;font-size:20px;font-weight:400;color:#2C2C2C;">&#10003; Reserva confirmada</h2>
+      <p style="margin:0 0 20px;font-size:14px;color:#555;font-family:Arial,sans-serif;line-height:1.7;">
+        Hola, <strong>${booking.guestName}</strong>. Nos complace confirmarte que tu reserva en
+        <strong>Casa Caldereta</strong> est&#225; confirmada. &#161;Te esperamos con los brazos abiertos!
+      </p>
+      ${detailsTable(data)}
+      <div style="margin-top:28px;padding:20px;background:#F9F7F4;border-top:2px solid #C9A96E;text-align:center;">
+        <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#555;line-height:1.6;">
+          Casa Caldereta &middot; Aielo de Rugat, Valencia<br>
+          Si tienes alguna duda, no dudes en contactarnos.
+        </p>
+      </div>`,
+    );
+  }
+
+  return emailWrapper(
+    'Reserva cancelada',
+    `<h2 style="margin:0 0 16px;font-size:20px;font-weight:400;color:#2C2C2C;">Reserva cancelada</h2>
+    <p style="margin:0 0 20px;font-size:14px;color:#555;font-family:Arial,sans-serif;line-height:1.7;">
+      Hola, <strong>${booking.guestName}</strong>. Lamentamos informarte de que tu reserva en
+      <strong>Casa Caldereta</strong> ha sido cancelada. Si tienes alguna pregunta al respecto,
+      por favor con&#769;tactanos.
+    </p>
+    ${detailsTable(data)}
+    <p style="margin:20px 0 0;font-size:13px;color:#888;font-family:Arial,sans-serif;line-height:1.6;">
+      Esperamos tener la oportunidad de recibirte en Casa Caldereta en otra ocasi&#243;n.
+    </p>`,
+  );
+}
+
+// ─── Servicio ─────────────────────────────────────────────────────────────────
+
+class EmailService {
+  private readonly client: Resend | null;
+
+  constructor() {
+    this.client = env.resendApiKey ? new Resend(env.resendApiKey) : null;
+
+    if (!this.client) {
+      console.info('[email] RESEND_API_KEY no configurada — notificaciones por email desactivadas');
+    }
+  }
+
+  async notifyOwnerNewBooking(booking: IBookingDocument): Promise<void> {
+    if (!this.client || !env.ownerEmail) return;
+
+    const checkIn  = formatDate(booking.checkIn);
+    const checkOut = formatDate(booking.checkOut);
+
+    await this.send({
+      to:      env.ownerEmail,
+      subject: `Nueva solicitud de reserva — ${booking.guestName}`,
+      html:    ownerNewBookingHtml({ booking, checkIn, checkOut }),
+      text:    [
+        `Nueva reserva de ${booking.guestName}.`,
+        `Email: ${booking.guestEmail} | Tel: ${booking.guestPhone}`,
+        `Check-in: ${checkIn}`,
+        `Check-out: ${checkOut}`,
+        `Huéspedes: ${booking.guests} | Total: ${booking.totalPrice} €`,
+        booking.notes ? `Notas: ${booking.notes}` : '',
+      ].filter(Boolean).join('\n'),
+    });
+  }
+
+  async sendGuestBookingReceived(booking: IBookingDocument): Promise<void> {
+    if (!this.client) return;
+
+    const checkIn  = formatDate(booking.checkIn);
+    const checkOut = formatDate(booking.checkOut);
+    const guests   = `${booking.guests} persona${booking.guests === 1 ? '' : 's'}`;
+
+    await this.send({
+      to:      booking.guestEmail,
+      subject: 'Hemos recibido tu solicitud de reserva — Casa Caldereta',
+      html:    guestBookingReceivedHtml({ booking, checkIn, checkOut }),
+      text:    `Hola ${booking.guestName}, hemos recibido tu solicitud para Casa Caldereta del ${checkIn} al ${checkOut} (${guests}). Importe estimado: ${booking.totalPrice} €. Nos pondremos en contacto contigo en breve.`,
+    });
+  }
+
+  async sendGuestStatusUpdate(booking: IBookingDocument, newStatus: BookingStatus): Promise<void> {
+    if (!this.client) return;
+    if (newStatus !== 'confirmed' && newStatus !== 'cancelled') return;
+
+    const checkIn  = formatDate(booking.checkIn);
+    const checkOut = formatDate(booking.checkOut);
+
+    const subject = newStatus === 'confirmed'
+      ? 'Tu reserva en Casa Caldereta está confirmada'
+      : 'Tu reserva en Casa Caldereta ha sido cancelada';
+
+    const text = newStatus === 'confirmed'
+      ? `Hola ${booking.guestName}, tu reserva del ${checkIn} al ${checkOut} está confirmada. ¡Te esperamos!`
+      : `Hola ${booking.guestName}, tu reserva del ${checkIn} al ${checkOut} ha sido cancelada. Contáctanos si tienes alguna duda.`;
+
+    await this.send({
+      to:      booking.guestEmail,
+      subject,
+      html:    guestStatusUpdateHtml({ booking, checkIn, checkOut, newStatus }),
+      text,
+    });
+  }
+
+  private async send(options: ISendOptions): Promise<void> {
+    if (!this.client) return;
+
+    try {
+      const recipient = env.resendOverrideTo || options.to;
+      const subject   = env.resendOverrideTo && env.resendOverrideTo !== options.to
+        ? `[→ ${options.to}] ${options.subject}`
+        : options.subject;
+
+      const { error } = await this.client.emails.send({
+        from:    env.resendFromEmail,
+        to:      [recipient],
+        subject,
+        html:    options.html,
+        text:    options.text,
+      });
+
+      if (error) {
+        console.error(`[email] Error al enviar a ${options.to}: ${error.message}`);
+        return;
+      }
+
+      console.info(`[email] Enviado a ${options.to} — "${options.subject}"`);
+    } catch (err) {
+      console.error('[email] Excepción inesperada:', err instanceof Error ? err.message : String(err));
+    }
+  }
+}
+
+export const emailService = new EmailService();

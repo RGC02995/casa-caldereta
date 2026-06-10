@@ -1,8 +1,9 @@
 import { Component, inject, signal, computed } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe, CurrencyPipe } from '@angular/common';
+import { BehaviorSubject, switchMap, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
 import { PricingRuleService } from '../../../../core/services/pricing-rule.service';
 import { BlockedPeriodService } from '../../../../core/services/blocked-period.service';
 import { BookingService } from '../../../../core/services/booking.service';
@@ -44,9 +45,42 @@ export class AdminCalendarComponent {
   readonly isSubmittingPrice = signal(false);
   readonly isSubmittingBlock = signal(false);
 
-  readonly pricingRules   = signal<IPricingRule[]>([]);
-  readonly blockedPeriods = signal<IBlockedPeriod[]>([]);
-  readonly allBookings    = signal<IBooking[]>([]);
+  private readonly pricingRefresh$  = new BehaviorSubject<void>(undefined);
+  private readonly blockedRefresh$  = new BehaviorSubject<void>(undefined);
+  private readonly bookingsRefresh$ = new BehaviorSubject<void>(undefined);
+
+  readonly pricingRules = toSignal(
+    this.pricingRefresh$.pipe(
+      switchMap(() => this.pricingService.getAll().pipe(
+        map(response => response.data),
+        catchError(() => {
+          this.loadError.set('No se pudieron cargar los datos del calendario.');
+          return of([] as IPricingRule[]);
+        }),
+      )),
+    ),
+    { initialValue: [] as IPricingRule[] },
+  );
+
+  readonly blockedPeriods = toSignal(
+    this.blockedRefresh$.pipe(
+      switchMap(() => this.blockedService.getAll().pipe(
+        map(response => response.data),
+        catchError(() => of([] as IBlockedPeriod[])),
+      )),
+    ),
+    { initialValue: [] as IBlockedPeriod[] },
+  );
+
+  readonly allBookings = toSignal(
+    this.bookingsRefresh$.pipe(
+      switchMap(() => this.bookingService.getAll().pipe(
+        map(response => response.data),
+        catchError(() => of([] as IBooking[])),
+      )),
+    ),
+    { initialValue: [] as IBooking[] },
+  );
 
   readonly viewYear  = signal(new Date().getFullYear());
   readonly viewMonth = signal(new Date().getMonth());
@@ -144,10 +178,6 @@ export class AdminCalendarComponent {
     return cells;
   });
 
-  constructor() {
-    this.loadAll();
-  }
-
   prevMonth(): void {
     if (this.viewMonth() === 0) {
       this.viewMonth.set(11);
@@ -205,17 +235,11 @@ export class AdminCalendarComponent {
       : this.pricingService.create(data);
 
     request$.subscribe({
-      next: response => {
-        if (editingId) {
-          this.pricingRules.update(rules =>
-            rules.map(rule => rule.id === editingId ? response.data : rule),
-          );
-          this.editingRuleId.set(null);
-        } else {
-          this.pricingRules.update(rules => [...rules, response.data]);
-        }
+      next: () => {
+        this.editingRuleId.set(null);
         this.resetPriceForm();
         this.isSubmittingPrice.set(false);
+        this.pricingRefresh$.next();
       },
       error: (err: HttpErrorResponse) => {
         const message = err.error?.message as string | undefined;
@@ -234,8 +258,8 @@ export class AdminCalendarComponent {
 
     this.pricingService.delete(ruleId).subscribe({
       next: () => {
-        this.pricingRules.update(rules => rules.filter(rule => rule.id !== ruleId));
         this.processingId.set(null);
+        this.pricingRefresh$.next();
       },
       error: () => {
         this.pricingError.set('No se pudo eliminar la regla. Inténtalo de nuevo.');
@@ -257,10 +281,10 @@ export class AdminCalendarComponent {
       endDate:   this.blockEnd(),
       ...(reason ? { reason } : {}),
     }).subscribe({
-      next: response => {
-        this.blockedPeriods.update(periods => [...periods, response.data]);
+      next: () => {
         this.resetBlockForm();
         this.isSubmittingBlock.set(false);
+        this.blockedRefresh$.next();
       },
       error: (err: HttpErrorResponse) => {
         const message = err.error?.message as string | undefined;
@@ -279,34 +303,14 @@ export class AdminCalendarComponent {
 
     this.blockedService.delete(periodId).subscribe({
       next: () => {
-        this.blockedPeriods.update(periods => periods.filter(period => period.id !== periodId));
         this.processingId.set(null);
+        this.blockedRefresh$.next();
       },
       error: () => {
         this.blockedError.set('No se pudo eliminar el bloqueo. Inténtalo de nuevo.');
         this.processingId.set(null);
       },
     });
-  }
-
-  private loadAll(): void {
-    this.pricingService.getAll().pipe(
-      map(response => response.data),
-      catchError(() => {
-        this.loadError.set('No se pudieron cargar los datos del calendario.');
-        return of([] as IPricingRule[]);
-      }),
-    ).subscribe(rules => this.pricingRules.set(rules));
-
-    this.blockedService.getAll().pipe(
-      map(response => response.data),
-      catchError(() => of([] as IBlockedPeriod[])),
-    ).subscribe(periods => this.blockedPeriods.set(periods));
-
-    this.bookingService.getAll().pipe(
-      map(response => response.data),
-      catchError(() => of([] as IBooking[])),
-    ).subscribe(bookings => this.allBookings.set(bookings));
   }
 
   private resetPriceForm(): void {

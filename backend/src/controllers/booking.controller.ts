@@ -2,8 +2,10 @@ import { Request, Response } from 'express';
 import { isValidObjectId } from 'mongoose';
 import { bookingService, ICreateBookingData } from '../services/booking.service';
 import { BookingStatus } from '../models/booking.model';
+import { emailService } from '../services/email.service';
 
 const VALID_STATUSES: BookingStatus[] = ['pending', 'confirmed', 'cancelled', 'completed'];
+const PHONE_REGEX = /^\+?[\d\s\-]{6,20}$/;
 
 export async function getAllBookingsHandler(_req: Request, res: Response): Promise<void> {
   try {
@@ -54,7 +56,7 @@ export async function createBookingHandler(req: Request, res: Response): Promise
   const { checkIn, checkOut, guestName, guestEmail, guestPhone, guests, notes } =
     req.body as Partial<ICreateBookingData>;
 
-  if (!checkIn || !checkOut || !guestName || !guestEmail || guests === undefined) {
+  if (!checkIn || !checkOut || !guestName || !guestEmail || !guestPhone || guests === undefined) {
     res.status(400).json({ success: false, message: 'Faltan campos obligatorios' });
     return;
   }
@@ -74,7 +76,7 @@ export async function createBookingHandler(req: Request, res: Response): Promise
     return;
   }
 
-  if (guestPhone !== undefined && (typeof guestPhone !== 'string' || guestPhone.trim().length > 20)) {
+  if (typeof guestPhone !== 'string' || !PHONE_REGEX.test(guestPhone.trim())) {
     res.status(400).json({ success: false, message: 'Teléfono no válido' });
     return;
   }
@@ -90,19 +92,25 @@ export async function createBookingHandler(req: Request, res: Response): Promise
       checkOut,
       guestName:  guestName.trim(),
       guestEmail: guestEmail.trim(),
+      guestPhone: guestPhone.trim(),
       guests,
     };
-
-    const trimmedPhone = guestPhone?.trim();
-    if (trimmedPhone) bookingData.guestPhone = trimmedPhone;
 
     const trimmedNotes = notes?.trim();
     if (trimmedNotes) bookingData.notes = trimmedNotes;
 
     const booking = await bookingService.create(bookingData);
     res.status(201).json({ success: true, data: booking, message: 'Reserva creada correctamente' });
+
+    // Fire-and-forget — la respuesta ya ha sido enviada, los emails no bloquean
+    void emailService.notifyOwnerNewBooking(booking);
+    void emailService.sendGuestBookingReceived(booking);
   } catch (error) {
     if (error instanceof Error) {
+      if ((error as NodeJS.ErrnoException & { code?: string }).code === 'DATE_CONFLICT') {
+        res.status(409).json({ success: false, message: error.message });
+        return;
+      }
       if (error.name === 'ValidationError' || error.message.includes('fecha') || error.message.includes('válid')) {
         res.status(400).json({ success: false, message: error.message });
         return;
@@ -132,6 +140,11 @@ export async function updateBookingStatusHandler(req: Request<{ id: string }>, r
       return;
     }
     res.status(200).json({ success: true, data: booking, message: 'Estado actualizado' });
+
+    // Notificar al huésped solo en transiciones relevantes
+    if (status === 'confirmed' || status === 'cancelled') {
+      void emailService.sendGuestStatusUpdate(booking, status);
+    }
   } catch {
     res.status(500).json({ success: false, message: 'Error al actualizar la reserva' });
   }

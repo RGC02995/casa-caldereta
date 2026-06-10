@@ -19,9 +19,9 @@ export interface IBookingRequest {
   readonly checkOut:    string;
   readonly guestName:   string;
   readonly guestEmail:  string;
-  readonly guestPhone?: string;
-  readonly guests:      number;
-  readonly notes?:      string;
+  readonly guestPhone: string;
+  readonly guests:     number;
+  readonly notes?:     string;
 }
 
 // Respuesta del endpoint público /availability — solo fechas, sin datos del huésped

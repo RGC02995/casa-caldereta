@@ -17,8 +17,10 @@ import { PricingRuleService } from '../../../../core/services/pricing-rule.servi
 import { IBookingAvailability } from '../../../../core/models/booking.model';
 import { IBlockedPeriod } from '../../../../core/models/blocked-period.model';
 import { IPricingRule } from '../../../../core/models/pricing-rule.model';
+import { SeoService } from '../../../../core/services/seo.service';
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+const PHONE_REGEX = /^\+?[\d\s\-]{6,20}$/;
 const DEFAULT_PRICE_PER_NIGHT = 150;
 
 interface CalendarDay {
@@ -121,11 +123,20 @@ export class BookingPageComponent {
 
   readonly nameTouched    = signal(false);
   readonly emailTouched   = signal(false);
+  readonly phoneTouched   = signal(false);
   readonly privacyTouched = signal(false);
 
   readonly nameError = computed(() => {
     if (!this.nameTouched()) return '';
     if (this.nameValue().trim().length < 2) return 'El nombre es obligatorio (mínimo 2 caracteres)';
+    return '';
+  });
+
+  readonly phoneError = computed(() => {
+    if (!this.phoneTouched()) return '';
+    const trimmed = this.phoneValue().trim();
+    if (trimmed.length === 0) return 'El teléfono es obligatorio';
+    if (!PHONE_REGEX.test(trimmed)) return 'Introduce un teléfono válido (+34 600 000 000)';
     return '';
   });
 
@@ -146,12 +157,19 @@ export class BookingPageComponent {
   readonly isFormValid = computed(() => {
     const nameValid    = this.nameValue().trim().length >= 2;
     const emailValid   = EMAIL_REGEX.test(this.emailValue().trim());
+    const phoneValid   = PHONE_REGEX.test(this.phoneValue().trim());
     const privacyValid = this.privacyChecked();
     const guestsValid  = this.guestsValue() >= 1 && this.guestsValue() <= 20;
-    return nameValid && emailValid && privacyValid && guestsValid;
+    return nameValid && emailValid && phoneValid && privacyValid && guestsValid;
   });
 
   constructor() {
+    inject(SeoService).setPage({
+      title:         'Reservar',
+      description:   'Consulta disponibilidad y reserva Casa Caldereta en Aielo de Rugat, Valencia. Alojamiento rural de lujo para hasta 6 personas con jacuzzi y terraza privada.',
+      canonicalPath: '/reservar',
+      keywords:      'reservar casa rural Valencia, disponibilidad alojamiento Aielo de Rugat, reserva casa vacaciones Valencia',
+    });
     this.loadData();
   }
 
@@ -193,6 +211,7 @@ export class BookingPageComponent {
     event.preventDefault();
     this.nameTouched.set(true);
     this.emailTouched.set(true);
+    this.phoneTouched.set(true);
     this.privacyTouched.set(true);
 
     const checkIn  = this.checkIn();
@@ -208,13 +227,13 @@ export class BookingPageComponent {
     const notes = this.messageValue().trim();
 
     const requestData = {
-      checkIn:    checkIn.toISOString().slice(0, 10),
-      checkOut:   checkOut.toISOString().slice(0, 10),
+      checkIn:    format(checkIn, 'yyyy-MM-dd'),
+      checkOut:   format(checkOut, 'yyyy-MM-dd'),
       guestName:  this.nameValue().trim(),
       guestEmail: this.emailValue().trim(),
+      guestPhone: phone,
       guests:     this.guestsValue(),
-      ...(phone ? { guestPhone: phone } : {}),
-      ...(notes ? { notes }             : {}),
+      ...(notes ? { notes } : {}),
     };
 
     this.bookingService.create(requestData).subscribe({
@@ -223,9 +242,16 @@ export class BookingPageComponent {
         this.isSubmitting.set(false);
       },
       error: (err: HttpErrorResponse) => {
-        const message = err.error?.message as string | undefined;
-        this.submitError.set(message ?? 'No se pudo enviar la solicitud. Inténtalo de nuevo.');
         this.isSubmitting.set(false);
+        if (err.status === 409) {
+          this.checkIn.set(null);
+          this.checkOut.set(null);
+          this.loadData();
+          this.submitError.set('Esas fechas acaban de ser reservadas por otro usuario. El calendario se ha actualizado — selecciona nuevas fechas.');
+        } else {
+          const message = err.error?.message as string | undefined;
+          this.submitError.set(message ?? 'No se pudo enviar la solicitud. Inténtalo de nuevo.');
+        }
       },
     });
   }
@@ -241,6 +267,7 @@ export class BookingPageComponent {
     this.privacyChecked.set(false);
     this.nameTouched.set(false);
     this.emailTouched.set(false);
+    this.phoneTouched.set(false);
     this.privacyTouched.set(false);
     this.isSubmitted.set(false);
     this.submitError.set('');
