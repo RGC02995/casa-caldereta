@@ -14,6 +14,10 @@
     <!-- ── CALENDARIO ──────────────────────────────────────────────────────── -->
     <div class="booking-cal">
 
+      @if (loadError()) {
+        <p class="booking-cal__load-error" role="alert">{{ loadError() }}</p>
+      }
+
       <div class="booking-cal__header">
         <button
           type="button"
@@ -54,6 +58,8 @@
               [class.booking-cal__day--check-out]="day.isCheckOut"
               [class.booking-cal__day--in-range]="day.isInRange"
               [class.booking-cal__day--past]="day.isPast"
+              [class.booking-cal__day--booked]="day.isBooked"
+              [class.booking-cal__day--blocked]="day.isBlocked"
               [disabled]="day.isDisabled"
               (click)="onDayClick(day)"
               [attr.aria-label]="day.dayNumber + ' ' + monthLabel()"
@@ -74,6 +80,14 @@
         <div class="booking-cal__legend-item">
           <span class="booking-cal__legend-dot booking-cal__legend-dot--range"></span>
           Estancia
+        </div>
+        <div class="booking-cal__legend-item">
+          <span class="booking-cal__legend-dot booking-cal__legend-dot--booked"></span>
+          Reservado
+        </div>
+        <div class="booking-cal__legend-item">
+          <span class="booking-cal__legend-dot booking-cal__legend-dot--blocked"></span>
+          No disponible
         </div>
       </div>
 
@@ -107,11 +121,11 @@
         @if (nights() > 0) {
           <div class="booking-summary__price">
             <span class="booking-summary__price-detail">
-              {{ nights() }} {{ nights() === 1 ? 'noche' : 'noches' }} × €{{ PRICE_PER_NIGHT }}
+              {{ nights() }} {{ nights() === 1 ? 'noche' : 'noches' }} · precio calculado
             </span>
             <strong class="booking-summary__price-total">€{{ totalPrice() }}</strong>
           </div>
-          <p class="booking-summary__note">* Precio orientativo — sujeto a confirmación</p>
+          <p class="booking-summary__note">* Precio estimado según tarifas vigentes — sujeto a confirmación</p>
         }
       </div>
 
@@ -192,12 +206,25 @@
           </div>
 
           <div class="booking-form__field">
+            <label for="booking-guests" class="booking-form__label">Huéspedes *</label>
+            <input
+              id="booking-guests"
+              type="number"
+              class="booking-form__input booking-form__input--number"
+              min="1"
+              max="20"
+              [value]="guestsValue()"
+              (input)="guestsValue.set(+$any($event.target).value)"
+            />
+          </div>
+
+          <div class="booking-form__field">
             <label for="booking-message" class="booking-form__label">Mensaje</label>
             <textarea
               id="booking-message"
               class="booking-form__textarea"
               rows="3"
-              placeholder="Número de huéspedes, mascotas, peticiones especiales..."
+              placeholder="Mascotas, peticiones especiales..."
               [value]="messageValue()"
               (input)="messageValue.set($any($event.target).value)"
             ></textarea>
@@ -223,12 +250,19 @@
             }
           </div>
 
+          @if (submitError()) {
+            <p class="booking-form__submit-error" role="alert">{{ submitError() }}</p>
+          }
+
           <button
             type="submit"
             class="booking-form__submit"
             [class.booking-form__submit--no-dates]="!checkIn() || !checkOut()"
+            [disabled]="isSubmitting()"
           >
-            @if (!checkIn() || !checkOut()) {
+            @if (isSubmitting()) {
+              Enviando solicitud...
+            } @else if (!checkIn() || !checkOut()) {
               Selecciona las fechas primero
             } @else {
               Solicitar reserva

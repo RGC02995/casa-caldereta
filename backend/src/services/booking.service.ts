@@ -1,19 +1,27 @@
 import { BookingModel, BookingStatus, IBookingDocument } from '../models/booking.model';
+import { IPricingRuleDocument } from '../models/pricing-rule.model';
+import { pricingRuleService } from './pricing-rule.service';
 import { withId } from '../utils/mongoose.util';
 
+const DEFAULT_PRICE_PER_NIGHT = 150;
+
 export interface ICreateBookingData {
-  checkIn:    string;
-  checkOut:   string;
-  guestName:  string;
-  guestEmail: string;
-  guestPhone: string;
-  guests:     number;
-  totalPrice: number;
-  notes?:     string | undefined;
+  checkIn:     string;
+  checkOut:    string;
+  guestName:   string;
+  guestEmail:  string;
+  guestPhone?: string | undefined;
+  guests:      number;
+  notes?:      string | undefined;
 }
 
 export interface IUpdateStatusData {
   status: BookingStatus;
+}
+
+export interface IBookingAvailability {
+  checkIn:  Date;
+  checkOut: Date;
 }
 
 class BookingService {
@@ -36,6 +44,14 @@ class BookingService {
     return docs.map(withId);
   }
 
+  // Devuelve solo fechas de reservas activas — sin datos personales del huésped
+  async getAvailability(): Promise<IBookingAvailability[]> {
+    return BookingModel.find(
+      { status: { $in: ['pending', 'confirmed'] } },
+      { checkIn: 1, checkOut: 1, _id: 0 },
+    ).lean<IBookingAvailability[]>();
+  }
+
   async getById(id: string): Promise<IBookingDocument | null> {
     const doc = await BookingModel.findById(id).lean<IBookingDocument>();
     return doc ? withId(doc) : null;
@@ -53,7 +69,23 @@ class BookingService {
       throw new Error('La fecha de salida debe ser posterior a la de entrada');
     }
 
-    const booking  = new BookingModel({ ...data, checkIn, checkOut, status: 'pending' });
+    const rules      = await pricingRuleService.getOverlapping(checkIn, checkOut);
+    const totalPrice = this.calculateTotalPrice(checkIn, checkOut, rules);
+
+    const bookingData: Record<string, unknown> = {
+      checkIn,
+      checkOut,
+      guestName:  data.guestName,
+      guestEmail: data.guestEmail,
+      guests:     data.guests,
+      totalPrice,
+      status:     'pending',
+    };
+
+    if (data.guestPhone) bookingData['guestPhone'] = data.guestPhone;
+    if (data.notes)      bookingData['notes']      = data.notes;
+
+    const booking  = new BookingModel(bookingData);
     const savedDoc = await booking.save();
     const result   = await BookingModel.findById(savedDoc._id).lean<IBookingDocument>();
     return withId(result!);
@@ -71,6 +103,30 @@ class BookingService {
   async delete(id: string): Promise<boolean> {
     const result = await BookingModel.findByIdAndDelete(id);
     return result !== null;
+  }
+
+  private calculateTotalPrice(
+    checkIn: Date,
+    checkOut: Date,
+    rules: IPricingRuleDocument[],
+  ): number {
+    let total    = 0;
+    const cursor = new Date(checkIn);
+    cursor.setHours(12, 0, 0, 0);
+
+    while (cursor < checkOut) {
+      const rule = rules.find(r => {
+        const start = new Date(r.startDate);
+        const end   = new Date(r.endDate);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+        return cursor >= start && cursor <= end;
+      });
+      total += rule ? rule.pricePerNight : DEFAULT_PRICE_PER_NIGHT;
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    return total;
   }
 }
 

@@ -23,6 +23,16 @@ export async function getUpcomingBookingsHandler(_req: Request, res: Response): 
   }
 }
 
+// Endpoint público — devuelve solo fechas de reservas activas, sin datos del huésped
+export async function getAvailabilityHandler(_req: Request, res: Response): Promise<void> {
+  try {
+    const availability = await bookingService.getAvailability();
+    res.status(200).json({ success: true, data: availability, message: 'Disponibilidad obtenida' });
+  } catch {
+    res.status(500).json({ success: false, message: 'Error al obtener disponibilidad' });
+  }
+}
+
 export async function getBookingByIdHandler(req: Request<{ id: string }>, res: Response): Promise<void> {
   if (!isValidObjectId(req.params.id)) {
     res.status(400).json({ success: false, message: 'ID no válido' });
@@ -41,22 +51,54 @@ export async function getBookingByIdHandler(req: Request<{ id: string }>, res: R
 }
 
 export async function createBookingHandler(req: Request, res: Response): Promise<void> {
-  const { checkIn, checkOut, guestName, guestEmail, guestPhone, guests, totalPrice, notes } =
+  const { checkIn, checkOut, guestName, guestEmail, guestPhone, guests, notes } =
     req.body as Partial<ICreateBookingData>;
 
-  if (!checkIn || !checkOut || !guestName || !guestEmail || !guestPhone || guests === undefined || totalPrice === undefined) {
+  if (!checkIn || !checkOut || !guestName || !guestEmail || guests === undefined) {
     res.status(400).json({ success: false, message: 'Faltan campos obligatorios' });
     return;
   }
 
-  if (typeof guests !== 'number' || guests < 1 || typeof totalPrice !== 'number' || totalPrice < 0) {
-    res.status(400).json({ success: false, message: 'Datos no válidos' });
+  if (typeof guestName !== 'string' || guestName.trim().length < 2 || guestName.trim().length > 100) {
+    res.status(400).json({ success: false, message: 'El nombre debe tener entre 2 y 100 caracteres' });
+    return;
+  }
+
+  if (typeof guestEmail !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail.trim())) {
+    res.status(400).json({ success: false, message: 'Email no válido' });
+    return;
+  }
+
+  if (typeof guests !== 'number' || !Number.isInteger(guests) || guests < 1 || guests > 20) {
+    res.status(400).json({ success: false, message: 'El número de huéspedes debe ser entre 1 y 20' });
+    return;
+  }
+
+  if (guestPhone !== undefined && (typeof guestPhone !== 'string' || guestPhone.trim().length > 20)) {
+    res.status(400).json({ success: false, message: 'Teléfono no válido' });
+    return;
+  }
+
+  if (notes !== undefined && (typeof notes !== 'string' || notes.trim().length > 500)) {
+    res.status(400).json({ success: false, message: 'El mensaje no puede superar los 500 caracteres' });
     return;
   }
 
   try {
-    const bookingData: ICreateBookingData = { checkIn, checkOut, guestName, guestEmail, guestPhone, guests, totalPrice };
-    if (notes) bookingData.notes = notes;
+    const bookingData: ICreateBookingData = {
+      checkIn,
+      checkOut,
+      guestName:  guestName.trim(),
+      guestEmail: guestEmail.trim(),
+      guests,
+    };
+
+    const trimmedPhone = guestPhone?.trim();
+    if (trimmedPhone) bookingData.guestPhone = trimmedPhone;
+
+    const trimmedNotes = notes?.trim();
+    if (trimmedNotes) bookingData.notes = trimmedNotes;
+
     const booking = await bookingService.create(bookingData);
     res.status(201).json({ success: true, data: booking, message: 'Reserva creada correctamente' });
   } catch (error) {

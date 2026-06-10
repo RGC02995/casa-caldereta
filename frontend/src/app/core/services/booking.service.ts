@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { ApiResponse } from '../models/api-response.model';
-import { IBooking, IBookingRequest, BookingStatus } from '../models/booking.model';
+import { IBooking, IBookingAvailability, IBookingRequest, BookingStatus } from '../models/booking.model';
 
 @Injectable({ providedIn: 'root' })
 export class BookingService {
@@ -14,6 +14,11 @@ export class BookingService {
 
   getUpcoming(): Observable<ApiResponse<IBooking[]>> {
     return this.api.get<IBooking[]>('bookings/upcoming');
+  }
+
+  // Endpoint público — solo devuelve rangos de fechas, sin datos personales
+  getAvailability(): Observable<ApiResponse<IBookingAvailability[]>> {
+    return this.api.get<IBookingAvailability[]>('bookings/availability');
   }
 
   getById(id: string): Observable<ApiResponse<IBooking>> {
