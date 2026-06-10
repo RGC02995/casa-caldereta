@@ -44,6 +44,15 @@
         <span class="admin-layout__nav-icon" aria-hidden="true">🗺</span>
         Rutas
       </a>
+      <a
+        class="admin-layout__nav-link"
+        routerLink="/admin/calendario"
+        routerLinkActive="admin-layout__nav-link--active"
+        (click)="isSidebarOpen.set(false)"
+      >
+        <span class="admin-layout__nav-icon" aria-hidden="true">🗓</span>
+        Calendario
+      </a>
     </nav>
 
     <div class="admin-layout__sidebar-footer">

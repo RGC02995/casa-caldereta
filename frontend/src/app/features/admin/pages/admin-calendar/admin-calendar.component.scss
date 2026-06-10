@@ -1,0 +1,437 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+@use 'sass:color';
+
+.admin-calendar {
+
+  &__header {
+    margin-bottom: $space-8;
+  }
+
+  &__title {
+    font-family: $font-family-heading;
+    font-size: $font-size-2xl;
+    color: $color-neutral-800;
+    font-weight: $font-weight-semibold;
+  }
+
+  &__load-error {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-error;
+    padding: $space-4;
+    background-color: color.adjust($color-error, $lightness: 42%);
+    border-radius: $border-radius-sm;
+    margin-bottom: $space-6;
+  }
+
+  &__layout {
+    display: grid;
+    gap: $space-8;
+
+    @include respond-to('xl') {
+      grid-template-columns: 1fr 380px;
+      align-items: start;
+    }
+  }
+
+  // ── CALENDAR ──────────────────────────────────────────────
+
+  &__cal-section {
+    background-color: $color-white;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-md;
+    padding: $space-6;
+  }
+
+  &__cal-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $space-4;
+  }
+
+  &__cal-nav-btn {
+    width: 36px;
+    height: 36px;
+    background: none;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-sm;
+    font-size: $font-size-xl;
+    color: $color-neutral-600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color $transition-fast, color $transition-fast;
+    line-height: 1;
+
+    &:hover {
+      border-color: $color-primary;
+      color: $color-primary;
+    }
+  }
+
+  &__cal-month {
+    font-family: $font-family-heading;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-800;
+    text-transform: capitalize;
+  }
+
+  &__cal-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-3;
+    margin-bottom: $space-4;
+  }
+
+  &__legend-item {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    color: $color-neutral-600;
+
+    &::before {
+      content: '';
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+    }
+
+    &--booked::before  { background-color: #3b82f6; }
+    &--blocked::before { background-color: $color-error; }
+    &--priced::before  { background-color: color.adjust($color-primary, $lightness: 30%); border: 1px solid $color-primary; }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+  }
+
+  &__grid-weekday {
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-500;
+    text-align: center;
+    padding: $space-2 0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__grid-cell {
+    min-height: 56px;
+    border-radius: $border-radius-sm;
+    padding: $space-2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    position: relative;
+    transition: background-color $transition-fast;
+
+    &--empty {
+      background: none;
+    }
+
+    &--past {
+      background-color: $color-neutral-100;
+      opacity: 0.6;
+    }
+
+    &--today {
+      outline: 2px solid $color-primary;
+      outline-offset: -2px;
+    }
+
+    &--booked {
+      background-color: color.adjust(#3b82f6, $lightness: 36%);
+    }
+
+    &--blocked {
+      background-color: color.adjust($color-error, $lightness: 38%);
+    }
+
+    &:not(&--empty):not(&--past):not(&--booked):not(&--blocked) {
+      background-color: $color-neutral-100;
+    }
+  }
+
+  &__grid-day {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-neutral-700;
+    line-height: 1;
+  }
+
+  &__grid-price {
+    font-family: $font-family-body;
+    font-size: 10px;
+    color: $color-primary;
+    font-weight: $font-weight-medium;
+    line-height: 1;
+  }
+
+  &__grid-badge {
+    font-family: $font-family-body;
+    font-size: 9px;
+    font-weight: $font-weight-semibold;
+    padding: 1px 4px;
+    border-radius: 2px;
+    line-height: 1.4;
+
+    &--booked {
+      background-color: #3b82f6;
+      color: $color-white;
+    }
+
+    &--blocked {
+      background-color: $color-error;
+      color: $color-white;
+    }
+  }
+
+  // ── PANEL ─────────────────────────────────────────────────
+
+  &__panel {
+    background-color: $color-white;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-md;
+    overflow: hidden;
+  }
+
+  &__panel-tabs {
+    display: flex;
+    border-bottom: 1px solid $border-color;
+  }
+
+  &__panel-tab {
+    flex: 1;
+    padding: $space-4;
+    background: none;
+    border: none;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-neutral-500;
+    cursor: pointer;
+    transition: color $transition-fast, border-bottom $transition-fast;
+    border-bottom: 3px solid transparent;
+
+    &:hover {
+      color: $color-primary;
+    }
+
+    &--active {
+      color: $color-primary;
+      border-bottom-color: $color-primary;
+    }
+  }
+
+  &__panel-content {
+    padding: $space-6;
+  }
+
+  &__panel-heading {
+    font-family: $font-family-heading;
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-800;
+    margin-bottom: $space-4;
+  }
+
+  // ── FORM ──────────────────────────────────────────────────
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: $space-4;
+    margin-bottom: $space-6;
+    padding-bottom: $space-6;
+    border-bottom: 1px solid $border-color;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+  }
+
+  &__field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $space-3;
+  }
+
+  &__label {
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    color: $color-neutral-600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__input {
+    padding: $space-2 $space-3;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-sm;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-800;
+    background-color: $color-white;
+    transition: border-color $transition-fast;
+    width: 100%;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+    }
+  }
+
+  &__form-error {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-error;
+    padding: $space-3;
+    background-color: color.adjust($color-error, $lightness: 42%);
+    border-radius: $border-radius-sm;
+  }
+
+  &__form-actions {
+    display: flex;
+    gap: $space-3;
+    justify-content: flex-end;
+  }
+
+  // ── BUTTONS ───────────────────────────────────────────────
+
+  &__btn {
+    padding: $space-2 $space-5;
+    border-radius: $border-radius-sm;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+    transition: background-color $transition-fast, color $transition-fast, border-color $transition-fast;
+    border: 1px solid transparent;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &--primary {
+      background-color: $color-primary;
+      color: $color-white;
+
+      &:hover:not(:disabled) {
+        background-color: color.adjust($color-primary, $lightness: -5%);
+      }
+    }
+
+    &--ghost {
+      background-color: transparent;
+      border-color: $border-color;
+      color: $color-neutral-600;
+
+      &:hover:not(:disabled) {
+        border-color: $color-primary;
+        color: $color-primary;
+      }
+    }
+
+    &--danger {
+      background-color: transparent;
+      border-color: $color-error;
+      color: $color-error;
+
+      &:hover:not(:disabled) {
+        background-color: $color-error;
+        color: $color-white;
+      }
+    }
+
+    &--sm {
+      padding: $space-1 $space-3;
+      font-size: $font-size-xs;
+    }
+  }
+
+  // ── RULE LIST ─────────────────────────────────────────────
+
+  &__rule-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+  }
+
+  &__rule-item {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: $space-4;
+    padding: $space-4;
+    background-color: $color-neutral-100;
+    border-radius: $border-radius-sm;
+    border: 1px solid $border-color;
+    transition: opacity $transition-fast;
+
+    &--processing {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+  }
+
+  &__rule-info {
+    display: flex;
+    flex-direction: column;
+    gap: $space-1;
+    min-width: 0;
+  }
+
+  &__rule-label {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-neutral-800;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__rule-dates {
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    color: $color-neutral-500;
+  }
+
+  &__rule-price {
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    color: $color-primary;
+    font-weight: $font-weight-medium;
+  }
+
+  &__rule-actions {
+    display: flex;
+    gap: $space-2;
+    flex-shrink: 0;
+  }
+
+  &__empty {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-400;
+    padding: $space-4 0;
+  }
+}

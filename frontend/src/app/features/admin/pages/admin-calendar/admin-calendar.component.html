@@ -1,0 +1,331 @@
+<div class="admin-calendar">
+
+  <div class="admin-calendar__header">
+    <h1 class="admin-calendar__title">Calendario y precios</h1>
+  </div>
+
+  @if (loadError()) {
+    <p class="admin-calendar__load-error" role="alert">{{ loadError() }}</p>
+  }
+
+  <div class="admin-calendar__layout">
+
+    <!-- ── CALENDARIO ─────────────────────────────────────── -->
+    <section class="admin-calendar__cal-section">
+
+      <div class="admin-calendar__cal-nav">
+        <button
+          class="admin-calendar__cal-nav-btn"
+          type="button"
+          (click)="prevMonth()"
+          aria-label="Mes anterior"
+        >&#8249;</button>
+
+        <span class="admin-calendar__cal-month">{{ viewMonthLabel() }}</span>
+
+        <button
+          class="admin-calendar__cal-nav-btn"
+          type="button"
+          (click)="nextMonth()"
+          aria-label="Mes siguiente"
+        >&#8250;</button>
+      </div>
+
+      <div class="admin-calendar__cal-legend">
+        <span class="admin-calendar__legend-item admin-calendar__legend-item--booked">Reservado</span>
+        <span class="admin-calendar__legend-item admin-calendar__legend-item--blocked">Bloqueado</span>
+        <span class="admin-calendar__legend-item admin-calendar__legend-item--priced">Con precio</span>
+      </div>
+
+      <div class="admin-calendar__grid" role="grid" [attr.aria-label]="viewMonthLabel()">
+
+        @for (weekday of weekdays; track weekday) {
+          <div class="admin-calendar__grid-weekday" role="columnheader">{{ weekday }}</div>
+        }
+
+        @for (cell of calendarCells(); track $index) {
+          @if (cell === null) {
+            <div class="admin-calendar__grid-cell admin-calendar__grid-cell--empty" role="gridcell" aria-hidden="true"></div>
+          } @else {
+            <div
+              class="admin-calendar__grid-cell"
+              role="gridcell"
+              [class.admin-calendar__grid-cell--today]="cell.isToday"
+              [class.admin-calendar__grid-cell--past]="cell.isPast"
+              [class.admin-calendar__grid-cell--booked]="cell.booking !== null"
+              [class.admin-calendar__grid-cell--blocked]="cell.isBlocked"
+              [attr.aria-label]="cell.dateStr"
+            >
+              <span class="admin-calendar__grid-day">{{ cell.day }}</span>
+
+              @if (cell.price !== null && !cell.booking && !cell.isBlocked) {
+                <span class="admin-calendar__grid-price">{{ cell.price | currency:'EUR':'symbol':'1.0-0':'es' }}</span>
+              }
+
+              @if (cell.booking) {
+                <span class="admin-calendar__grid-badge admin-calendar__grid-badge--booked">
+                  {{ cell.booking.status === 'confirmed' ? 'Conf.' : 'Pen.' }}
+                </span>
+              }
+
+              @if (cell.isBlocked) {
+                <span class="admin-calendar__grid-badge admin-calendar__grid-badge--blocked">Bloq.</span>
+              }
+            </div>
+          }
+        }
+
+      </div>
+    </section>
+
+    <!-- ── PANEL LATERAL ──────────────────────────────────── -->
+    <aside class="admin-calendar__panel">
+
+      <div class="admin-calendar__panel-tabs" role="tablist">
+        <button
+          class="admin-calendar__panel-tab"
+          role="tab"
+          type="button"
+          [class.admin-calendar__panel-tab--active]="activePanel() === 'pricing'"
+          [attr.aria-selected]="activePanel() === 'pricing'"
+          (click)="activePanel.set('pricing')"
+        >
+          Precios
+        </button>
+        <button
+          class="admin-calendar__panel-tab"
+          role="tab"
+          type="button"
+          [class.admin-calendar__panel-tab--active]="activePanel() === 'blocked'"
+          [attr.aria-selected]="activePanel() === 'blocked'"
+          (click)="activePanel.set('blocked')"
+        >
+          Bloqueos
+        </button>
+      </div>
+
+      <!-- PANEL PRECIOS -->
+      @if (activePanel() === 'pricing') {
+        <div class="admin-calendar__panel-content" role="tabpanel">
+
+          <h2 class="admin-calendar__panel-heading">
+            {{ editingRuleId() ? 'Editar regla' : 'Nueva regla de precio' }}
+          </h2>
+
+          @if (pricingError()) {
+            <p class="admin-calendar__form-error" role="alert">{{ pricingError() }}</p>
+          }
+
+          <form class="admin-calendar__form" (submit)="onPricingSubmit($event)" novalidate>
+            <div class="admin-calendar__field">
+              <label class="admin-calendar__label" for="priceLabel">Etiqueta</label>
+              <input
+                id="priceLabel"
+                class="admin-calendar__input"
+                type="text"
+                maxlength="100"
+                placeholder="Ej: Temporada alta"
+                [value]="priceLabel()"
+                (input)="priceLabel.set($any($event.target).value)"
+              />
+            </div>
+
+            <div class="admin-calendar__field-row">
+              <div class="admin-calendar__field">
+                <label class="admin-calendar__label" for="priceStart">Desde</label>
+                <input
+                  id="priceStart"
+                  class="admin-calendar__input"
+                  type="date"
+                  [value]="priceStart()"
+                  (input)="priceStart.set($any($event.target).value)"
+                />
+              </div>
+              <div class="admin-calendar__field">
+                <label class="admin-calendar__label" for="priceEnd">Hasta</label>
+                <input
+                  id="priceEnd"
+                  class="admin-calendar__input"
+                  type="date"
+                  [value]="priceEnd()"
+                  (input)="priceEnd.set($any($event.target).value)"
+                />
+              </div>
+            </div>
+
+            <div class="admin-calendar__field-row">
+              <div class="admin-calendar__field">
+                <label class="admin-calendar__label" for="priceAmount">€/noche</label>
+                <input
+                  id="priceAmount"
+                  class="admin-calendar__input"
+                  type="number"
+                  min="1"
+                  max="10000"
+                  placeholder="150"
+                  [value]="pricePerNight() ?? ''"
+                  (input)="pricePerNight.set(+$any($event.target).value || null)"
+                />
+              </div>
+              <div class="admin-calendar__field">
+                <label class="admin-calendar__label" for="priceMinNights">Noches mín.</label>
+                <input
+                  id="priceMinNights"
+                  class="admin-calendar__input"
+                  type="number"
+                  min="1"
+                  max="365"
+                  [value]="priceMinNights()"
+                  (input)="priceMinNights.set(+$any($event.target).value || 1)"
+                />
+              </div>
+            </div>
+
+            <div class="admin-calendar__form-actions">
+              @if (editingRuleId()) {
+                <button
+                  class="admin-calendar__btn admin-calendar__btn--ghost"
+                  type="button"
+                  (click)="cancelEditRule()"
+                >Cancelar</button>
+              }
+              <button
+                class="admin-calendar__btn admin-calendar__btn--primary"
+                type="submit"
+                [disabled]="!priceFormValid() || isSubmittingPrice()"
+              >
+                {{ isSubmittingPrice() ? 'Guardando…' : (editingRuleId() ? 'Actualizar' : 'Crear regla') }}
+              </button>
+            </div>
+          </form>
+
+          <ul class="admin-calendar__rule-list">
+            @for (rule of pricingRules(); track rule.id) {
+              <li
+                class="admin-calendar__rule-item"
+                [class.admin-calendar__rule-item--processing]="processingId() === rule.id"
+              >
+                <div class="admin-calendar__rule-info">
+                  <span class="admin-calendar__rule-label">{{ rule.label }}</span>
+                  <span class="admin-calendar__rule-dates">
+                    {{ rule.startDate | date:'dd/MM/yy':'':'es' }} – {{ rule.endDate | date:'dd/MM/yy':'':'es' }}
+                  </span>
+                  <span class="admin-calendar__rule-price">
+                    {{ rule.pricePerNight | currency:'EUR':'symbol':'1.0-0':'es' }}/noche · mín. {{ rule.minNights }} noches
+                  </span>
+                </div>
+                <div class="admin-calendar__rule-actions">
+                  <button
+                    class="admin-calendar__btn admin-calendar__btn--sm admin-calendar__btn--ghost"
+                    type="button"
+                    [disabled]="!!processingId()"
+                    (click)="startEditRule(rule)"
+                  >Editar</button>
+                  <button
+                    class="admin-calendar__btn admin-calendar__btn--sm admin-calendar__btn--danger"
+                    type="button"
+                    [disabled]="!!processingId()"
+                    (click)="deleteRule(rule.id)"
+                  >Eliminar</button>
+                </div>
+              </li>
+            } @empty {
+              <li class="admin-calendar__empty">No hay reglas de precio definidas.</li>
+            }
+          </ul>
+
+        </div>
+      }
+
+      <!-- PANEL BLOQUEOS -->
+      @if (activePanel() === 'blocked') {
+        <div class="admin-calendar__panel-content" role="tabpanel">
+
+          <h2 class="admin-calendar__panel-heading">Nuevo bloqueo</h2>
+
+          @if (blockedError()) {
+            <p class="admin-calendar__form-error" role="alert">{{ blockedError() }}</p>
+          }
+
+          <form class="admin-calendar__form" (submit)="onBlockedSubmit($event)" novalidate>
+            <div class="admin-calendar__field-row">
+              <div class="admin-calendar__field">
+                <label class="admin-calendar__label" for="blockStart">Desde</label>
+                <input
+                  id="blockStart"
+                  class="admin-calendar__input"
+                  type="date"
+                  [value]="blockStart()"
+                  (input)="blockStart.set($any($event.target).value)"
+                />
+              </div>
+              <div class="admin-calendar__field">
+                <label class="admin-calendar__label" for="blockEnd">Hasta</label>
+                <input
+                  id="blockEnd"
+                  class="admin-calendar__input"
+                  type="date"
+                  [value]="blockEnd()"
+                  (input)="blockEnd.set($any($event.target).value)"
+                />
+              </div>
+            </div>
+
+            <div class="admin-calendar__field">
+              <label class="admin-calendar__label" for="blockReason">Motivo (opcional)</label>
+              <input
+                id="blockReason"
+                class="admin-calendar__input"
+                type="text"
+                maxlength="200"
+                placeholder="Ej: Uso personal, mantenimiento…"
+                [value]="blockReason()"
+                (input)="blockReason.set($any($event.target).value)"
+              />
+            </div>
+
+            <div class="admin-calendar__form-actions">
+              <button
+                class="admin-calendar__btn admin-calendar__btn--primary"
+                type="submit"
+                [disabled]="!blockFormValid() || isSubmittingBlock()"
+              >
+                {{ isSubmittingBlock() ? 'Guardando…' : 'Bloquear fechas' }}
+              </button>
+            </div>
+          </form>
+
+          <ul class="admin-calendar__rule-list">
+            @for (period of blockedPeriods(); track period.id) {
+              <li
+                class="admin-calendar__rule-item"
+                [class.admin-calendar__rule-item--processing]="processingId() === period.id"
+              >
+                <div class="admin-calendar__rule-info">
+                  <span class="admin-calendar__rule-dates">
+                    {{ period.startDate | date:'dd/MM/yy':'':'es' }} – {{ period.endDate | date:'dd/MM/yy':'':'es' }}
+                  </span>
+                  @if (period.reason) {
+                    <span class="admin-calendar__rule-label">{{ period.reason }}</span>
+                  }
+                </div>
+                <button
+                  class="admin-calendar__btn admin-calendar__btn--sm admin-calendar__btn--danger"
+                  type="button"
+                  [disabled]="!!processingId()"
+                  (click)="deleteBlockedPeriod(period.id)"
+                >Eliminar</button>
+              </li>
+            } @empty {
+              <li class="admin-calendar__empty">No hay fechas bloqueadas.</li>
+            }
+          </ul>
+
+        </div>
+      }
+
+    </aside>
+
+  </div>
+
+</div>
