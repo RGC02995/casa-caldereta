@@ -68,9 +68,24 @@
       <h2 class="home-gallery__title">La casa en imágenes</h2>
     </header>
     <div class="home-gallery__grid" aria-label="Vista previa de la galería">
-      <div class="home-gallery__item home-gallery__item--large"></div>
-      <div class="home-gallery__item home-gallery__item--small"></div>
-      <div class="home-gallery__item home-gallery__item--small"></div>
+      @for (photo of previewPhotos(); track photo.id; let i = $index) {
+        <div
+          class="home-gallery__item"
+          [class.home-gallery__item--large]="i === 0"
+          [class.home-gallery__item--small]="i > 0"
+        >
+          <img
+            class="home-gallery__img"
+            [src]="photo.url"
+            [alt]="photo.alt"
+            loading="lazy"
+          />
+        </div>
+      } @empty {
+        <div class="home-gallery__item home-gallery__item--large"></div>
+        <div class="home-gallery__item home-gallery__item--small"></div>
+        <div class="home-gallery__item home-gallery__item--small"></div>
+      }
     </div>
     <div class="home-gallery__footer">
       <a routerLink="/galeria" class="home-section-link">
@@ -89,12 +104,20 @@
       <h2 class="home-routes__title">Qué hacer cerca</h2>
     </header>
     <ul class="home-routes__grid">
-      @for (route of routePreviews; track route.title) {
+      @for (route of previewRoutes(); track route.id) {
         <li class="home-routes__card">
-          <span class="home-routes__tag">{{ route.tag }}</span>
+          <span class="home-routes__tag">{{ typeLabel(route.type) }}</span>
           <h3 class="home-routes__card-title">{{ route.title }}</h3>
           <p class="home-routes__card-desc">{{ route.description }}</p>
         </li>
+      } @empty {
+        @for (fallback of routePreviewFallbacks; track fallback.title) {
+          <li class="home-routes__card">
+            <span class="home-routes__tag">{{ fallback.tag }}</span>
+            <h3 class="home-routes__card-title">{{ fallback.title }}</h3>
+            <p class="home-routes__card-desc">{{ fallback.description }}</p>
+          </li>
+        }
       }
     </ul>
     <div class="home-routes__footer">
@@ -109,6 +132,7 @@
 <!-- ── BOOKING CTA ────────────────────────────────────────────────────────── -->
 <section class="home-booking-cta">
   <div class="home-booking-cta__inner">
+    <span class="home-booking-cta__rule" aria-hidden="true"></span>
     <h2 class="home-booking-cta__title">¿Listo para reservar?</h2>
     <p class="home-booking-cta__subtitle">
       Comprueba disponibilidad y reserva tu estancia en Casa Caldereta.

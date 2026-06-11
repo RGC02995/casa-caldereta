@@ -3,7 +3,7 @@
 
 // ── CABECERA ──────────────────────────────────────────────────────────────────
 .gallery-hero {
-  background-color: $color-neutral-800;
+  background-color: $color-primary-dark;
   padding-block: $space-20;
 
   &__inner {
@@ -11,12 +11,13 @@
     @include flex-column;
     align-items: center;
     text-align: center;
-    gap: $space-4;
+    gap: $space-3;
   }
 
   &__label {
     @include label-text;
-    color: $color-secondary;
+    color: rgba($color-secondary, 0.65);
+    letter-spacing: $letter-spacing-wider;
   }
 
   &__title {
@@ -27,12 +28,13 @@
 
   &__subtitle {
     font-size: $font-size-md;
-    color: rgba($color-white, 0.65);
+    color: rgba($color-white, 0.5);
     margin: 0;
+    font-weight: $font-weight-light;
   }
 }
 
-// ── GRID ─────────────────────────────────────────────────────────────────────
+// ── SECCIÓN PRINCIPAL ─────────────────────────────────────────────────────────
 .gallery-grid-section {
   background-color: $color-neutral-100;
 
@@ -42,20 +44,65 @@
   }
 }
 
+// ── FILTROS DE CATEGORÍA ──────────────────────────────────────────────────────
+.gallery-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-1;
+  margin-bottom: $space-10;
+  border-bottom: 1px solid $color-neutral-200;
+  padding-bottom: 0;
+
+  &__btn {
+    @include button-reset;
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    letter-spacing: $letter-spacing-wide;
+    text-transform: uppercase;
+    color: $color-neutral-500;
+    padding: $space-3 $space-4;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color $transition-fast, border-color $transition-fast;
+
+    &:hover {
+      color: $color-neutral-800;
+    }
+
+    &--active {
+      color: $color-primary;
+      border-bottom-color: $color-primary;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $color-primary;
+      outline-offset: 2px;
+    }
+  }
+}
+
+// ── GRID ─────────────────────────────────────────────────────────────────────
 .gallery-grid {
   list-style: none;
   padding: 0;
   margin: 0;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: $space-3;
+  gap: 3px;
 
-  @include respond-to('md') { grid-template-columns: repeat(3, 1fr); }
-  @include respond-to('lg') { grid-template-columns: repeat(4, 1fr); }
+  @include respond-to('md') {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+  }
 
+  @include respond-to('lg') {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  // Variación editorial: cada 5.º y cada 9.º item ocupa dos columnas
   &__item {
-    &:nth-child(5),
-    &:nth-child(9) {
+    &:nth-child(5n + 1) {
       @include respond-to('md') { grid-column: span 2; }
     }
   }
@@ -64,36 +111,83 @@
     @include button-reset;
     display: block;
     width: 100%;
-    cursor: pointer;
-    border-radius: $border-radius-md;
     overflow: hidden;
+    position: relative;
 
-    &:focus-visible { @include focus-visible; }
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-color: rgba($color-primary-dark, 0);
+      transition: background-color $transition-normal;
+      pointer-events: none;
+    }
 
-    &:hover .gallery-grid__placeholder {
-      transform: scale(1.04);
-      filter: brightness(0.85);
+    &:hover::after {
+      background-color: rgba($color-primary-dark, 0.15);
+    }
+
+    &:focus-visible {
+      outline: 2px solid $color-secondary;
+      outline-offset: 0;
     }
   }
 
-  // Placeholder — sustituir por <img [src]="photo.src" [alt]="photo.alt" class="gallery-grid__img"> con foto real
-  &__placeholder {
+  &__img {
+    display: block;
+    width: 100%;
     aspect-ratio: 1 / 1;
-    background-color: $color-neutral-400;
-    transition:
-      transform $transition-slow,
-      filter $transition-normal;
+    object-fit: cover;
+    transition: transform 600ms ease;
 
-    &[data-index="2"]  { background-color: $color-neutral-300; }
-    &[data-index="3"]  { background-color: $color-neutral-500; }
-    &[data-index="4"]  { background-color: $color-neutral-400; }
-    &[data-index="5"]  { background-color: $color-neutral-300; aspect-ratio: 2 / 1; }
-    &[data-index="6"]  { background-color: $color-neutral-500; }
-    &[data-index="7"]  { background-color: $color-neutral-400; }
-    &[data-index="8"]  { background-color: $color-neutral-300; }
-    &[data-index="9"]  { background-color: $color-neutral-500; aspect-ratio: 2 / 1; }
-    &[data-index="10"] { background-color: $color-neutral-300; }
-    &[data-index="11"] { background-color: $color-neutral-400; }
-    &[data-index="12"] { background-color: $color-neutral-500; }
+    .gallery-grid__btn:hover & {
+      transform: scale(1.04);
+    }
+  }
+}
+
+// ── SKELETON ─────────────────────────────────────────────────────────────────
+@keyframes gallery-shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+
+.gallery-skeleton {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3px;
+
+  @include respond-to('md') { grid-template-columns: repeat(3, 1fr); }
+  @include respond-to('lg') { grid-template-columns: repeat(4, 1fr); }
+
+  &__item {
+    aspect-ratio: 1 / 1;
+    background: linear-gradient(
+      90deg,
+      $color-neutral-200 25%,
+      $color-neutral-300 50%,
+      $color-neutral-200 75%
+    );
+    background-size: 1200px 100%;
+    animation: gallery-shimmer 1.6s ease-in-out infinite;
+  }
+}
+
+// ── ESTADOS ───────────────────────────────────────────────────────────────────
+.gallery-state {
+  text-align: center;
+  padding: $space-24 0;
+
+  &--empty {
+    font-family: $font-family-heading;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-light;
+    color: $color-neutral-400;
+  }
+
+  &--error {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-error;
   }
 }

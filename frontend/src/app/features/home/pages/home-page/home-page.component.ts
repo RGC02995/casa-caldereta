@@ -1,6 +1,12 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map, catchError, of } from 'rxjs';
+import { PhotoService } from '../../../../core/services/photo.service';
+import { RouteService } from '../../../../core/services/route.service';
+import { IPhoto } from '../../../../core/models/photo.model';
+import { IRoute, RouteDifficulty, RouteType } from '../../../../core/models/route.model';
 import { SeoService } from '../../../../core/services/seo.service';
 
 interface Highlight {
@@ -14,6 +20,20 @@ interface AmenityGroup {
   readonly items:    readonly string[];
 }
 
+interface RoutePreviewFallback {
+  readonly tag:         string;
+  readonly title:       string;
+  readonly description: string;
+}
+
+const DIFFICULTY_LABELS: Record<RouteDifficulty, string> = {
+  easy: 'Fácil', moderate: 'Moderada', hard: 'Difícil',
+};
+
+const TYPE_LABELS: Record<RouteType, string> = {
+  hiking: 'Senderismo', cycling: 'Ciclismo', driving: 'En coche', walking: 'A pie',
+};
+
 @Component({
   selector: 'home-page',
   standalone: true,
@@ -22,6 +42,9 @@ interface AmenityGroup {
   styleUrl: './home-page.component.scss',
 })
 export class HomePageComponent {
+  private readonly photoService = inject(PhotoService);
+  private readonly routeService = inject(RouteService);
+
   constructor() {
     inject(SeoService).setPage({
       title:         'Alojamiento Rural de Lujo en Valencia',
@@ -29,6 +52,33 @@ export class HomePageComponent {
       canonicalPath: '/',
       keywords:      'casa rural Valencia, alojamiento exclusivo Aielo de Rugat, jacuzzi rural Valencia, casa vacaciones montaña Valencia',
     });
+  }
+
+  private readonly _photos = toSignal(
+    this.photoService.getAll().pipe(
+      map(response => response.data),
+      catchError(() => of([] as IPhoto[])),
+    ),
+    { initialValue: [] as IPhoto[] },
+  );
+
+  private readonly _routes = toSignal(
+    this.routeService.getPublished().pipe(
+      map(response => response.data),
+      catchError(() => of([] as IRoute[])),
+    ),
+    { initialValue: [] as IRoute[] },
+  );
+
+  readonly previewPhotos = computed(() => this._photos().slice(0, 4));
+  readonly previewRoutes = computed(() => this._routes().slice(0, 3));
+
+  difficultyLabel(difficulty: RouteDifficulty): string {
+    return DIFFICULTY_LABELS[difficulty] ?? difficulty;
+  }
+
+  typeLabel(type: RouteType): string {
+    return TYPE_LABELS[type] ?? type;
   }
 
   readonly highlights: Highlight[] = [
@@ -73,24 +123,11 @@ export class HomePageComponent {
     },
     {
       category: 'Cocina',
-      items: [
-        'Fogones',
-        'Horno',
-        'Nevera',
-        'Lavavajillas',
-        'Cafetera',
-        'Copas de vino',
-      ],
+      items: ['Fogones', 'Horno', 'Nevera', 'Lavavajillas', 'Cafetera', 'Copas de vino'],
     },
     {
       category: 'Confort y tecnología',
-      items: [
-        'WiFi',
-        'Smart TV',
-        'Aire acondicionado',
-        'Zona de trabajo',
-        'Jacuzzi',
-      ],
+      items: ['WiFi', 'Smart TV', 'Aire acondicionado', 'Zona de trabajo', 'Jacuzzi'],
     },
     {
       category: 'Baños',
@@ -104,37 +141,28 @@ export class HomePageComponent {
     },
     {
       category: 'Exterior',
-      items: [
-        'Terraza privada',
-        'Barbacoa',
-        'Hoguera',
-        'Vistas a la montaña',
-      ],
+      items: ['Terraza privada', 'Barbacoa', 'Hoguera', 'Vistas a la montaña'],
     },
     {
       category: 'Política del alojamiento',
-      items: [
-        'Uso exclusivo',
-        '180m²',
-        'Mascotas bienvenidas',
-      ],
+      items: ['Uso exclusivo', '180m²', 'Mascotas bienvenidas'],
     },
   ];
 
-  readonly routePreviews = [
+  readonly routePreviewFallbacks: RoutePreviewFallback[] = [
     {
-      tag: 'Naturaleza',
-      title: 'Ruta por la naturaleza',
+      tag:         'Naturaleza',
+      title:       'Ruta por la naturaleza',
       description: 'Descubre los paisajes únicos de los alrededores de Aielo de Rugat.',
     },
     {
-      tag: 'Historia',
-      title: 'Ruta histórica',
+      tag:         'Historia',
+      title:       'Ruta histórica',
       description: 'Castillos, pueblos y patrimonio cultural de La Costera.',
     },
     {
-      tag: 'Gastronomía',
-      title: 'Ruta gastronómica',
+      tag:         'Gastronomía',
+      title:       'Ruta gastronómica',
       description: 'Vinos, naranjas y cocina valenciana de kilómetro cero.',
     },
   ];

@@ -1,4 +1,4 @@
-<!-- ── CABECERA ────────────────────────────────────────────────────────────── -->
+<!-- ── CABECERA ─────────────────────────────────────────────────────────────── -->
 <section class="routes-hero">
   <div class="routes-hero__inner">
     <p class="routes-hero__label">Aielo de Rugat · Vall d'Albaida</p>
@@ -7,42 +7,62 @@
   </div>
 </section>
 
-<!-- ── GRID DE RUTAS ───────────────────────────────────────────────────────── -->
-<section class="routes-grid-section">
-  <div class="routes-grid-section__inner">
-    <ul class="routes-grid">
-      @for (route of routes; track route.id) {
-        <li class="routes-card">
+<!-- ── LISTA EDITORIAL ─────────────────────────────────────────────────────── -->
+<section class="routes-list-section">
+  <div class="routes-list-section__inner">
 
-          <!-- Imagen placeholder -->
-          <div class="routes-card__img-wrapper">
-            <div class="routes-card__placeholder"></div>
-            <span class="routes-card__tag">{{ route.tag }}</span>
-          </div>
+    @if (isLoading()) {
+      <p class="routes-state" aria-busy="true" role="status">Cargando rutas…</p>
 
-          <!-- Contenido -->
-          <div class="routes-card__body">
-            <h2 class="routes-card__title">{{ route.title }}</h2>
-            <p class="routes-card__desc">{{ route.description }}</p>
+    } @else if (loadError()) {
+      <p class="routes-state routes-state--error" role="alert">{{ loadError() }}</p>
 
-            <!-- Badges de información -->
-            <ul class="routes-card__badges" aria-label="Información de la ruta">
-              <li class="routes-card__badge routes-card__badge--info">
-                <span class="routes-card__badge-icon" aria-hidden="true">⏱</span>
-                {{ route.duration }}
-              </li>
-              <li class="routes-card__badge routes-card__badge--info">
-                <span class="routes-card__badge-icon" aria-hidden="true">📍</span>
-                {{ route.distance }}
-              </li>
-              <li class="routes-card__badge" [class]="difficultyClass[route.difficulty]">
-                {{ route.difficulty }}
-              </li>
-            </ul>
-          </div>
+    } @else if (routes().length === 0) {
+      <p class="routes-state routes-state--empty">Las rutas estarán disponibles próximamente.</p>
 
-        </li>
-      }
-    </ul>
+    } @else {
+
+      <ol class="routes-list" aria-label="Rutas y actividades disponibles">
+        @for (route of routes(); track route.id; let i = $index) {
+          <li class="routes-entry">
+
+            <span class="routes-entry__number" aria-hidden="true">{{ padNumber(i + 1) }}</span>
+
+            <div class="routes-entry__content">
+              <p class="routes-entry__meta">
+                <span>{{ typeLabel(route.type) }}</span>
+                <span class="routes-entry__sep" aria-hidden="true">&nbsp;·&nbsp;</span>
+                <span>{{ route.distance }} km</span>
+                <span class="routes-entry__sep" aria-hidden="true">&nbsp;·&nbsp;</span>
+                <span>{{ formatDuration(route.duration) }}</span>
+                <span class="routes-entry__sep" aria-hidden="true">&nbsp;·&nbsp;</span>
+                <span
+                  class="routes-entry__difficulty"
+                  [class.routes-entry__difficulty--easy]="route.difficulty === 'easy'"
+                  [class.routes-entry__difficulty--moderate]="route.difficulty === 'moderate'"
+                  [class.routes-entry__difficulty--hard]="route.difficulty === 'hard'"
+                >{{ difficultyLabel(route.difficulty) }}</span>
+              </p>
+              <h2 class="routes-entry__title">{{ route.title }}</h2>
+              <p class="routes-entry__desc">{{ route.description }}</p>
+            </div>
+
+            @if (route.coverImageUrl) {
+              <div class="routes-entry__img-wrapper" aria-hidden="true">
+                <img
+                  class="routes-entry__img"
+                  [src]="route.coverImageUrl"
+                  [alt]="route.title"
+                  loading="lazy"
+                />
+              </div>
+            }
+
+          </li>
+        }
+      </ol>
+
+    }
+
   </div>
 </section>
