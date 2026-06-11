@@ -68,12 +68,8 @@
       <h2 class="home-gallery__title">La casa en imágenes</h2>
     </header>
     <div class="home-gallery__grid" aria-label="Vista previa de la galería">
-      @for (photo of previewPhotos(); track photo.id; let i = $index) {
-        <div
-          class="home-gallery__item"
-          [class.home-gallery__item--large]="i === 0"
-          [class.home-gallery__item--small]="i > 0"
-        >
+      @for (photo of previewPhotos(); track photo.id) {
+        <div class="home-gallery__item">
           <img
             class="home-gallery__img"
             [src]="photo.url"
@@ -82,9 +78,9 @@
           />
         </div>
       } @empty {
-        <div class="home-gallery__item home-gallery__item--large"></div>
-        <div class="home-gallery__item home-gallery__item--small"></div>
-        <div class="home-gallery__item home-gallery__item--small"></div>
+        @for (placeholder of [1, 2, 3, 4]; track placeholder) {
+          <div class="home-gallery__item"></div>
+        }
       }
     </div>
     <div class="home-gallery__footer">
