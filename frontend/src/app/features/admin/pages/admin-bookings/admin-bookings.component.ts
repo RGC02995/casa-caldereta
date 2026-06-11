@@ -46,6 +46,7 @@ export class AdminBookingsComponent {
   readonly actionError  = signal('');
   readonly activeFilter = signal<StatusFilter>('all');
   readonly processingId = signal<string | null>(null);
+  readonly legendOpen   = signal(false);
 
   private readonly refresh$ = new BehaviorSubject<void>(undefined);
 

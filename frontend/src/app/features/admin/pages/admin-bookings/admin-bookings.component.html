@@ -2,7 +2,40 @@
 
   <header class="admin-bookings__header">
     <h1 class="admin-bookings__title">Reservas</h1>
+    <button
+      class="admin-bookings__legend-toggle"
+      type="button"
+      (click)="legendOpen.set(!legendOpen())"
+      [attr.aria-expanded]="legendOpen() ? 'true' : 'false'"
+      aria-controls="bookings-legend"
+    >
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+      </svg>
+      ¿Cómo funcionan los estados?
+    </button>
   </header>
+
+  @if (legendOpen()) {
+    <div id="bookings-legend" class="admin-bookings__legend" role="region" aria-label="Explicación de estados de reserva">
+      <div class="admin-bookings__legend-item">
+        <span class="admin-bookings__badge admin-bookings__badge--pending">Pendiente</span>
+        <p class="admin-bookings__legend-text">La reserva acaba de llegar y aún no la has validado. Las fechas <strong>no quedan bloqueadas</strong> hasta que confirmes — te protege de spam o solicitudes con fechas incorrectas.</p>
+      </div>
+      <div class="admin-bookings__legend-item">
+        <span class="admin-bookings__badge admin-bookings__badge--confirmed">Confirmada</span>
+        <p class="admin-bookings__legend-text">Has validado la reserva. El huésped recibe un <strong>email de confirmación</strong> y las fechas quedan bloqueadas para cualquier otra solicitud.</p>
+      </div>
+      <div class="admin-bookings__legend-item">
+        <span class="admin-bookings__badge admin-bookings__badge--completed">Completada</span>
+        <p class="admin-bookings__legend-text">El huésped ya se fue y la estancia ocurrió. Separa el <strong>historial real</strong> de las reservas activas. Útil para futuras estadísticas o facturación.</p>
+      </div>
+      <div class="admin-bookings__legend-item">
+        <span class="admin-bookings__badge admin-bookings__badge--cancelled">Cancelada</span>
+        <p class="admin-bookings__legend-text">La reserva no se llevará a cabo. El huésped recibe un <strong>email de cancelación</strong> y las fechas vuelven a estar disponibles en el calendario.</p>
+      </div>
+    </div>
+  }
 
   @if (loadError()) {
     <p class="admin-bookings__load-error" role="alert">{{ loadError() }}</p>
