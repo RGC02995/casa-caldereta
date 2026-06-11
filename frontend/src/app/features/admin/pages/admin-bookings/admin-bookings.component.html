@@ -5,15 +5,16 @@
   </header>
 
   @if (loadError()) {
-    <p class="admin-bookings__load-error">{{ loadError() }}</p>
+    <p class="admin-bookings__load-error" role="alert">{{ loadError() }}</p>
   } @else {
 
-    <div class="admin-bookings__filters">
+    <div class="admin-bookings__filters" role="group" aria-label="Filtrar reservas por estado">
       @for (filterOption of filters; track filterOption.value) {
         <button
           class="admin-bookings__filter-btn"
           [class.admin-bookings__filter-btn--active]="activeFilter() === filterOption.value"
           type="button"
+          [attr.aria-pressed]="activeFilter() === filterOption.value ? 'true' : 'false'"
           (click)="activeFilter.set(filterOption.value)"
         >
           {{ filterOption.label }}
@@ -22,31 +23,34 @@
     </div>
 
     @if (actionError()) {
-      <p class="admin-bookings__action-error">{{ actionError() }}</p>
+      <p class="admin-bookings__action-error" role="alert">{{ actionError() }}</p>
     }
 
     @if (filteredBookings().length === 0) {
       <p class="admin-bookings__empty">No hay reservas para este filtro.</p>
     } @else {
+
+      <!-- TABLA — visible en md+ -->
       <div class="admin-bookings__table-wrapper">
-        <table class="admin-bookings__table">
+        <table class="admin-bookings__table" aria-label="Lista de reservas">
           <thead class="admin-bookings__table-head">
             <tr>
-              <th class="admin-bookings__table-th">Huésped</th>
-              <th class="admin-bookings__table-th">Email</th>
-              <th class="admin-bookings__table-th">Teléfono</th>
-              <th class="admin-bookings__table-th">Entrada</th>
-              <th class="admin-bookings__table-th">Salida</th>
-              <th class="admin-bookings__table-th">Huéspedes</th>
-              <th class="admin-bookings__table-th">Total</th>
-              <th class="admin-bookings__table-th">Estado</th>
-              <th class="admin-bookings__table-th">Acciones</th>
+              <th class="admin-bookings__table-th" scope="col">Huésped</th>
+              <th class="admin-bookings__table-th" scope="col">Email</th>
+              <th class="admin-bookings__table-th" scope="col">Teléfono</th>
+              <th class="admin-bookings__table-th" scope="col">Entrada</th>
+              <th class="admin-bookings__table-th" scope="col">Salida</th>
+              <th class="admin-bookings__table-th" scope="col">Huéspedes</th>
+              <th class="admin-bookings__table-th" scope="col">Total</th>
+              <th class="admin-bookings__table-th" scope="col">Estado</th>
+              <th class="admin-bookings__table-th" scope="col">Acciones</th>
             </tr>
           </thead>
           <tbody class="admin-bookings__table-body">
             @for (booking of filteredBookings(); track booking.id) {
               <tr class="admin-bookings__table-row"
-                  [class.admin-bookings__table-row--processing]="processingId() === booking.id">
+                  [class.admin-bookings__table-row--processing]="processingId() === booking.id"
+                  [attr.aria-busy]="processingId() === booking.id || null">
                 <td class="admin-bookings__table-td admin-bookings__table-td--name">{{ booking.guestName }}</td>
                 <td class="admin-bookings__table-td">{{ booking.guestEmail }}</td>
                 <td class="admin-bookings__table-td">{{ booking.guestPhone }}</td>
@@ -56,7 +60,7 @@
                 <td class="admin-bookings__table-td">{{ booking.totalPrice | currency: 'EUR' : 'symbol' : '1.0-0' }}</td>
                 <td class="admin-bookings__table-td">
                   <span class="admin-bookings__badge admin-bookings__badge--{{ booking.status }}">
-                    {{ booking.status }}
+                    {{ statusLabel(booking.status) }}
                   </span>
                 </td>
                 <td class="admin-bookings__table-td">
@@ -65,8 +69,9 @@
                       <button
                         class="admin-bookings__action-btn admin-bookings__action-btn--{{ transition.status }}"
                         type="button"
+                        [attr.aria-label]="transition.label + ' reserva de ' + booking.guestName"
                         [disabled]="processingId() !== null"
-                        (click)="changeStatus(booking.id, transition.status)"
+                        (click)="changeStatus(booking.id, transition.status, booking.guestName)"
                       >
                         {{ transition.label }}
                       </button>
@@ -74,6 +79,7 @@
                     <button
                       class="admin-bookings__action-btn admin-bookings__action-btn--delete"
                       type="button"
+                      [attr.aria-label]="'Eliminar reserva de ' + booking.guestName"
                       [disabled]="processingId() !== null"
                       (click)="deleteBooking(booking.id, booking.guestName)"
                     >
@@ -86,6 +92,77 @@
           </tbody>
         </table>
       </div>
+
+      <!-- TARJETAS — visible en < md -->
+      <div class="admin-bookings__cards">
+        @for (booking of filteredBookings(); track booking.id) {
+          <div class="admin-bookings__card"
+               role="group"
+               [attr.aria-label]="'Reserva de ' + booking.guestName"
+               [class.admin-bookings__card--processing]="processingId() === booking.id"
+               [attr.aria-busy]="processingId() === booking.id || null">
+
+            <div class="admin-bookings__card-header">
+              <span class="admin-bookings__card-name">{{ booking.guestName }}</span>
+              <span class="admin-bookings__badge admin-bookings__badge--{{ booking.status }}">
+                {{ statusLabel(booking.status) }}
+              </span>
+            </div>
+
+            <div class="admin-bookings__card-body">
+              <div class="admin-bookings__card-row">
+                <span class="admin-bookings__card-label">Entrada</span>
+                <span class="admin-bookings__card-value">{{ booking.checkIn | date: 'dd/MM/yyyy' }}</span>
+              </div>
+              <div class="admin-bookings__card-row">
+                <span class="admin-bookings__card-label">Salida</span>
+                <span class="admin-bookings__card-value">{{ booking.checkOut | date: 'dd/MM/yyyy' }}</span>
+              </div>
+              <div class="admin-bookings__card-row">
+                <span class="admin-bookings__card-label">Email</span>
+                <span class="admin-bookings__card-value">{{ booking.guestEmail }}</span>
+              </div>
+              <div class="admin-bookings__card-row">
+                <span class="admin-bookings__card-label">Teléfono</span>
+                <span class="admin-bookings__card-value">{{ booking.guestPhone }}</span>
+              </div>
+              <div class="admin-bookings__card-row">
+                <span class="admin-bookings__card-label">Huéspedes</span>
+                <span class="admin-bookings__card-value">{{ booking.guests }}</span>
+              </div>
+              <div class="admin-bookings__card-row">
+                <span class="admin-bookings__card-label">Total</span>
+                <span class="admin-bookings__card-value">{{ booking.totalPrice | currency: 'EUR' : 'symbol' : '1.0-0' }}</span>
+              </div>
+            </div>
+
+            <div class="admin-bookings__card-actions">
+              @for (transition of getTransitions(booking.status); track transition.status) {
+                <button
+                  class="admin-bookings__action-btn admin-bookings__action-btn--{{ transition.status }}"
+                  type="button"
+                  [attr.aria-label]="transition.label + ' reserva de ' + booking.guestName"
+                  [disabled]="processingId() !== null"
+                  (click)="changeStatus(booking.id, transition.status, booking.guestName)"
+                >
+                  {{ transition.label }}
+                </button>
+              }
+              <button
+                class="admin-bookings__action-btn admin-bookings__action-btn--delete"
+                type="button"
+                [attr.aria-label]="'Eliminar reserva de ' + booking.guestName"
+                [disabled]="processingId() !== null"
+                (click)="deleteBooking(booking.id, booking.guestName)"
+              >
+                Eliminar
+              </button>
+            </div>
+
+          </div>
+        }
+      </div>
+
     }
   }
 

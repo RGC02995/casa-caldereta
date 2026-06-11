@@ -10,11 +10,11 @@
   </header>
 
   @if (actionError()) {
-    <p class="admin-routes__action-error">{{ actionError() }}</p>
+    <p class="admin-routes__action-error" role="alert">{{ actionError() }}</p>
   }
 
   @if (formMode() !== 'hidden') {
-    <section class="admin-routes__form-section">
+    <section class="admin-routes__form-section" aria-label="{{ formMode() === 'create' ? 'Formulario nueva ruta' : 'Formulario editar ruta' }}">
       <h2 class="admin-routes__section-title">
         {{ formMode() === 'create' ? 'Nueva ruta' : 'Editar ruta' }}
       </h2>
@@ -30,6 +30,7 @@
               id="route-title"
               type="text"
               placeholder="Ej: Ruta por el Barranc de l'Encantada"
+              aria-required="true"
               [value]="formData().title"
               (input)="updateFormField('title', $any($event.target).value)"
             />
@@ -42,6 +43,7 @@
               id="route-description"
               rows="4"
               placeholder="Descripción detallada de la ruta..."
+              aria-required="true"
               [value]="formData().description"
               (input)="updateFormField('description', $any($event.target).value)"
             ></textarea>
@@ -119,6 +121,7 @@
               id="route-cover"
               type="text"
               placeholder="https://res.cloudinary.com/..."
+              aria-required="true"
               [value]="formData().coverImageUrl"
               (input)="updateFormField('coverImageUrl', $any($event.target).value)"
             />
@@ -126,7 +129,7 @@
               <img
                 class="admin-routes__cover-preview"
                 [src]="formData().coverImageUrl"
-                alt="Vista previa portada"
+                alt="Vista previa imagen de portada"
               />
             }
           </div>
@@ -152,6 +155,7 @@
                   class="admin-routes__input"
                   type="text"
                   placeholder="Nombre del punto"
+                  [attr.aria-label]="'Nombre del punto ' + ($index + 1)"
                   [value]="point.name"
                   (input)="updatePointField($index, 'name', $any($event.target).value)"
                 />
@@ -159,6 +163,7 @@
                   class="admin-routes__input"
                   type="text"
                   placeholder="Descripción del punto"
+                  [attr.aria-label]="'Descripción del punto ' + ($index + 1)"
                   [value]="point.description"
                   (input)="updatePointField($index, 'description', $any($event.target).value)"
                 />
@@ -166,8 +171,8 @@
               <button
                 class="admin-routes__remove-point-btn"
                 type="button"
+                [attr.aria-label]="'Eliminar punto ' + ($index + 1)"
                 (click)="removePoint($index)"
-                aria-label="Eliminar punto"
               >
                 ✕
               </button>
@@ -188,6 +193,7 @@
             class="admin-routes__submit-btn"
             type="submit"
             [disabled]="isSubmitting()"
+            [attr.aria-busy]="isSubmitting() || null"
           >
             {{ isSubmitting() ? 'Guardando...' : (formMode() === 'create' ? 'Crear ruta' : 'Guardar cambios') }}
           </button>
@@ -203,26 +209,30 @@
     </h2>
 
     @if (loadError()) {
-      <p class="admin-routes__load-error">{{ loadError() }}</p>
+      <p class="admin-routes__load-error" role="alert">{{ loadError() }}</p>
     } @else if (allRoutes().length === 0 && formMode() === 'hidden') {
       <p class="admin-routes__empty">No hay rutas creadas todavía.</p>
     } @else {
+
+      <!-- TABLA — visible en md+ -->
       <div class="admin-routes__table-wrapper">
-        <table class="admin-routes__table">
+        <table class="admin-routes__table" aria-label="Lista de rutas y actividades">
           <thead>
             <tr>
-              <th class="admin-routes__th">Título</th>
-              <th class="admin-routes__th">Tipo</th>
-              <th class="admin-routes__th">Dificultad</th>
-              <th class="admin-routes__th">Km / min</th>
-              <th class="admin-routes__th">Orden</th>
-              <th class="admin-routes__th">Estado</th>
-              <th class="admin-routes__th">Acciones</th>
+              <th class="admin-routes__th" scope="col">Título</th>
+              <th class="admin-routes__th" scope="col">Tipo</th>
+              <th class="admin-routes__th" scope="col">Dificultad</th>
+              <th class="admin-routes__th" scope="col">Km / min</th>
+              <th class="admin-routes__th" scope="col">Orden</th>
+              <th class="admin-routes__th" scope="col">Estado</th>
+              <th class="admin-routes__th" scope="col">Acciones</th>
             </tr>
           </thead>
           <tbody>
             @for (route of sortedRoutes(); track route.id) {
-              <tr class="admin-routes__tr" [class.admin-routes__tr--processing]="processingId() === route.id">
+              <tr class="admin-routes__tr"
+                  [class.admin-routes__tr--processing]="processingId() === route.id"
+                  [attr.aria-busy]="processingId() === route.id || null">
                 <td class="admin-routes__td admin-routes__td--title">
                   <span class="admin-routes__route-title">{{ route.title }}</span>
                   @if (route.points.length > 0) {
@@ -263,6 +273,7 @@
                   <button
                     class="admin-routes__action-btn admin-routes__action-btn--edit"
                     type="button"
+                    [attr.aria-label]="'Editar ruta: ' + route.title"
                     [disabled]="processingId() !== null"
                     (click)="openEditForm(route)"
                   >
@@ -273,6 +284,7 @@
                     [class.admin-routes__action-btn--publish]="!route.isPublished"
                     [class.admin-routes__action-btn--unpublish]="route.isPublished"
                     type="button"
+                    [attr.aria-label]="(route.isPublished ? 'Despublicar' : 'Publicar') + ' ruta: ' + route.title"
                     [disabled]="processingId() !== null"
                     (click)="togglePublished(route)"
                   >
@@ -281,6 +293,7 @@
                   <button
                     class="admin-routes__action-btn admin-routes__action-btn--delete"
                     type="button"
+                    [attr.aria-label]="'Eliminar ruta: ' + route.title"
                     [disabled]="processingId() !== null"
                     (click)="deleteRoute(route)"
                   >
@@ -292,6 +305,95 @@
           </tbody>
         </table>
       </div>
+
+      <!-- TARJETAS — visible en < md -->
+      <div class="admin-routes__cards">
+        @for (route of sortedRoutes(); track route.id) {
+          <div class="admin-routes__card"
+               role="group"
+               [attr.aria-label]="route.title"
+               [class.admin-routes__card--processing]="processingId() === route.id"
+               [attr.aria-busy]="processingId() === route.id || null">
+
+            <div class="admin-routes__card-header">
+              <div class="admin-routes__card-title-wrap">
+                <span class="admin-routes__card-title">{{ route.title }}</span>
+                @if (route.points.length > 0) {
+                  <span class="admin-routes__card-points">{{ route.points.length }} puntos</span>
+                }
+              </div>
+              <span
+                class="admin-routes__status"
+                [class.admin-routes__status--published]="route.isPublished"
+                [class.admin-routes__status--draft]="!route.isPublished"
+              >
+                {{ route.isPublished ? 'Publicada' : 'Borrador' }}
+              </span>
+            </div>
+
+            <div class="admin-routes__card-badges">
+              <span class="admin-routes__badge admin-routes__badge--type">{{ getTypeLabel(route.type) }}</span>
+              <span
+                class="admin-routes__badge"
+                [class.admin-routes__badge--easy]="route.difficulty === 'easy'"
+                [class.admin-routes__badge--moderate]="route.difficulty === 'moderate'"
+                [class.admin-routes__badge--hard]="route.difficulty === 'hard'"
+              >
+                {{ getDifficultyLabel(route.difficulty) }}
+              </span>
+            </div>
+
+            <div class="admin-routes__card-body">
+              <div class="admin-routes__card-row">
+                <span class="admin-routes__card-label">Distancia</span>
+                <span class="admin-routes__card-value">{{ route.distance }} km</span>
+              </div>
+              <div class="admin-routes__card-row">
+                <span class="admin-routes__card-label">Duración</span>
+                <span class="admin-routes__card-value">{{ route.duration }} min</span>
+              </div>
+              <div class="admin-routes__card-row">
+                <span class="admin-routes__card-label">Orden</span>
+                <span class="admin-routes__card-value">{{ route.order }}</span>
+              </div>
+            </div>
+
+            <div class="admin-routes__card-actions">
+              <button
+                class="admin-routes__action-btn admin-routes__action-btn--edit"
+                type="button"
+                [attr.aria-label]="'Editar ruta: ' + route.title"
+                [disabled]="processingId() !== null"
+                (click)="openEditForm(route)"
+              >
+                Editar
+              </button>
+              <button
+                class="admin-routes__action-btn"
+                [class.admin-routes__action-btn--publish]="!route.isPublished"
+                [class.admin-routes__action-btn--unpublish]="route.isPublished"
+                type="button"
+                [attr.aria-label]="(route.isPublished ? 'Despublicar' : 'Publicar') + ' ruta: ' + route.title"
+                [disabled]="processingId() !== null"
+                (click)="togglePublished(route)"
+              >
+                {{ route.isPublished ? 'Despublicar' : 'Publicar' }}
+              </button>
+              <button
+                class="admin-routes__action-btn admin-routes__action-btn--delete"
+                type="button"
+                [attr.aria-label]="'Eliminar ruta: ' + route.title"
+                [disabled]="processingId() !== null"
+                (click)="deleteRoute(route)"
+              >
+                Eliminar
+              </button>
+            </div>
+
+          </div>
+        }
+      </div>
+
     }
   </section>
 

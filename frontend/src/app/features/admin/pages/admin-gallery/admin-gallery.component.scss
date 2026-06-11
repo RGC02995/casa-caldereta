@@ -3,8 +3,9 @@
 @use 'sass:color';
 
 .admin-gallery {
+
   &__header {
-    margin-bottom: $space-8;
+    margin-bottom: $space-6;
   }
 
   &__title {
@@ -12,22 +13,29 @@
     font-size: $font-size-2xl;
     color: $color-neutral-800;
     font-weight: $font-weight-semibold;
+    letter-spacing: -0.02em;
+    margin: 0;
   }
 
-  &__section-title {
-    font-family: $font-family-heading;
-    font-size: $font-size-lg;
-    color: $color-neutral-700;
+  &__section-label {
+    font-family: $font-family-body;
+    font-size: 11px;
     font-weight: $font-weight-semibold;
-    margin-bottom: $space-4;
+    color: $color-neutral-500;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    margin: 0 0 $space-4;
   }
+
+  // ── UPLOAD SECTION ──────────────────────────────────────
 
   &__upload-section {
     background-color: $color-white;
-    border: 1px solid $border-color;
+    border: 1px solid $color-neutral-200;
     border-radius: $border-radius-md;
     padding: $space-6;
-    margin-bottom: $space-8;
+    margin-bottom: $space-6;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   }
 
   &__upload-form {
@@ -35,7 +43,7 @@
     gap: $space-6;
 
     @include respond-to('md') {
-      grid-template-columns: 220px 1fr;
+      grid-template-columns: 200px 1fr;
       align-items: start;
     }
   }
@@ -43,17 +51,19 @@
   &__upload-dropzone {
     position: relative;
     height: 180px;
-    border: 2px dashed $border-color;
+    border: 2px dashed $color-neutral-300;
     border-radius: $border-radius-md;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     overflow: hidden;
-    transition: border-color $transition-fast;
+    transition: border-color 140ms ease, background-color 140ms ease;
 
-    &:hover {
+    &:hover,
+    &:focus-within {
       border-color: $color-primary;
+      background-color: rgba($color-primary, 0.025);
     }
 
     &--has-preview {
@@ -69,12 +79,26 @@
   }
 
   &__upload-placeholder {
-    font-family: $font-family-body;
-    font-size: $font-size-sm;
-    color: $color-neutral-400;
-    text-align: center;
-    padding: $space-4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-2;
     pointer-events: none;
+    padding: $space-4;
+    text-align: center;
+  }
+
+  &__upload-icon {
+    width: 28px;
+    height: 28px;
+    color: $color-neutral-400;
+    flex-shrink: 0;
+  }
+
+  &__upload-placeholder-text {
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    color: $color-neutral-400;
   }
 
   &__upload-input {
@@ -107,36 +131,53 @@
 
   &__input,
   &__select {
-    padding: $space-3 $space-4;
-    border: 1px solid $border-color;
+    padding: 10px 14px;
+    border: 1.5px solid $color-neutral-300;
     border-radius: $border-radius-sm;
     font-family: $font-family-body;
     font-size: $font-size-sm;
     color: $color-neutral-800;
     background-color: $color-white;
-    transition: border-color $transition-fast;
+    transition: border-color 140ms ease, box-shadow 140ms ease;
+    outline: none;
 
     &:focus {
-      outline: none;
       border-color: $color-primary;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+    }
+
+    &:focus-visible {
+      border-color: $color-primary;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
     }
   }
 
   &__upload-btn {
-    padding: $space-3 $space-6;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-2;
+    padding: 11px $space-6;
+    min-height: 44px;
     background-color: $color-primary;
     color: $color-white;
     border: none;
     border-radius: $border-radius-sm;
     font-family: $font-family-body;
     font-size: $font-size-sm;
-    font-weight: $font-weight-medium;
+    font-weight: $font-weight-semibold;
+    letter-spacing: 0.02em;
     cursor: pointer;
-    transition: background-color $transition-fast;
+    transition: background-color 140ms ease;
     align-self: flex-end;
 
     &:hover:not(:disabled) {
-      background-color: color.adjust($color-primary, $lightness: -5%);
+      background-color: $color-primary-dark;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $color-primary;
+      outline-offset: 3px;
     }
 
     &:disabled {
@@ -145,56 +186,84 @@
     }
   }
 
+  &__upload-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba($color-white, 0.3);
+    border-top-color: $color-white;
+    border-radius: 50%;
+    animation: gallerySpin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+
   &__load-error,
   &__action-error {
     font-family: $font-family-body;
     font-size: $font-size-sm;
-    color: $color-error;
-    padding: $space-4;
-    background-color: color.adjust($color-error, $lightness: 42%);
+    color: color.adjust($color-error, $lightness: -8%);
+    padding: $space-3 $space-4;
+    background-color: rgba($color-error, 0.07);
+    border-left: 3px solid $color-error;
     border-radius: $border-radius-sm;
-    margin-top: $space-4;
+    margin: $space-4 0;
   }
+
+  // ── LIST SECTION ────────────────────────────────────────
 
   &__list-section {
     background-color: $color-white;
-    border: 1px solid $border-color;
+    border: 1px solid $color-neutral-200;
     border-radius: $border-radius-md;
     padding: $space-6;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   }
 
-  &__filters {
+  &__list-header {
     display: flex;
+    align-items: center;
+    justify-content: space-between;
     flex-wrap: wrap;
-    gap: $space-2;
-    margin-bottom: $space-6;
+    gap: $space-3;
+    margin-bottom: $space-5;
+  }
+
+  // ── FILTERS (segmented control) ────────────────────────
+
+  &__filters {
+    display: inline-flex;
+    gap: 2px;
+    background-color: $color-neutral-200;
+    padding: 3px;
+    border-radius: $border-radius-sm;
+    flex-wrap: wrap;
   }
 
   &__filter-btn {
-    padding: $space-2 $space-4;
-    border: 1px solid $border-color;
-    border-radius: $border-radius-sm;
-    background-color: $color-white;
+    padding: 6px $space-4;
+    border: none;
+    border-radius: 3px;
+    background: none;
     font-family: $font-family-body;
-    font-size: $font-size-sm;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
     color: $color-neutral-600;
     cursor: pointer;
-    transition: border-color $transition-fast, background-color $transition-fast, color $transition-fast;
+    transition: background-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
+    white-space: nowrap;
 
-    &:hover {
-      border-color: $color-primary;
-      color: $color-primary;
+    &:hover:not(&--active) {
+      color: $color-neutral-800;
     }
 
     &--active {
-      background-color: $color-primary;
-      border-color: $color-primary;
-      color: $color-white;
+      background-color: $color-white;
+      color: $color-neutral-800;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
 
-      &:hover {
-        background-color: color.adjust($color-primary, $lightness: -5%);
-        color: $color-white;
-      }
+    &:focus-visible {
+      outline: 2px solid $color-primary;
+      outline-offset: 2px;
     }
   }
 
@@ -202,13 +271,16 @@
     font-family: $font-family-body;
     font-size: $font-size-sm;
     color: $color-neutral-500;
-    padding: $space-6 0;
+    padding: $space-10 0;
+    text-align: center;
   }
+
+  // ── GRID DE FOTOS ───────────────────────────────────────
 
   &__grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: $space-4;
+    gap: $space-3;
 
     @include respond-to('md') {
       grid-template-columns: repeat(3, 1fr);
@@ -220,18 +292,36 @@
   }
 
   &__item {
-    position: relative;
-    border-radius: $border-radius-sm;
+    border-radius: $border-radius-md;
     overflow: hidden;
-    aspect-ratio: 4 / 3;
+    border: 1px solid $color-neutral-200;
     background-color: $color-neutral-200;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 
     &--processing {
       opacity: 0.4;
       pointer-events: none;
     }
+  }
 
-    &:hover &-overlay {
+  &__item-img-wrap {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-color: rgba($color-black, 0.12);
+      opacity: 0;
+      transition: opacity 200ms ease;
+      pointer-events: none;
+    }
+
+    &:hover::after {
       opacity: 1;
     }
   }
@@ -241,55 +331,81 @@
     height: 100%;
     object-fit: cover;
     display: block;
+    transition: transform 320ms ease;
+
+    .admin-gallery__item-img-wrap:hover & {
+      transform: scale(1.04);
+    }
   }
 
-  &__item-overlay {
-    position: absolute;
-    inset: 0;
-    background-color: rgba($color-black, 0.6);
+  &__item-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-2;
+    padding: $space-2 $space-3;
+    background-color: $color-white;
+    border-top: 1px solid $color-neutral-200;
+    flex-shrink: 0;
+  }
+
+  &__item-info {
+    flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
-    padding: $space-3;
-    opacity: 0;
-    transition: opacity $transition-normal;
+    gap: 2px;
   }
 
   &__item-category {
     font-family: $font-family-body;
-    font-size: $font-size-xs;
+    font-size: 10px;
     font-weight: $font-weight-semibold;
-    color: $color-secondary;
+    color: $color-primary;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: $space-1;
+    letter-spacing: 0.07em;
   }
 
   &__item-alt {
     font-family: $font-family-body;
     font-size: $font-size-xs;
-    color: $color-neutral-300;
-    margin-bottom: $space-3;
+    color: $color-neutral-500;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   &__delete-btn {
-    align-self: flex-start;
-    padding: $space-1 $space-3;
-    background-color: color.adjust($color-error, $lightness: -5%);
-    color: $color-white;
-    border: none;
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 4px $space-2;
+    min-height: 30px;
+    background-color: $color-white;
+    border: 1px solid $color-neutral-200;
     border-radius: $border-radius-sm;
     font-family: $font-family-body;
     font-size: $font-size-xs;
     font-weight: $font-weight-medium;
+    color: $color-neutral-500;
     cursor: pointer;
-    transition: background-color $transition-fast;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+    white-space: nowrap;
+
+    @include respond-below('md') {
+      min-height: 44px;
+      padding: $space-2 $space-3;
+    }
 
     &:hover:not(:disabled) {
-      background-color: color.adjust($color-error, $lightness: -15%);
+      background-color: rgba($color-error, 0.07);
+      border-color: rgba($color-error, 0.24);
+      color: $color-error;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $color-error;
+      outline-offset: 2px;
     }
 
     &:disabled {
@@ -297,4 +413,8 @@
       cursor: not-allowed;
     }
   }
+}
+
+@keyframes gallerySpin {
+  to { transform: rotate(360deg); }
 }

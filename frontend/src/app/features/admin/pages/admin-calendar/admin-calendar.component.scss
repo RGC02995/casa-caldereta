@@ -5,7 +5,7 @@
 .admin-calendar {
 
   &__header {
-    margin-bottom: $space-8;
+    margin-bottom: $space-6;
   }
 
   &__title {
@@ -13,21 +13,24 @@
     font-size: $font-size-2xl;
     color: $color-neutral-800;
     font-weight: $font-weight-semibold;
+    letter-spacing: -0.02em;
+    margin: 0;
   }
 
   &__load-error {
     font-family: $font-family-body;
     font-size: $font-size-sm;
-    color: $color-error;
-    padding: $space-4;
-    background-color: color.adjust($color-error, $lightness: 42%);
+    color: color.adjust($color-error, $lightness: -8%);
+    padding: $space-3 $space-4;
+    background-color: rgba($color-error, 0.07);
+    border-left: 3px solid $color-error;
     border-radius: $border-radius-sm;
     margin-bottom: $space-6;
   }
 
   &__layout {
     display: grid;
-    gap: $space-8;
+    gap: $space-6;
 
     @include respond-to('xl') {
       grid-template-columns: 1fr 380px;
@@ -39,9 +42,10 @@
 
   &__cal-section {
     background-color: $color-white;
-    border: 1px solid $border-color;
+    border: 1px solid $color-neutral-200;
     border-radius: $border-radius-md;
     padding: $space-6;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   }
 
   &__cal-nav {
@@ -52,23 +56,32 @@
   }
 
   &__cal-nav-btn {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     background: none;
-    border: 1px solid $border-color;
+    border: 1px solid $color-neutral-200;
     border-radius: $border-radius-sm;
-    font-size: $font-size-xl;
     color: $color-neutral-600;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: border-color $transition-fast, color $transition-fast;
-    line-height: 1;
+    transition: border-color 120ms ease, color 120ms ease, background-color 120ms ease;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
 
     &:hover {
       border-color: $color-primary;
       color: $color-primary;
+      background-color: rgba($color-primary, 0.04);
+    }
+
+    &:focus-visible {
+      outline: 2px solid $color-primary;
+      outline-offset: 2px;
     }
   }
 
@@ -78,6 +91,7 @@
     font-weight: $font-weight-semibold;
     color: $color-neutral-800;
     text-transform: capitalize;
+    letter-spacing: -0.01em;
   }
 
   &__cal-legend {
@@ -97,14 +111,18 @@
 
     &::before {
       content: '';
-      width: 12px;
-      height: 12px;
+      width: 10px;
+      height: 10px;
       border-radius: 2px;
+      flex-shrink: 0;
     }
 
     &--booked::before  { background-color: #3b82f6; }
     &--blocked::before { background-color: $color-error; }
-    &--priced::before  { background-color: color.adjust($color-primary, $lightness: 30%); border: 1px solid $color-primary; }
+    &--priced::before  {
+      background-color: color.adjust($color-primary, $lightness: 30%);
+      border: 1px solid $color-primary;
+    }
   }
 
   &__grid {
@@ -119,21 +137,31 @@
     font-weight: $font-weight-semibold;
     color: $color-neutral-500;
     text-align: center;
-    padding: $space-2 0;
+    padding: $space-1 0;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
+
+    @include respond-to('md') {
+      padding: $space-2 0;
+    }
   }
 
   &__grid-cell {
-    min-height: 56px;
+    min-height: 40px;
     border-radius: $border-radius-sm;
-    padding: $space-2;
+    padding: $space-1;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 2px;
+    gap: 1px;
     position: relative;
-    transition: background-color $transition-fast;
+    transition: background-color 120ms ease;
+
+    @include respond-to('md') {
+      min-height: 56px;
+      padding: $space-2;
+      gap: 2px;
+    }
 
     &--empty {
       background: none;
@@ -164,27 +192,43 @@
 
   &__grid-day {
     font-family: $font-family-body;
-    font-size: $font-size-sm;
+    font-size: $font-size-xs;
     font-weight: $font-weight-medium;
     color: $color-neutral-700;
     line-height: 1;
+
+    @include respond-to('md') {
+      font-size: $font-size-sm;
+    }
   }
 
+  // Precio y badges: solo visibles en pantallas md+ (leyenda explica colores en móvil)
+
   &__grid-price {
+    display: none;
     font-family: $font-family-body;
     font-size: 10px;
     color: $color-primary;
     font-weight: $font-weight-medium;
     line-height: 1;
+
+    @include respond-to('md') {
+      display: block;
+    }
   }
 
   &__grid-badge {
+    display: none;
     font-family: $font-family-body;
     font-size: 9px;
     font-weight: $font-weight-semibold;
     padding: 1px 4px;
     border-radius: 2px;
     line-height: 1.4;
+
+    @include respond-to('md') {
+      display: block;
+    }
 
     &--booked {
       background-color: #3b82f6;
@@ -201,49 +245,62 @@
 
   &__panel {
     background-color: $color-white;
-    border: 1px solid $border-color;
+    border: 1px solid $color-neutral-200;
     border-radius: $border-radius-md;
     overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   }
+
+  // Tabs como segmented control dentro del panel
 
   &__panel-tabs {
     display: flex;
-    border-bottom: 1px solid $border-color;
+    border-bottom: 1px solid $color-neutral-200;
+    background-color: $color-neutral-100;
   }
 
   &__panel-tab {
     flex: 1;
-    padding: $space-4;
+    padding: $space-3 $space-4;
+    min-height: 44px;
     background: none;
     border: none;
+    border-bottom: 3px solid transparent;
     font-family: $font-family-body;
     font-size: $font-size-sm;
     font-weight: $font-weight-medium;
     color: $color-neutral-500;
     cursor: pointer;
-    transition: color $transition-fast, border-bottom $transition-fast;
-    border-bottom: 3px solid transparent;
+    transition: color 120ms ease, border-color 120ms ease;
 
     &:hover {
-      color: $color-primary;
+      color: $color-neutral-800;
     }
 
     &--active {
       color: $color-primary;
       border-bottom-color: $color-primary;
+      background-color: $color-white;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $color-primary;
+      outline-offset: -2px;
     }
   }
 
   &__panel-content {
-    padding: $space-6;
+    padding: $space-5 $space-6;
   }
 
   &__panel-heading {
-    font-family: $font-family-heading;
-    font-size: $font-size-base;
+    font-family: $font-family-body;
+    font-size: 11px;
     font-weight: $font-weight-semibold;
-    color: $color-neutral-800;
-    margin-bottom: $space-4;
+    color: $color-neutral-500;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    margin: 0 0 $space-4;
   }
 
   // ── FORM ──────────────────────────────────────────────────
@@ -252,9 +309,9 @@
     display: flex;
     flex-direction: column;
     gap: $space-4;
-    margin-bottom: $space-6;
-    padding-bottom: $space-6;
-    border-bottom: 1px solid $border-color;
+    margin-bottom: $space-5;
+    padding-bottom: $space-5;
+    border-bottom: 1px solid $color-neutral-200;
   }
 
   &__field {
@@ -271,36 +328,41 @@
 
   &__label {
     font-family: $font-family-body;
-    font-size: $font-size-xs;
+    font-size: $font-size-sm;
     font-weight: $font-weight-medium;
-    color: $color-neutral-600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    color: $color-neutral-700;
   }
 
   &__input {
-    padding: $space-2 $space-3;
-    border: 1px solid $border-color;
+    padding: 10px 14px;
+    border: 1.5px solid $color-neutral-300;
     border-radius: $border-radius-sm;
     font-family: $font-family-body;
     font-size: $font-size-sm;
     color: $color-neutral-800;
     background-color: $color-white;
-    transition: border-color $transition-fast;
+    transition: border-color 140ms ease, box-shadow 140ms ease;
+    outline: none;
     width: 100%;
 
     &:focus {
-      outline: none;
       border-color: $color-primary;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+    }
+
+    &:focus-visible {
+      border-color: $color-primary;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
     }
   }
 
   &__form-error {
     font-family: $font-family-body;
     font-size: $font-size-sm;
-    color: $color-error;
-    padding: $space-3;
-    background-color: color.adjust($color-error, $lightness: 42%);
+    color: color.adjust($color-error, $lightness: -8%);
+    padding: $space-3 $space-4;
+    background-color: rgba($color-error, 0.07);
+    border-left: 3px solid $color-error;
     border-radius: $border-radius-sm;
   }
 
@@ -313,13 +375,17 @@
   // ── BUTTONS ───────────────────────────────────────────────
 
   &__btn {
-    padding: $space-2 $space-5;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px $space-5;
+    min-height: 40px;
     border-radius: $border-radius-sm;
     font-family: $font-family-body;
     font-size: $font-size-sm;
     font-weight: $font-weight-medium;
     cursor: pointer;
-    transition: background-color $transition-fast, color $transition-fast, border-color $transition-fast;
+    transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
     border: 1px solid transparent;
 
     &:disabled {
@@ -327,40 +393,58 @@
       cursor: not-allowed;
     }
 
+    &:focus-visible {
+      outline: 2px solid $color-primary;
+      outline-offset: 2px;
+    }
+
     &--primary {
       background-color: $color-primary;
       color: $color-white;
+      font-weight: $font-weight-semibold;
+      letter-spacing: 0.02em;
 
       &:hover:not(:disabled) {
-        background-color: color.adjust($color-primary, $lightness: -5%);
+        background-color: $color-primary-dark;
       }
     }
 
     &--ghost {
-      background-color: transparent;
-      border-color: $border-color;
+      background-color: $color-white;
+      border-color: $color-neutral-200;
       color: $color-neutral-600;
 
       &:hover:not(:disabled) {
-        border-color: $color-primary;
-        color: $color-primary;
+        background-color: $color-neutral-100;
+        border-color: $color-neutral-300;
+        color: $color-neutral-800;
       }
     }
 
     &--danger {
-      background-color: transparent;
-      border-color: $color-error;
+      background-color: $color-white;
+      border-color: rgba($color-error, 0.24);
       color: $color-error;
 
       &:hover:not(:disabled) {
-        background-color: $color-error;
-        color: $color-white;
+        background-color: rgba($color-error, 0.07);
+        border-color: rgba($color-error, 0.4);
+      }
+
+      &:focus-visible {
+        outline-color: $color-error;
       }
     }
 
     &--sm {
-      padding: $space-1 $space-3;
+      padding: 6px $space-3;
       font-size: $font-size-xs;
+      min-height: 30px;
+
+      @include respond-below('md') {
+        min-height: 44px;
+        padding: $space-2 $space-4;
+      }
     }
   }
 
@@ -372,19 +456,19 @@
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: $space-3;
+    gap: $space-2;
   }
 
   &__rule-item {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: $space-4;
-    padding: $space-4;
+    gap: $space-3;
+    padding: $space-3 $space-4;
     background-color: $color-neutral-100;
     border-radius: $border-radius-sm;
-    border: 1px solid $border-color;
-    transition: opacity $transition-fast;
+    border: 1px solid $color-neutral-200;
+    transition: opacity 120ms ease;
 
     &--processing {
       opacity: 0.4;
@@ -395,7 +479,7 @@
   &__rule-info {
     display: flex;
     flex-direction: column;
-    gap: $space-1;
+    gap: 3px;
     min-width: 0;
   }
 
@@ -419,7 +503,7 @@
     font-family: $font-family-body;
     font-size: $font-size-xs;
     color: $color-primary;
-    font-weight: $font-weight-medium;
+    font-weight: $font-weight-semibold;
   }
 
   &__rule-actions {
@@ -433,5 +517,6 @@
     font-size: $font-size-sm;
     color: $color-neutral-400;
     padding: $space-4 0;
+    text-align: center;
   }
 }

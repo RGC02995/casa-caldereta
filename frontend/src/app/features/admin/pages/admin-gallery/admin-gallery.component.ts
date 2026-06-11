@@ -122,9 +122,9 @@ export class AdminGalleryComponent {
     });
   }
 
-  deletePhoto(photoId: string): void {
+  deletePhoto(photoId: string, photoAlt: string): void {
     if (this.processingId()) return;
-    if (!confirm('¿Eliminar esta foto? Se borrará de Cloudinary y no se puede recuperar.')) return;
+    if (!confirm(`"${photoAlt}"\n\n¿Eliminar esta foto? Se borrará de Cloudinary y no se puede recuperar.`)) return;
 
     this.processingId.set(photoId);
     this.actionError.set('');

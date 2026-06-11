@@ -5,49 +5,119 @@
 .admin-login {
   min-height: 100vh;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: $color-neutral-100;
-  padding: $space-6;
 
-  &__card {
-    background-color: $color-white;
-    border-radius: $border-radius-sm;
-    box-shadow: $shadow-lg;
-    padding: $space-12 $space-8;
-    width: 100%;
-    max-width: 420px;
+  // ── VISUAL PANEL (solo escritorio) ─────────────────────
+
+  &__visual {
+    display: none;
+
+    @include respond-to('lg') {
+      display: flex;
+      flex: 0 0 42%;
+      max-width: 560px;
+      align-items: flex-end;
+      padding: $space-12;
+      background-color: $color-neutral-800;
+      background-image: linear-gradient(
+        155deg,
+        rgba($color-primary-dark, 0.5) 0%,
+        rgba($color-neutral-800, 1) 65%
+      );
+      position: relative;
+      overflow: hidden;
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: -100px;
+      right: -100px;
+      width: 380px;
+      height: 380px;
+      border-radius: 50%;
+      background-color: rgba($color-secondary, 0.04);
+      pointer-events: none;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 80px;
+      left: -60px;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      background-color: rgba($color-primary, 0.06);
+      pointer-events: none;
+    }
   }
 
-  &__header {
-    text-align: center;
-    margin-bottom: $space-8;
+  &__visual-inner {
+    position: relative;
+    z-index: 1;
   }
 
-  &__logo {
-    display: block;
+  &__visual-name {
     font-family: $font-family-heading;
-    font-size: $font-size-lg;
-    color: $color-accent;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: $space-2;
+    font-size: $font-size-3xl;
+    font-weight: $font-weight-semibold;
+    color: $color-secondary;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    margin: 0 0 $space-3;
   }
 
-  &__title {
+  &__visual-location {
     font-family: $font-family-body;
     font-size: $font-size-sm;
-    font-weight: $font-weight-regular;
-    color: $color-neutral-500;
-    letter-spacing: 0.04em;
+    color: rgba($color-white, 0.32);
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     margin: 0;
   }
 
+  // ── PANEL DE FORMULARIO ────────────────────────────────
+
+  &__panel {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $space-8 $space-6;
+    background-color: $color-neutral-100;
+  }
+
+  &__form-wrap {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  &__header {
+    margin-bottom: $space-8;
+  }
+
+  &__title {
+    font-family: $font-family-heading;
+    font-size: $font-size-2xl;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-800;
+    letter-spacing: -0.02em;
+    margin: 0 0 $space-2;
+  }
+
+  &__subtitle {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-500;
+    margin: 0;
+  }
+
+  // ── FORMULARIO ─────────────────────────────────────────
+
   &__form {
     display: flex;
     flex-direction: column;
-    gap: $space-4;
+    gap: $space-5;
   }
 
   &__field {
@@ -61,42 +131,88 @@
     font-size: $font-size-sm;
     font-weight: $font-weight-medium;
     color: $color-neutral-700;
-    letter-spacing: 0.02em;
+  }
+
+  &__input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  &__password-toggle {
+    position: absolute;
+    right: $space-3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: $space-1;
+    cursor: pointer;
+    color: $color-neutral-400;
+    transition: color 140ms ease;
+    border-radius: $border-radius-sm;
+
+    &:hover {
+      color: $color-neutral-700;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $color-primary;
+      outline-offset: 2px;
+    }
   }
 
   &__input {
-    padding: $space-3 $space-4;
-    border: 1px solid $border-color;
+    padding: 11px 14px;
+    width: 100%;
+    border: 1.5px solid $color-neutral-300;
     border-radius: $border-radius-sm;
     font-family: $font-family-body;
     font-size: $font-size-base;
-    color: $color-neutral-700;
+    color: $color-neutral-800;
     background-color: $color-white;
-    transition: border-color $transition-fast;
+    transition: border-color 140ms ease, box-shadow 140ms ease;
     outline: none;
 
     &:focus {
-      border-color: $color-accent;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+    }
+
+    &:focus-visible {
+      border-color: $color-primary;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
     }
 
     &--error {
       border-color: $color-error;
+
+      &:focus {
+        box-shadow: 0 0 0 3px rgba($color-error, 0.1);
+      }
+    }
+
+    &--password {
+      padding-right: $space-10;
     }
   }
 
   &__error {
+    font-family: $font-family-body;
     font-size: $font-size-xs;
     color: $color-error;
   }
 
   &__alert {
     padding: $space-3 $space-4;
-    background-color: rgba($color-error, 0.08);
-    border: 1px solid rgba($color-error, 0.3);
+    background-color: rgba($color-error, 0.07);
+    border: 1px solid rgba($color-error, 0.22);
+    border-left: 3px solid $color-error;
     border-radius: $border-radius-sm;
+    font-family: $font-family-body;
     font-size: $font-size-sm;
-    color: $color-error;
-    text-align: center;
+    color: color.adjust($color-error, $lightness: -8%);
   }
 
   &__submit {
@@ -105,25 +221,30 @@
     justify-content: center;
     gap: $space-2;
     margin-top: $space-2;
-    padding: $space-3 $space-6;
-    background-color: $color-accent;
+    padding: 12px $space-6;
+    background-color: $color-primary;
     color: $color-white;
     border: none;
     border-radius: $border-radius-sm;
     font-family: $font-family-body;
     font-size: $font-size-sm;
-    font-weight: $font-weight-medium;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    font-weight: $font-weight-semibold;
+    letter-spacing: 0.03em;
     cursor: pointer;
-    transition: background-color $transition-fast, opacity $transition-fast;
+    transition: background-color 140ms ease;
+    min-height: 46px;
 
     &:hover:not(:disabled) {
-      background-color: color.adjust($color-accent, $lightness: -8%);
+      background-color: $color-primary-dark;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $color-primary;
+      outline-offset: 3px;
     }
 
     &:disabled {
-      opacity: 0.6;
+      opacity: 0.62;
       cursor: not-allowed;
     }
   }
@@ -131,13 +252,14 @@
   &__spinner {
     width: 16px;
     height: 16px;
-    border: 2px solid rgba($color-white, 0.4);
+    border: 2px solid rgba($color-white, 0.32);
     border-top-color: $color-white;
     border-radius: 50%;
-    animation: spin 0.7s linear infinite;
+    animation: loginSpin 0.7s linear infinite;
+    flex-shrink: 0;
   }
 }
 
-@keyframes spin {
+@keyframes loginSpin {
   to { transform: rotate(360deg); }
 }

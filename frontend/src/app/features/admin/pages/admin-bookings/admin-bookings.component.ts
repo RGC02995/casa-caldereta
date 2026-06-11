@@ -20,6 +20,19 @@ const STATUS_TRANSITIONS: Record<BookingStatus, IStatusTransition[]> = {
   completed: [],
 };
 
+const STATUS_LABELS: Record<BookingStatus, string> = {
+  pending:   'Pendiente',
+  confirmed: 'Confirmada',
+  cancelled: 'Cancelada',
+  completed: 'Completada',
+};
+
+const STATUS_CONFIRMATIONS: Partial<Record<BookingStatus, string>> = {
+  confirmed: '¿Confirmar esta reserva?',
+  cancelled: 'Esta acción no se puede deshacer. ¿Cancelar la reserva de forma definitiva?',
+  completed: 'Esta acción no se puede deshacer. ¿Marcar la reserva como completada?',
+};
+
 @Component({
   selector: 'admin-bookings',
   imports: [DatePipe, CurrencyPipe],
@@ -63,12 +76,20 @@ export class AdminBookingsComponent {
     { label: 'Completadas', value: 'completed' },
   ];
 
+  statusLabel(status: string): string {
+    return STATUS_LABELS[status as BookingStatus] ?? status;
+  }
+
   getTransitions(status: BookingStatus): IStatusTransition[] {
     return STATUS_TRANSITIONS[status];
   }
 
-  changeStatus(bookingId: string, newStatus: BookingStatus): void {
+  changeStatus(bookingId: string, newStatus: BookingStatus, guestName: string): void {
     if (this.processingId()) return;
+
+    const confirmMessage = STATUS_CONFIRMATIONS[newStatus];
+    if (confirmMessage && !confirm(`${guestName}\n\n${confirmMessage}`)) return;
+
     this.processingId.set(bookingId);
     this.actionError.set('');
 
@@ -86,7 +107,7 @@ export class AdminBookingsComponent {
 
   deleteBooking(bookingId: string, guestName: string): void {
     if (this.processingId()) return;
-    if (!confirm(`¿Eliminar la reserva de ${guestName}? Esta acción no se puede deshacer.`)) return;
+    if (!confirm(`${guestName}\n\n¿Eliminar esta reserva? Esta acción no se puede deshacer.`)) return;
 
     this.processingId.set(bookingId);
     this.actionError.set('');

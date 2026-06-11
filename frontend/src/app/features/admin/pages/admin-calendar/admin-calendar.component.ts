@@ -249,14 +249,14 @@ export class AdminCalendarComponent {
     });
   }
 
-  deleteRule(ruleId: string): void {
+  deleteRule(rule: IPricingRule): void {
     if (this.processingId()) return;
-    if (!confirm('¿Eliminar esta regla de precio? Esta acción no se puede deshacer.')) return;
+    if (!confirm(`${rule.label}\n\n¿Eliminar esta regla de precio? Esta acción no se puede deshacer.`)) return;
 
-    this.processingId.set(ruleId);
+    this.processingId.set(rule.id);
     this.pricingError.set('');
 
-    this.pricingService.delete(ruleId).subscribe({
+    this.pricingService.delete(rule.id).subscribe({
       next: () => {
         this.processingId.set(null);
         this.pricingRefresh$.next();
@@ -294,14 +294,16 @@ export class AdminCalendarComponent {
     });
   }
 
-  deleteBlockedPeriod(periodId: string): void {
+  deleteBlockedPeriod(period: IBlockedPeriod): void {
     if (this.processingId()) return;
-    if (!confirm('¿Eliminar este bloqueo? Las fechas volverán a estar disponibles.')) return;
+    const startFormatted = period.startDate.slice(0, 10).split('-').reverse().join('/');
+    const endFormatted   = period.endDate.slice(0, 10).split('-').reverse().join('/');
+    if (!confirm(`${startFormatted} – ${endFormatted}\n\n¿Eliminar este bloqueo? Las fechas volverán a estar disponibles.`)) return;
 
-    this.processingId.set(periodId);
+    this.processingId.set(period.id);
     this.blockedError.set('');
 
-    this.blockedService.delete(periodId).subscribe({
+    this.blockedService.delete(period.id).subscribe({
       next: () => {
         this.processingId.set(null);
         this.blockedRefresh$.next();

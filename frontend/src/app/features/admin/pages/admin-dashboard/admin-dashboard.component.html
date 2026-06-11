@@ -1,51 +1,76 @@
 <div class="admin-dashboard">
 
   <header class="admin-dashboard__header">
+    <p class="admin-dashboard__date">{{ todayFormatted }}</p>
     <h1 class="admin-dashboard__title">Dashboard</h1>
   </header>
 
-  <div class="admin-dashboard__grid">
+  <!-- ESTADÍSTICAS -->
+  <div class="admin-dashboard__stats" aria-label="Resumen del estado de la propiedad">
 
-    <section class="admin-dashboard__card admin-dashboard__card--status">
-      <h2 class="admin-dashboard__card-title">Estado de la casa</h2>
-      <div class="admin-dashboard__status"
-           [class.admin-dashboard__status--occupied]="houseStatus() === 'occupied'">
-        <span class="admin-dashboard__status-dot"></span>
-        <span class="admin-dashboard__status-label">
+    <div class="admin-dashboard__stat"
+         [class.admin-dashboard__stat--free]="houseStatus() === 'free'"
+         [class.admin-dashboard__stat--occupied]="houseStatus() === 'occupied'">
+      <span class="admin-dashboard__stat-label">Estado hoy</span>
+      <div class="admin-dashboard__stat-row">
+        <span class="admin-dashboard__stat-dot" aria-hidden="true"></span>
+        <span class="admin-dashboard__stat-value">
           {{ houseStatus() === 'occupied' ? 'Ocupada' : 'Libre' }}
         </span>
       </div>
-    </section>
+    </div>
+
+    <div class="admin-dashboard__stat admin-dashboard__stat--pending">
+      <span class="admin-dashboard__stat-label">Pendientes</span>
+      <span class="admin-dashboard__stat-number">{{ pendingCount() }}</span>
+    </div>
+
+    <div class="admin-dashboard__stat admin-dashboard__stat--next">
+      <span class="admin-dashboard__stat-label">Próxima entrada</span>
+      @if (nextCheckIn()) {
+        <span class="admin-dashboard__stat-value">
+          {{ nextCheckIn()!.checkIn | date:'d MMM':'':'es' }}
+          <span class="admin-dashboard__stat-guest">{{ nextCheckIn()!.guestName }}</span>
+        </span>
+      } @else {
+        <span class="admin-dashboard__stat-empty">Sin confirmar</span>
+      }
+    </div>
+
+  </div>
+
+  <!-- GRID PRINCIPAL -->
+  <div class="admin-dashboard__grid">
 
     <section class="admin-dashboard__card admin-dashboard__card--bookings">
-      <h2 class="admin-dashboard__card-title">Próximas reservas</h2>
+      <h2 class="admin-dashboard__card-heading">Próximas reservas</h2>
 
       @if (bookingsError()) {
-        <p class="admin-dashboard__error">{{ bookingsError() }}</p>
+        <p class="admin-dashboard__error" role="alert">{{ bookingsError() }}</p>
       } @else if (upcomingBookings().length === 0) {
         <p class="admin-dashboard__empty">No hay reservas próximas.</p>
       } @else {
         <div class="admin-dashboard__table-wrapper">
-          <table class="admin-dashboard__table">
-            <thead class="admin-dashboard__table-head">
+          <table class="admin-dashboard__table" aria-label="Próximas reservas">
+            <thead>
               <tr>
-                <th class="admin-dashboard__table-th">Huésped</th>
-                <th class="admin-dashboard__table-th">Entrada</th>
-                <th class="admin-dashboard__table-th">Salida</th>
-                <th class="admin-dashboard__table-th">Noches</th>
-                <th class="admin-dashboard__table-th">Estado</th>
+                <th class="admin-dashboard__th" scope="col">Huésped</th>
+                <th class="admin-dashboard__th" scope="col">Entrada</th>
+                <th class="admin-dashboard__th admin-dashboard__th--hide-sm" scope="col">Salida</th>
+                <th class="admin-dashboard__th admin-dashboard__th--hide-sm" scope="col">Noches</th>
+                <th class="admin-dashboard__th" scope="col">Estado</th>
               </tr>
             </thead>
-            <tbody class="admin-dashboard__table-body">
+            <tbody>
               @for (booking of upcomingBookings(); track booking.id) {
-                <tr class="admin-dashboard__table-row">
-                  <td class="admin-dashboard__table-td">{{ booking.guestName }}</td>
-                  <td class="admin-dashboard__table-td">{{ booking.checkIn | date: 'dd/MM/yyyy' }}</td>
-                  <td class="admin-dashboard__table-td">{{ booking.checkOut | date: 'dd/MM/yyyy' }}</td>
-                  <td class="admin-dashboard__table-td">{{ booking.guests }}</td>
-                  <td class="admin-dashboard__table-td">
+                <tr class="admin-dashboard__tr">
+                  <td class="admin-dashboard__td admin-dashboard__td--name">{{ booking.guestName }}</td>
+                  <td class="admin-dashboard__td">{{ booking.checkIn | date:'dd/MM/yy' }}</td>
+                  <td class="admin-dashboard__td admin-dashboard__td--hide-sm">{{ booking.checkOut | date:'dd/MM/yy' }}</td>
+                  <td class="admin-dashboard__td admin-dashboard__td--hide-sm">{{ getNights(booking.checkIn, booking.checkOut) }}</td>
+                  <td class="admin-dashboard__td">
                     <span class="admin-dashboard__badge admin-dashboard__badge--{{ booking.status }}">
-                      {{ booking.status }}
+                      {{ statusLabel(booking.status) }}
                     </span>
                   </td>
                 </tr>
@@ -53,19 +78,29 @@
             </tbody>
           </table>
         </div>
+        <div class="admin-dashboard__card-footer">
+          <a class="admin-dashboard__view-all" routerLink="/admin/reservas">
+            Ver todas las reservas
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
+        </div>
       }
     </section>
 
     <section class="admin-dashboard__card admin-dashboard__card--links">
-      <h2 class="admin-dashboard__card-title">Accesos rápidos</h2>
-      <div class="admin-dashboard__links">
+      <h2 class="admin-dashboard__card-heading">Accesos rápidos</h2>
+      <nav class="admin-dashboard__links" aria-label="Accesos rápidos">
         @for (link of quickLinks; track link.route) {
           <a class="admin-dashboard__link" [routerLink]="link.route">
-            <span class="admin-dashboard__link-icon" aria-hidden="true">{{ link.icon }}</span>
             <span class="admin-dashboard__link-label">{{ link.label }}</span>
+            <svg class="admin-dashboard__link-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <path d="M9 18l6-6-6-6"/>
+            </svg>
           </a>
         }
-      </div>
+      </nav>
     </section>
 
   </div>

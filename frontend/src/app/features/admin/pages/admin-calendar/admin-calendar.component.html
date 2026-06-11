@@ -11,7 +11,7 @@
   <div class="admin-calendar__layout">
 
     <!-- ── CALENDARIO ─────────────────────────────────────── -->
-    <section class="admin-calendar__cal-section">
+    <section class="admin-calendar__cal-section" aria-label="Calendario mensual">
 
       <div class="admin-calendar__cal-nav">
         <button
@@ -21,7 +21,7 @@
           aria-label="Mes anterior"
         >&#8249;</button>
 
-        <span class="admin-calendar__cal-month">{{ viewMonthLabel() }}</span>
+        <span class="admin-calendar__cal-month" aria-live="polite" aria-atomic="true">{{ viewMonthLabel() }}</span>
 
         <button
           class="admin-calendar__cal-nav-btn"
@@ -31,7 +31,7 @@
         >&#8250;</button>
       </div>
 
-      <div class="admin-calendar__cal-legend">
+      <div class="admin-calendar__cal-legend" role="group" aria-label="Leyenda del calendario">
         <span class="admin-calendar__legend-item admin-calendar__legend-item--booked">Reservado</span>
         <span class="admin-calendar__legend-item admin-calendar__legend-item--blocked">Bloqueado</span>
         <span class="admin-calendar__legend-item admin-calendar__legend-item--priced">Con precio</span>
@@ -54,22 +54,25 @@
               [class.admin-calendar__grid-cell--past]="cell.isPast"
               [class.admin-calendar__grid-cell--booked]="cell.booking !== null"
               [class.admin-calendar__grid-cell--blocked]="cell.isBlocked"
-              [attr.aria-label]="cell.dateStr"
+              [attr.aria-label]="cell.dateStr
+                + (cell.booking ? ' — ' + (cell.booking.status === 'confirmed' ? 'Confirmada' : 'Pendiente') : '')
+                + (cell.isBlocked ? ' — Bloqueado' : '')
+                + (cell.price !== null && !cell.booking && !cell.isBlocked ? ' — ' + cell.price + '€/noche' : '')"
             >
               <span class="admin-calendar__grid-day">{{ cell.day }}</span>
 
               @if (cell.price !== null && !cell.booking && !cell.isBlocked) {
-                <span class="admin-calendar__grid-price">{{ cell.price | currency:'EUR':'symbol':'1.0-0':'es' }}</span>
+                <span class="admin-calendar__grid-price" aria-hidden="true">{{ cell.price | currency:'EUR':'symbol':'1.0-0':'es' }}</span>
               }
 
               @if (cell.booking) {
-                <span class="admin-calendar__grid-badge admin-calendar__grid-badge--booked">
+                <span class="admin-calendar__grid-badge admin-calendar__grid-badge--booked" aria-hidden="true">
                   {{ cell.booking.status === 'confirmed' ? 'Conf.' : 'Pen.' }}
                 </span>
               }
 
               @if (cell.isBlocked) {
-                <span class="admin-calendar__grid-badge admin-calendar__grid-badge--blocked">Bloq.</span>
+                <span class="admin-calendar__grid-badge admin-calendar__grid-badge--blocked" aria-hidden="true">Bloq.</span>
               }
             </div>
           }
@@ -81,23 +84,27 @@
     <!-- ── PANEL LATERAL ──────────────────────────────────── -->
     <aside class="admin-calendar__panel">
 
-      <div class="admin-calendar__panel-tabs" role="tablist">
+      <div class="admin-calendar__panel-tabs" role="tablist" aria-label="Secciones de gestión">
         <button
           class="admin-calendar__panel-tab"
+          id="tab-pricing"
           role="tab"
           type="button"
           [class.admin-calendar__panel-tab--active]="activePanel() === 'pricing'"
-          [attr.aria-selected]="activePanel() === 'pricing'"
+          [attr.aria-selected]="activePanel() === 'pricing' ? 'true' : 'false'"
+          aria-controls="panel-pricing"
           (click)="activePanel.set('pricing')"
         >
           Precios
         </button>
         <button
           class="admin-calendar__panel-tab"
+          id="tab-blocked"
           role="tab"
           type="button"
           [class.admin-calendar__panel-tab--active]="activePanel() === 'blocked'"
-          [attr.aria-selected]="activePanel() === 'blocked'"
+          [attr.aria-selected]="activePanel() === 'blocked' ? 'true' : 'false'"
+          aria-controls="panel-blocked"
           (click)="activePanel.set('blocked')"
         >
           Bloqueos
@@ -106,7 +113,10 @@
 
       <!-- PANEL PRECIOS -->
       @if (activePanel() === 'pricing') {
-        <div class="admin-calendar__panel-content" role="tabpanel">
+        <div class="admin-calendar__panel-content"
+             id="panel-pricing"
+             role="tabpanel"
+             aria-labelledby="tab-pricing">
 
           <h2 class="admin-calendar__panel-heading">
             {{ editingRuleId() ? 'Editar regla' : 'Nueva regla de precio' }}
@@ -118,13 +128,14 @@
 
           <form class="admin-calendar__form" (submit)="onPricingSubmit($event)" novalidate>
             <div class="admin-calendar__field">
-              <label class="admin-calendar__label" for="priceLabel">Etiqueta</label>
+              <label class="admin-calendar__label" for="priceLabel">Etiqueta *</label>
               <input
                 id="priceLabel"
                 class="admin-calendar__input"
                 type="text"
                 maxlength="100"
                 placeholder="Ej: Temporada alta"
+                aria-required="true"
                 [value]="priceLabel()"
                 (input)="priceLabel.set($any($event.target).value)"
               />
@@ -132,21 +143,23 @@
 
             <div class="admin-calendar__field-row">
               <div class="admin-calendar__field">
-                <label class="admin-calendar__label" for="priceStart">Desde</label>
+                <label class="admin-calendar__label" for="priceStart">Desde *</label>
                 <input
                   id="priceStart"
                   class="admin-calendar__input"
                   type="date"
+                  aria-required="true"
                   [value]="priceStart()"
                   (input)="priceStart.set($any($event.target).value)"
                 />
               </div>
               <div class="admin-calendar__field">
-                <label class="admin-calendar__label" for="priceEnd">Hasta</label>
+                <label class="admin-calendar__label" for="priceEnd">Hasta *</label>
                 <input
                   id="priceEnd"
                   class="admin-calendar__input"
                   type="date"
+                  aria-required="true"
                   [value]="priceEnd()"
                   (input)="priceEnd.set($any($event.target).value)"
                 />
@@ -155,7 +168,7 @@
 
             <div class="admin-calendar__field-row">
               <div class="admin-calendar__field">
-                <label class="admin-calendar__label" for="priceAmount">€/noche</label>
+                <label class="admin-calendar__label" for="priceAmount">€/noche *</label>
                 <input
                   id="priceAmount"
                   class="admin-calendar__input"
@@ -163,6 +176,7 @@
                   min="1"
                   max="10000"
                   placeholder="150"
+                  aria-required="true"
                   [value]="pricePerNight() ?? ''"
                   (input)="pricePerNight.set(+$any($event.target).value || null)"
                 />
@@ -193,17 +207,19 @@
                 class="admin-calendar__btn admin-calendar__btn--primary"
                 type="submit"
                 [disabled]="!priceFormValid() || isSubmittingPrice()"
+                [attr.aria-busy]="isSubmittingPrice() || null"
               >
                 {{ isSubmittingPrice() ? 'Guardando…' : (editingRuleId() ? 'Actualizar' : 'Crear regla') }}
               </button>
             </div>
           </form>
 
-          <ul class="admin-calendar__rule-list">
+          <ul class="admin-calendar__rule-list" aria-label="Reglas de precio definidas">
             @for (rule of pricingRules(); track rule.id) {
               <li
                 class="admin-calendar__rule-item"
                 [class.admin-calendar__rule-item--processing]="processingId() === rule.id"
+                [attr.aria-busy]="processingId() === rule.id || null"
               >
                 <div class="admin-calendar__rule-info">
                   <span class="admin-calendar__rule-label">{{ rule.label }}</span>
@@ -218,14 +234,16 @@
                   <button
                     class="admin-calendar__btn admin-calendar__btn--sm admin-calendar__btn--ghost"
                     type="button"
+                    [attr.aria-label]="'Editar regla: ' + rule.label"
                     [disabled]="!!processingId()"
                     (click)="startEditRule(rule)"
                   >Editar</button>
                   <button
                     class="admin-calendar__btn admin-calendar__btn--sm admin-calendar__btn--danger"
                     type="button"
+                    [attr.aria-label]="'Eliminar regla: ' + rule.label"
                     [disabled]="!!processingId()"
-                    (click)="deleteRule(rule.id)"
+                    (click)="deleteRule(rule)"
                   >Eliminar</button>
                 </div>
               </li>
@@ -239,7 +257,10 @@
 
       <!-- PANEL BLOQUEOS -->
       @if (activePanel() === 'blocked') {
-        <div class="admin-calendar__panel-content" role="tabpanel">
+        <div class="admin-calendar__panel-content"
+             id="panel-blocked"
+             role="tabpanel"
+             aria-labelledby="tab-blocked">
 
           <h2 class="admin-calendar__panel-heading">Nuevo bloqueo</h2>
 
@@ -250,21 +271,23 @@
           <form class="admin-calendar__form" (submit)="onBlockedSubmit($event)" novalidate>
             <div class="admin-calendar__field-row">
               <div class="admin-calendar__field">
-                <label class="admin-calendar__label" for="blockStart">Desde</label>
+                <label class="admin-calendar__label" for="blockStart">Desde *</label>
                 <input
                   id="blockStart"
                   class="admin-calendar__input"
                   type="date"
+                  aria-required="true"
                   [value]="blockStart()"
                   (input)="blockStart.set($any($event.target).value)"
                 />
               </div>
               <div class="admin-calendar__field">
-                <label class="admin-calendar__label" for="blockEnd">Hasta</label>
+                <label class="admin-calendar__label" for="blockEnd">Hasta *</label>
                 <input
                   id="blockEnd"
                   class="admin-calendar__input"
                   type="date"
+                  aria-required="true"
                   [value]="blockEnd()"
                   (input)="blockEnd.set($any($event.target).value)"
                 />
@@ -289,17 +312,19 @@
                 class="admin-calendar__btn admin-calendar__btn--primary"
                 type="submit"
                 [disabled]="!blockFormValid() || isSubmittingBlock()"
+                [attr.aria-busy]="isSubmittingBlock() || null"
               >
                 {{ isSubmittingBlock() ? 'Guardando…' : 'Bloquear fechas' }}
               </button>
             </div>
           </form>
 
-          <ul class="admin-calendar__rule-list">
+          <ul class="admin-calendar__rule-list" aria-label="Períodos bloqueados">
             @for (period of blockedPeriods(); track period.id) {
               <li
                 class="admin-calendar__rule-item"
                 [class.admin-calendar__rule-item--processing]="processingId() === period.id"
+                [attr.aria-busy]="processingId() === period.id || null"
               >
                 <div class="admin-calendar__rule-info">
                   <span class="admin-calendar__rule-dates">
@@ -312,8 +337,9 @@
                 <button
                   class="admin-calendar__btn admin-calendar__btn--sm admin-calendar__btn--danger"
                   type="button"
+                  [attr.aria-label]="'Eliminar bloqueo: ' + (period.startDate | date:'dd/MM/yy':'':'es') + ' – ' + (period.endDate | date:'dd/MM/yy':'':'es')"
                   [disabled]="!!processingId()"
-                  (click)="deleteBlockedPeriod(period.id)"
+                  (click)="deleteBlockedPeriod(period)"
                 >Eliminar</button>
               </li>
             } @empty {

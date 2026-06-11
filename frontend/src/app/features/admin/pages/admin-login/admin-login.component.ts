@@ -17,8 +17,13 @@ export class AdminLoginComponent {
   readonly passwordValue   = signal('');
   readonly emailTouched    = signal(false);
   readonly passwordTouched = signal(false);
-  readonly isLoading       = signal(false);
-  readonly errorMessage    = signal('');
+  readonly isLoading         = signal(false);
+  readonly errorMessage      = signal('');
+  readonly passwordVisible   = signal(false);
+
+  togglePasswordVisibility(): void {
+    this.passwordVisible.update(visible => !visible);
+  }
 
   readonly emailError = computed(() => {
     if (!this.emailTouched()) return '';

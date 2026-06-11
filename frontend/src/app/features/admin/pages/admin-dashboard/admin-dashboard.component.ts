@@ -7,11 +7,19 @@ import { map, catchError } from 'rxjs/operators';
 import { BookingService } from '../../../../core/services/booking.service';
 import { IBooking } from '../../../../core/models/booking.model';
 
+type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
+
 interface IQuickLink {
   readonly label: string;
-  readonly icon:  string;
   readonly route: string;
 }
+
+const STATUS_LABELS: Record<BookingStatus, string> = {
+  pending:   'Pendiente',
+  confirmed: 'Confirmada',
+  cancelled: 'Cancelada',
+  completed: 'Completada',
+};
 
 @Component({
   selector: 'admin-dashboard',
@@ -21,6 +29,11 @@ interface IQuickLink {
 })
 export class AdminDashboardComponent {
   private readonly bookingService = inject(BookingService);
+
+  readonly today          = new Date();
+  readonly todayFormatted = new Date().toLocaleDateString('es-ES', {
+    weekday: 'long', day: 'numeric', month: 'long',
+  }).replace(/^\w/, c => c.toUpperCase());
 
   readonly bookingsError = signal('');
 
@@ -40,18 +53,39 @@ export class AdminDashboardComponent {
   );
 
   readonly houseStatus = computed<'free' | 'occupied'>(() => {
-    const today = new Date();
+    const now = new Date();
     const isOccupied = this.upcomingBookings().some(booking =>
-      new Date(booking.checkIn) <= today &&
-      new Date(booking.checkOut) >= today &&
+      new Date(booking.checkIn) <= now &&
+      new Date(booking.checkOut) >= now &&
       booking.status === 'confirmed',
     );
     return isOccupied ? 'occupied' : 'free';
   });
 
+  readonly pendingCount = computed(() =>
+    this.upcomingBookings().filter(b => b.status === 'pending').length,
+  );
+
+  readonly nextCheckIn = computed(() => {
+    const now = new Date();
+    return this.upcomingBookings()
+      .filter(b => b.status === 'confirmed' && new Date(b.checkIn) > now)
+      .sort((a, b) => new Date(a.checkIn).getTime() - new Date(b.checkIn).getTime())[0] ?? null;
+  });
+
   readonly quickLinks: IQuickLink[] = [
-    { label: 'Gestionar fotos',  icon: '🖼', route: '/admin/fotos'    },
-    { label: 'Gestionar rutas',  icon: '🗺', route: '/admin/rutas'    },
-    { label: 'Ver reservas',     icon: '📅', route: '/admin/reservas' },
+    { label: 'Ver reservas',    route: '/admin/reservas'   },
+    { label: 'Calendario',      route: '/admin/calendario' },
+    { label: 'Gestionar fotos', route: '/admin/fotos'      },
+    { label: 'Gestionar rutas', route: '/admin/rutas'      },
   ];
+
+  statusLabel(status: string): string {
+    return STATUS_LABELS[status as BookingStatus] ?? status;
+  }
+
+  getNights(checkIn: Date | string, checkOut: Date | string): number {
+    const msPerDay = 1000 * 60 * 60 * 24;
+    return Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / msPerDay);
+  }
 }

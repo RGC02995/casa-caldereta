@@ -11,15 +11,18 @@
 
       <div class="admin-gallery__upload-dropzone" [class.admin-gallery__upload-dropzone--has-preview]="previewUrl()">
         @if (previewUrl()) {
-          <img class="admin-gallery__upload-preview" [src]="previewUrl()!" alt="Vista previa" />
+          <img class="admin-gallery__upload-preview" [src]="previewUrl()!" alt="Vista previa de la imagen seleccionada" />
         } @else {
-          <span class="admin-gallery__upload-placeholder">Haz clic para seleccionar una imagen</span>
+          <span class="admin-gallery__upload-placeholder" aria-hidden="true">
+            Haz clic para seleccionar una imagen
+          </span>
         }
         <input
           #fileInput
           class="admin-gallery__upload-input"
           type="file"
           accept="image/jpeg,image/png,image/webp"
+          aria-label="Seleccionar imagen para subir (JPEG, PNG o WebP, máx. 10 MB)"
           (change)="onFileSelected($event)"
         />
       </div>
@@ -55,6 +58,7 @@
           class="admin-gallery__upload-btn"
           type="submit"
           [disabled]="isUploading() || !selectedFile()"
+          [attr.aria-busy]="isUploading() || null"
         >
           {{ isUploading() ? 'Subiendo...' : 'Subir foto' }}
         </button>
@@ -63,7 +67,7 @@
     </form>
 
     @if (actionError()) {
-      <p class="admin-gallery__action-error">{{ actionError() }}</p>
+      <p class="admin-gallery__action-error" role="alert">{{ actionError() }}</p>
     }
   </section>
 
@@ -71,15 +75,16 @@
     <h2 class="admin-gallery__section-title">Fotos subidas</h2>
 
     @if (loadError()) {
-      <p class="admin-gallery__load-error">{{ loadError() }}</p>
+      <p class="admin-gallery__load-error" role="alert">{{ loadError() }}</p>
     } @else {
 
-      <div class="admin-gallery__filters">
+      <div class="admin-gallery__filters" role="group" aria-label="Filtrar fotos por categoría">
         @for (filterOption of filters; track filterOption.value) {
           <button
             class="admin-gallery__filter-btn"
             [class.admin-gallery__filter-btn--active]="activeFilter() === filterOption.value"
             type="button"
+            [attr.aria-pressed]="activeFilter() === filterOption.value ? 'true' : 'false'"
             (click)="activeFilter.set(filterOption.value)"
           >
             {{ filterOption.label }}
@@ -93,25 +98,34 @@
         <div class="admin-gallery__grid">
           @for (photo of filteredPhotos(); track photo.id) {
             <div class="admin-gallery__item"
-                 [class.admin-gallery__item--processing]="processingId() === photo.id">
-              <img
-                class="admin-gallery__img"
-                [src]="photo.url"
-                [alt]="photo.alt"
-                loading="lazy"
-              />
-              <div class="admin-gallery__item-overlay">
-                <span class="admin-gallery__item-category">{{ getCategoryLabel(photo.category) }}</span>
-                <span class="admin-gallery__item-alt">{{ photo.alt }}</span>
+                 [class.admin-gallery__item--processing]="processingId() === photo.id"
+                 [attr.aria-busy]="processingId() === photo.id || null">
+
+              <div class="admin-gallery__item-img-wrap">
+                <img
+                  class="admin-gallery__img"
+                  [src]="photo.url"
+                  [alt]="photo.alt"
+                  loading="lazy"
+                />
+              </div>
+
+              <div class="admin-gallery__item-footer">
+                <div class="admin-gallery__item-info">
+                  <span class="admin-gallery__item-category">{{ getCategoryLabel(photo.category) }}</span>
+                  <span class="admin-gallery__item-alt" [title]="photo.alt">{{ photo.alt }}</span>
+                </div>
                 <button
                   class="admin-gallery__delete-btn"
                   type="button"
+                  [attr.aria-label]="'Eliminar foto: ' + photo.alt"
                   [disabled]="processingId() !== null"
-                  (click)="deletePhoto(photo.id)"
+                  (click)="deletePhoto(photo.id, photo.alt)"
                 >
                   Eliminar
                 </button>
               </div>
+
             </div>
           }
         </div>
