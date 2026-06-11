@@ -100,13 +100,6 @@
     grid-template-columns: repeat(4, 1fr);
   }
 
-  // Variación editorial: cada 5.º y cada 9.º item ocupa dos columnas
-  &__item {
-    &:nth-child(5n + 1) {
-      @include respond-to('md') { grid-column: span 2; }
-    }
-  }
-
   &__btn {
     @include button-reset;
     display: block;

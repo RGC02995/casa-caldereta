@@ -8,8 +8,8 @@
         src="assets/images/logo.png"
         alt="Casa Caldereta"
         class="site-header__logo-img"
-        width="40"
-        height="40"
+        width="44"
+        height="44"
       >
       <span class="site-header__logo-name">Casa Caldereta</span>
     </a>
@@ -40,7 +40,7 @@
           (click)="setLanguage('es')"
           aria-label="Español"
         >ES</button>
-        <span class="site-header__lang-sep" aria-hidden="true">|</span>
+        <span class="site-header__lang-sep" aria-hidden="true">·</span>
         <button
           type="button"
           class="site-header__lang-btn"
@@ -55,7 +55,7 @@
         {{ 'nav.booking' | translate }}
       </a>
 
-      <!-- Hamburger (solo móvil, oculto cuando el menú está abierto) -->
+      <!-- Hamburger (solo móvil) -->
       @if (!isMobileMenuOpen()) {
         <button
           type="button"
@@ -81,15 +81,33 @@
       aria-modal="true"
       aria-label="Menú de navegación"
     >
-      <button
-        type="button"
-        class="site-header__mobile-close"
-        (click)="closeMobileMenu()"
-        aria-label="Cerrar menú"
-      >&times;</button>
 
+      <!-- Cabecera del overlay: logo + botón cerrar -->
+      <div class="site-header__mobile-header">
+        <a routerLink="/" class="site-header__mobile-brand" (click)="closeMobileMenu()">
+          <img
+            src="assets/images/logo.png"
+            alt="Casa Caldereta"
+            class="site-header__mobile-brand-img"
+            width="36"
+            height="36"
+          >
+          <span class="site-header__mobile-brand-name">Casa Caldereta</span>
+        </a>
+        <button
+          type="button"
+          class="site-header__mobile-close"
+          (click)="closeMobileMenu()"
+          aria-label="Cerrar menú"
+        >
+          <span class="site-header__mobile-close-line"></span>
+          <span class="site-header__mobile-close-line"></span>
+        </button>
+      </div>
+
+      <!-- Navegación numerada -->
       <nav class="site-header__mobile-nav" aria-label="Navegación móvil">
-        @for (link of navLinks; track link.path) {
+        @for (link of navLinks; track link.path; let i = $index) {
           <a
             [routerLink]="link.path"
             routerLinkActive="site-header__mobile-link--active"
@@ -97,35 +115,39 @@
             class="site-header__mobile-link"
             (click)="closeMobileMenu()"
           >
-            {{ link.labelKey | translate }}
+            <span class="site-header__mobile-link-text">{{ link.labelKey | translate }}</span>
           </a>
         }
-        <a
-          routerLink="/reservar"
-          class="site-header__mobile-cta"
-          (click)="closeMobileMenu()"
-        >
-          {{ 'nav.booking' | translate }}
-        </a>
       </nav>
 
-      <div class="site-header__mobile-lang">
-        <button
-          type="button"
-          class="site-header__lang-btn"
-          [class.site-header__lang-btn--active]="currentLang() === 'es'"
-          (click)="setLanguage('es')"
-          aria-label="Español"
-        >ES</button>
-        <span class="site-header__lang-sep" aria-hidden="true">|</span>
-        <button
-          type="button"
-          class="site-header__lang-btn"
-          [class.site-header__lang-btn--active]="currentLang() === 'en'"
-          (click)="setLanguage('en')"
-          aria-label="English"
-        >EN</button>
+      <!-- Footer: CTA + idioma + ubicación -->
+      <div class="site-header__mobile-footer">
+        <div class="site-header__mobile-footer-row">
+          <a
+            routerLink="/reservar"
+            class="site-header__mobile-cta"
+            (click)="closeMobileMenu()"
+          >{{ 'nav.booking' | translate }}</a>
+          <div class="site-header__mobile-lang">
+            <button
+              type="button"
+              class="site-header__lang-btn"
+              [class.site-header__lang-btn--active]="currentLang() === 'es'"
+              (click)="setLanguage('es')"
+              aria-label="Español"
+            >ES</button>
+            <span class="site-header__lang-sep" aria-hidden="true">·</span>
+            <button
+              type="button"
+              class="site-header__lang-btn"
+              [class.site-header__lang-btn--active]="currentLang() === 'en'"
+              (click)="setLanguage('en')"
+              aria-label="English"
+            >EN</button>
+          </div>
+        </div>
       </div>
+
     </div>
   }
 

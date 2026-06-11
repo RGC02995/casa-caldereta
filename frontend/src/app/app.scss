@@ -5,10 +5,10 @@
 
   // Empuja el contenido hacia abajo para no quedar bajo el header fijo
   &--with-header {
-    padding-top: 80px;
+    padding-top: 60px;
 
     @media (min-width: 992px) {
-      padding-top: 120px;
+      padding-top: 76px;
     }
   }
 }

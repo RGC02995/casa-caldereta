@@ -1,35 +1,47 @@
 @use '../../../../styles/variables' as *;
 @use '../../../../styles/mixins' as *;
 
+@keyframes mobileMenuIn {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
 .site-header {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: $z-sticky;
-  transition:
-    background-color $transition-normal,
-    box-shadow $transition-normal;
 
-  // Por defecto: gradiente oscuro para que el texto sea legible sobre el hero
-  background: linear-gradient(to bottom, rgba($color-black, 0.45) 0%, transparent 100%);
-
-  // Scrolled: blanco sólido con blur sutil
-  &--scrolled {
-    background: rgba($color-white, 0.97);
-    box-shadow: $shadow-sm;
-    backdrop-filter: blur(8px);
+  // Fondo con blur en pseudo-elemento para no crear un containing block
+  // que rompería el position:fixed del overlay móvil
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: rgba($color-neutral-100, 0.97);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid $color-neutral-200;
+    pointer-events: none;
   }
 
   // ── Barra interior ────────────────────────────────────────────────────────────
   &__inner {
     @include container;
-    @include flex-between;
-    height: 80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 60px;
+    max-width: 1100px;
     position: relative;
-    z-index: 2; // Siempre encima del overlay móvil
+    z-index: 2;
 
-    @include respond-to('lg') { height: 120px; }
+    @include respond-to('lg') {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      height: 76px;
+    }
   }
 
   // ── Logo ──────────────────────────────────────────────────────────────────────
@@ -44,64 +56,75 @@
   }
 
   &__logo-img {
-    height: 52px;
+    height: 44px;
     width: auto;
-    // Header transparente (sobre hero oscuro): logo blanco
-    filter: brightness(0) invert(1);
-    transition: filter $transition-normal;
 
-    @include respond-to('lg') { height: 90px; }
-
-    // Header scrolled (fondo blanco): logo verde original
-    .site-header--scrolled & { filter: none; }
+    @include respond-to('lg') { height: 56px; }
   }
 
   &__logo-name {
     font-family: $font-family-heading;
     font-size: $font-size-lg;
-    font-weight: $font-weight-regular;
+    font-weight: $font-weight-light;
     letter-spacing: $letter-spacing-wide;
-    color: $color-white;
-    transition: color $transition-normal;
+    color: $color-primary;
 
     @include respond-to('lg') { font-size: $font-size-xl; }
-
-    .site-header--scrolled & { color: $color-primary; }
   }
 
   // ── Navegación desktop ────────────────────────────────────────────────────────
   &__nav {
     display: none;
     align-items: center;
-    gap: $space-8;
+    gap: $space-6;
 
     @include respond-to('lg') { display: flex; }
   }
 
   &__nav-link {
+    position: relative;
     font-family: $font-family-body;
-    font-size: $font-size-sm;
+    font-size: $font-size-xs;
     font-weight: $font-weight-medium;
-    letter-spacing: $letter-spacing-wide;
+    letter-spacing: $letter-spacing-wider;
     text-transform: uppercase;
     text-decoration: none;
-    color: rgba($color-white, 0.85);
+    color: $color-neutral-600;
     transition: color $transition-fast;
+    padding-bottom: 3px;
 
-    &:hover { color: $color-white; }
-    &--active { color: $color-secondary; }
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background-color: $color-primary;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform $transition-normal;
+    }
+
+    &:hover {
+      color: $color-primary;
+      &::after { transform: scaleX(1); }
+    }
+
+    &--active {
+      color: $color-primary;
+      &::after { transform: scaleX(1); }
+    }
+
     &:focus-visible { @include focus-visible; }
-
-    .site-header--scrolled & { color: $color-neutral-600; }
-    .site-header--scrolled &:hover { color: $color-primary; }
-    .site-header--scrolled &--active { color: $color-secondary-dark; }
   }
 
   // ── Acciones ──────────────────────────────────────────────────────────────────
   &__actions {
     display: flex;
     align-items: center;
-    gap: $space-4;
+    justify-content: flex-end;
+    gap: $space-5;
   }
 
   // ── Toggle idioma ─────────────────────────────────────────────────────────────
@@ -118,47 +141,40 @@
     font-size: $font-size-xs;
     font-weight: $font-weight-medium;
     letter-spacing: $letter-spacing-wider;
-    color: rgba($color-white, 0.55);
+    color: $color-neutral-400;
     transition: color $transition-fast;
 
-    &:hover { color: $color-white; }
-    &--active { color: $color-white; }
-    &:focus-visible { @include focus-visible; }
+    &:hover     { color: $color-primary; }
+    &--active   { color: $color-primary; }
 
-    .site-header--scrolled & { color: $color-neutral-400; }
-    .site-header--scrolled &:hover { color: $color-primary; }
-    .site-header--scrolled &--active { color: $color-primary; }
+    &:focus-visible { @include focus-visible; }
   }
 
   &__lang-sep {
-    color: rgba($color-white, 0.3);
     font-size: $font-size-xs;
+    color: $color-neutral-300;
     user-select: none;
-
-    .site-header--scrolled & { color: $color-neutral-300; }
   }
 
   // ── CTA Reservar (desktop) ────────────────────────────────────────────────────
   &__cta {
     display: none;
-    padding: $space-2 $space-5;
-    border: 1px solid rgba($color-white, 0.7);
-    border-radius: $border-radius-sm;
+    padding: $space-2 $space-6;
+    border: 1px solid $color-primary;
     font-family: $font-family-body;
     font-size: $font-size-xs;
     font-weight: $font-weight-medium;
     letter-spacing: $letter-spacing-wider;
     text-transform: uppercase;
     text-decoration: none;
-    color: $color-white;
+    color: $color-primary;
     transition:
       background-color $transition-fast,
-      border-color $transition-fast,
       color $transition-fast;
 
     &:hover {
-      background-color: $color-white;
-      color: $color-primary;
+      background-color: $color-primary;
+      color: $color-white;
     }
 
     &:focus-visible { @include focus-visible; }
@@ -166,16 +182,6 @@
     @include respond-to('lg') {
       display: inline-flex;
       align-items: center;
-    }
-
-    .site-header--scrolled & {
-      border-color: $color-primary;
-      color: $color-primary;
-
-      &:hover {
-        background-color: $color-primary;
-        color: $color-white;
-      }
     }
   }
 
@@ -197,66 +203,139 @@
     display: block;
     width: 100%;
     height: 2px;
-    background-color: $color-white;
-    border-radius: 2px;
-    transition: background-color $transition-normal;
-
-    .site-header--scrolled & { background-color: $color-primary; }
+    background-color: $color-primary;
+    border-radius: 1px;
   }
 
   // ── Overlay móvil ─────────────────────────────────────────────────────────────
   &__mobile-menu {
     position: fixed;
     inset: 0;
-    z-index: 1; // Bajo el __inner (z-index: 2) — la barra siempre queda encima
-    background-color: $color-primary-dark;
+    z-index: $z-overlay;
     display: flex;
     flex-direction: column;
+    padding: 0 $space-8 $space-8;
+    background: linear-gradient(
+      160deg,
+      $color-primary-dark 0%,
+      $color-primary-dark 60%,
+      $color-primary 100%
+    );
+    animation: mobileMenuIn 260ms ease forwards;
+  }
+
+  &__mobile-header {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    gap: $space-12;
-    @include fade-in($transition-fast);
+    justify-content: space-between;
+    height: 60px;
+    flex-shrink: 0;
+  }
+
+  &__mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    text-decoration: none;
+
+    &:focus-visible { @include focus-visible; }
+  }
+
+  &__mobile-brand-img {
+    height: 36px;
+    width: auto;
+    filter: brightness(0) invert(1) opacity(0.85);
+  }
+
+  &__mobile-brand-name {
+    font-family: $font-family-heading;
+    font-size: $font-size-base;
+    font-weight: $font-weight-light;
+    letter-spacing: $letter-spacing-wide;
+    color: rgba($color-white, 0.85);
   }
 
   &__mobile-close {
     @include button-reset;
-    position: absolute;
-    top: $space-6;
-    right: $space-6;
-    font-size: $font-size-2xl;
-    color: rgba($color-white, 0.6);
-    line-height: 1;
-    transition: color $transition-fast;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
 
-    &:hover { color: $color-white; }
     &:focus-visible { @include focus-visible; }
+  }
+
+  &__mobile-close-line {
+    position: absolute;
+    width: 20px;
+    height: 1.5px;
+    background-color: rgba($color-white, 0.45);
+    border-radius: 1px;
+    transition: background-color $transition-fast;
+
+    &:first-child { transform: rotate(45deg); }
+    &:last-child  { transform: rotate(-45deg); }
+
+    .site-header__mobile-close:hover & {
+      background-color: $color-white;
+    }
   }
 
   &__mobile-nav {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: $space-8;
+    flex: 1;
+    justify-content: center;
+    padding-block: $space-8;
   }
 
   &__mobile-link {
-    @include heading-lg;
-    color: rgba($color-white, 0.7);
+    display: block;
+    padding-block: $space-5;
     text-decoration: none;
-    transition: color $transition-fast;
 
-    &:hover { color: $color-white; }
-    &--active { color: $color-secondary; }
+    &:hover .site-header__mobile-link-text {
+      color: $color-white;
+      transform: translateX(6px);
+    }
+
+    &--active .site-header__mobile-link-text { color: $color-white; }
+
     &:focus-visible { @include focus-visible; }
   }
 
+  &__mobile-link-text {
+    font-family: $font-family-heading;
+    font-size: $font-size-3xl;
+    font-weight: $font-weight-light;
+    letter-spacing: $letter-spacing-wide;
+    text-transform: uppercase;
+    color: rgba($color-white, 0.6);
+    transition: color $transition-fast, transform $transition-fast;
+    display: block;
+  }
+
+  &__mobile-footer {
+    flex-shrink: 0;
+    padding-top: $space-6;
+    display: flex;
+    flex-direction: column;
+    gap: $space-4;
+  }
+
+  &__mobile-footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
   &__mobile-cta {
-    margin-top: $space-4;
-    padding: $space-3 $space-10;
-    border: 1px solid $color-secondary;
-    border-radius: $border-radius-sm;
+    padding: $space-3 $space-8;
+    border: 1px solid rgba($color-secondary, 0.5);
     font-family: $font-family-body;
-    font-size: $font-size-sm;
+    font-size: $font-size-xs;
     font-weight: $font-weight-medium;
     letter-spacing: $letter-spacing-wider;
     text-transform: uppercase;
@@ -264,10 +343,12 @@
     color: $color-secondary;
     transition:
       background-color $transition-fast,
+      border-color $transition-fast,
       color $transition-fast;
 
     &:hover {
       background-color: $color-secondary;
+      border-color: $color-secondary;
       color: $color-white;
     }
 
@@ -278,5 +359,17 @@
     display: flex;
     align-items: center;
     gap: $space-3;
+
+    .site-header__lang-btn {
+      color: rgba($color-white, 0.35);
+
+      &:hover   { color: rgba($color-white, 0.8); }
+      &--active { color: $color-white; }
+    }
+
+    .site-header__lang-sep {
+      color: rgba($color-white, 0.2);
+    }
   }
+
 }
