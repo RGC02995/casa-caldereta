@@ -210,6 +210,22 @@ Diseño de lujo estilo boutique (inspiración: ritualdeterra.com). Monorepo Angu
 - [x] Página admin rutas — tabla ordenada, formulario create/edit inline, puntos de ruta dinámicos, publicar/despublicar, eliminar
 - [x] Gestión de calendario y precios
 
+### Fase 6+7 — Emails + SEO ✅ COMPLETADA (2026-06-10)
+- [x] EmailService con Resend — email propietario (nueva reserva) + emails huésped (recibida/confirmada/cancelada)
+- [x] RESEND_OVERRIDE_TO para redirigir emails en desarrollo
+- [x] SeoService — Title/Meta/OG/canonical por página
+- [x] JSON-LD LodgingBusiness en index.html
+- [x] robots.txt + sitemap.xml en frontend/public/
+
+### Fase 8 — Despliegue ✅ COMPLETADA (2026-06-11)
+- [x] `environment.prod.ts` con URL real de Railway
+- [x] `vercel.json` con SPA rewrites
+- [x] MongoDB Atlas — whitelist `0.0.0.0/0` para Railway
+- [x] Railway — `app.set('trust proxy', 1)` para express-rate-limit
+- [x] Railway — variables de entorno: `NODE_ENV`, `CORS_ORIGIN_PROD`, todas las requeridas
+- [x] Frontend desplegado en Vercel: `https://casa-caldereta-frontend.vercel.app`
+- [x] Backend desplegado en Railway: `https://backend-production-d85c.up.railway.app`
+
 ---
 
 ## Datos legales
@@ -218,7 +234,8 @@ Diseño de lujo estilo boutique (inspiración: ritualdeterra.com). Monorepo Angu
 - **Normativa:** LSSI, RGPD, LOPDGDD, Ley 15/2018 Turisme CV, Decreto 92/2009
 
 ## Pendientes / Preguntas abiertas
-- [ ] Dominio elegido (pendiente)
+- [ ] **Comprar dominio en Namecheap** (primer paso antes de configurar DNS, Vercel, Railway, Resend)
+- [ ] Tras comprar dominio: actualizar `CORS_ORIGIN_PROD` en Railway, `BASE_URL` en `seo.service.ts`, DNS records, Vercel custom domain, Resend domain verification, `RESEND_FROM_EMAIL`
 
 ---
 
@@ -236,3 +253,5 @@ Diseño de lujo estilo boutique (inspiración: ritualdeterra.com). Monorepo Angu
 | fase 5c completa | Admin reservas + fotos (Cloudinary) + rutas CRUD con slug y puntos dinámicos |
 | fix: admin gallery | Recargar fotos desde servidor tras upload y resetear filtro |
 | fase 5 completa | Calendario y precios: PricingRule + BlockedPeriod — backend seguro + admin calendar |
+| fase 6+7 completas | Emails Resend + SEO + admin reactivo |
+| fase 8 completa | Despliegue: Vercel + Railway + MongoDB Atlas + fixes trust proxy/CORS |
