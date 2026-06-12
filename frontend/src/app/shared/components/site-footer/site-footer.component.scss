@@ -7,13 +7,14 @@
 
   &__inner {
     @include container;
-    padding-block: $space-16;
+    padding-block: $space-12;
     display: grid;
-    grid-template-columns: 1fr;
-    gap: $space-10;
+    grid-template-columns: repeat(2, 1fr);
+    gap: $space-8 $space-6;
 
     @include respond-to('md') {
-      grid-template-columns: repeat(2, 1fr);
+      padding-block: $space-16;
+      gap: $space-10 $space-8;
     }
 
     @include respond-to('lg') {
@@ -24,15 +25,25 @@
 
   // ── Columna brand ─────────────────────────────────────────────────────────────
   &__brand {
+    grid-column: 1 / -1;
     display: flex;
     flex-direction: column;
-    gap: $space-5;
+    gap: $space-4;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+
+    @include respond-to('lg') {
+      grid-column: auto;
+      align-items: flex-start;
+      text-align: left;
+    }
   }
 
   &__logo-link {
     display: inline-flex;
     align-items: center;
-    gap: $space-4;
+    gap: $space-3;
     text-decoration: none;
     width: fit-content;
 
@@ -40,23 +51,26 @@
   }
 
   &__logo-img {
-    height: 56px;
+    height: 44px;
     width: auto;
-    // Logo verde oscuro → blanco sobre fondo oscuro
     filter: brightness(0) invert(1);
     opacity: 0.9;
     transition: opacity $transition-fast;
+
+    @include respond-to('lg') { height: 56px; }
 
     .site-footer__logo-link:hover & { opacity: 1; }
   }
 
   &__logo-name {
     font-family: $font-family-heading;
-    font-size: $font-size-xl;
+    font-size: $font-size-lg;
     font-weight: $font-weight-regular;
     letter-spacing: $letter-spacing-wide;
     color: $color-white;
     transition: color $transition-fast;
+
+    @include respond-to('lg') { font-size: $font-size-xl; }
 
     .site-footer__logo-link:hover & { color: $color-secondary; }
   }
@@ -65,7 +79,7 @@
     font-size: $font-size-sm;
     color: rgba($color-white, 0.55);
     line-height: $line-height-relaxed;
-    max-width: 260px;
+    max-width: 280px;
     margin: 0;
   }
 
@@ -73,7 +87,15 @@
   &__col {
     display: flex;
     flex-direction: column;
-    gap: $space-5;
+    gap: $space-4;
+
+    @include respond-to('lg') { gap: $space-5; }
+
+    &--full {
+      grid-column: 1 / -1;
+
+      @include respond-to('lg') { grid-column: auto; }
+    }
   }
 
   &__col-title {
@@ -122,10 +144,10 @@
 
   &__bottom-inner {
     @include container;
-    padding-block: $space-6;
+    padding-block: $space-5;
     display: flex;
     flex-direction: column;
-    gap: $space-2;
+    gap: $space-1;
     align-items: center;
     text-align: center;
 
