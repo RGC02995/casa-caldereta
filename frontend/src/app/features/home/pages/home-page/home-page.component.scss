@@ -2,11 +2,6 @@
 @use '../../../../../styles/mixins' as *;
 
 // ── HERO ─────────────────────────────────────────────────────────────────────
-@keyframes scrollPulse {
-  0%, 100% { opacity: 0.3; }
-  50%       { opacity: 0.9; }
-}
-
 .home-hero {
   position: relative;
   min-height: 100vh;
@@ -113,50 +108,37 @@
     }
   }
 
-  &__scroll-indicator {
-    position: absolute;
-    bottom: $space-10;
-    left: 50%;
-    transform: translateX(-50%);
-  }
+}
 
-  &__scroll-line {
-    display: block;
-    width: 1px;
-    height: 60px;
-    background: linear-gradient(to bottom, rgba($color-white, 0.6), transparent);
-    animation: scrollPulse 2.4s ease-in-out infinite;
-  }
+// ── HERO LOAD ANIMATION ──────────────────────────────────────────────────────
+@keyframes heroFadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .home-hero__label    { animation: heroFadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both; }
+  .home-hero__title    { animation: heroFadeUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both; }
+  .home-hero__subtitle { animation: heroFadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.55s both; }
+  .home-hero__actions  { animation: heroFadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.75s both; }
 }
 
 // ── HIGHLIGHTS ───────────────────────────────────────────────────────────────
 .home-highlights {
-  background-color: $color-white;
+  background-color: $color-neutral-100;
 
   &__inner {
     @include container;
     padding-block: $space-20;
-    display: flex;
-    flex-direction: column;
-    gap: $space-16;
-
-    @include respond-to('lg') {
-      flex-direction: row;
-      align-items: flex-start;
-      gap: $space-20;
-    }
+    @include flex-column;
+    gap: $space-12;
   }
 
   &__header {
     @include flex-column;
-    gap: $space-4;
-    flex-shrink: 0;
-
-    @include respond-to('lg') {
-      width: 260px;
-      position: sticky;
-      top: 140px;
-    }
+    gap: $space-3;
+    align-items: center;
+    text-align: center;
   }
 
   &__label {
@@ -176,36 +158,77 @@
     margin: 0;
     display: grid;
     grid-template-columns: 1fr;
-    gap: $space-6;
-    flex: 1;
+    gap: 2px;
 
     @include respond-to('md') { grid-template-columns: repeat(2, 1fr); }
+    @include respond-to('lg') { grid-template-columns: repeat(4, 1fr); }
   }
 
   &__item {
+    background-color: $color-white;
     @include flex-column;
-    gap: $space-3;
-    padding: $space-8;
-    border-top: 2px solid $color-neutral-200;
-    transition: border-color $transition-fast;
+    align-items: center;
+    text-align: center;
+    gap: $space-4;
+    padding: $space-12 $space-8;
+    transition: background-color $transition-normal;
 
     &:hover {
-      border-top-color: $color-primary;
+      background-color: rgba($color-primary, 0.02);
     }
   }
 
-  &__number {
-    font-family: $font-family-heading;
-    font-size: $font-size-4xl;
-    font-weight: $font-weight-light;
-    color: $color-neutral-200;
-    line-height: 1;
+  &__icon-wrap {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background-color: rgba($color-primary, 0.07);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: $space-2;
+    transition: background-color $transition-normal, transform $transition-normal;
+
+    .home-highlights__item:hover & {
+      background-color: rgba($color-primary, 0.13);
+      transform: translateY(-3px);
+    }
+  }
+
+  &__icon {
+    width: 28px;
+    height: 28px;
+    color: $color-primary;
+    transition: color $transition-fast;
+
+    .home-highlights__item:hover & {
+      color: $color-secondary;
+    }
   }
 
   &__item-title {
-    @include heading-md;
-    color: $color-neutral-800;
+    font-family: $font-family-heading;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-light;
+    color: $color-primary-dark;
     margin: 0;
+    letter-spacing: $letter-spacing-wide;
+  }
+
+  &__item-accent {
+    display: block;
+    width: 24px;
+    height: 1px;
+    background-color: $color-secondary;
+
+    @media (prefers-reduced-motion: no-preference) {
+      transform-origin: left center;
+      transform: scaleX(0);
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      transition-delay: calc(var(--reveal-delay, 0ms) + 250ms);
+
+      .is-visible & { transform: scaleX(1); }
+    }
   }
 
   &__item-desc {
@@ -213,12 +236,13 @@
     color: $color-neutral-500;
     line-height: $line-height-relaxed;
     margin: 0;
+    max-width: 220px;
   }
 }
 
 // ── COMODIDADES ───────────────────────────────────────────────────────────────
 .home-amenities {
-  background-color: $color-neutral-100;
+  background-color: $color-white;
 
   &__inner {
     @include container;
@@ -355,7 +379,7 @@
 
 // ── RUTAS PREVIEW ────────────────────────────────────────────────────────────
 .home-routes {
-  background-color: $color-neutral-100;
+  background-color: $color-primary;
 
   &__inner {
     @include container;
@@ -373,12 +397,12 @@
 
   &__label {
     @include label-text;
-    color: $color-secondary;
+    color: rgba($color-secondary, 0.85);
   }
 
   &__title {
     @include heading-lg;
-    color: $color-neutral-800;
+    color: $color-white;
     margin: 0;
   }
 
@@ -388,60 +412,111 @@
     margin: 0;
     display: grid;
     grid-template-columns: 1fr;
-    gap: 0;
+    gap: $space-6;
 
     @include respond-to('md') { grid-template-columns: repeat(3, 1fr); }
   }
 
   &__card {
+    background-color: rgba($color-black, 0.2);
+    border: 1px solid rgba($color-white, 0.1);
+    overflow: hidden;
     @include flex-column;
-    gap: $space-3;
-    padding: $space-8;
-    border-top: 1px solid $color-neutral-200;
-    transition: background-color $transition-fast;
-
-    @include respond-to('md') {
-      border-top: none;
-      border-left: 1px solid $color-neutral-200;
-
-      &:first-child { border-left: none; }
-    }
+    transition: background-color $transition-normal, border-color $transition-normal, transform $transition-normal;
 
     &:hover {
-      background-color: $color-white;
+      background-color: rgba($color-black, 0.3);
+      border-color: rgba($color-white, 0.18);
+      transform: translateY(-3px);
     }
   }
 
-  &__tag {
-    @include label-text;
-    color: $color-secondary;
+  &__card-img {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 3 / 2;
+    background-color: rgba($color-black, 0.25);
+  }
+
+  &__card-photo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.85;
+    transition: transform 600ms ease, opacity 400ms ease;
+
+    .home-routes__card:hover & {
+      transform: scale(1.05);
+      opacity: 1;
+    }
+  }
+
+  &__card-placeholder {
+    width: 100%;
+    height: 100%;
+    @include flex-center;
+    background: linear-gradient(135deg, rgba($color-primary-light, 0.25) 0%, rgba($color-primary-dark, 0.5) 100%);
+
+    svg {
+      width: 44px;
+      height: 44px;
+      color: rgba($color-white, 0.25);
+    }
+  }
+
+  &__card-badge {
+    position: absolute;
+    top: $space-3;
+    left: $space-3;
+    background-color: $color-secondary;
+    color: $color-white;
+    font-family: $font-family-body;
     font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    letter-spacing: $letter-spacing-wider;
+    text-transform: uppercase;
+    padding: $space-1 $space-3;
+  }
+
+  &__card-body {
+    padding: $space-5;
+    @include flex-column;
+    gap: $space-2;
+    flex: 1;
   }
 
   &__card-title {
-    @include heading-md;
-    color: $color-neutral-800;
+    font-family: $font-family-heading;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-light;
+    color: $color-white;
     margin: 0;
+    line-height: $line-height-tight;
+    letter-spacing: $letter-spacing-wide;
   }
 
   &__card-desc {
     font-size: $font-size-sm;
-    color: $color-neutral-500;
+    color: rgba($color-white, 0.6);
     line-height: $line-height-relaxed;
     margin: 0;
-    flex: 1;
   }
 
   &__footer {
     display: flex;
     justify-content: center;
+
+    .home-section-link {
+      color: $color-secondary;
+      &:hover { color: $color-secondary-light; }
+    }
   }
 }
 
 // ── BOOKING CTA ───────────────────────────────────────────────────────────────
 .home-booking-cta {
-  background-color: $color-white;
-  border-top: 1px solid $color-neutral-200;
+  background-color: $color-primary-dark;
 
   &__inner {
     @include container;
@@ -462,13 +537,13 @@
 
   &__title {
     @include heading-lg;
-    color: $color-neutral-800;
+    color: $color-white;
     margin: 0;
   }
 
   &__subtitle {
     font-size: $font-size-md;
-    color: $color-neutral-500;
+    color: rgba($color-white, 0.65);
     line-height: $line-height-relaxed;
     margin: 0;
     max-width: 480px;
@@ -480,7 +555,7 @@
     align-items: center;
     margin-top: $space-4;
     padding: $space-4 $space-12;
-    background-color: $color-primary;
+    background-color: $color-secondary;
     color: $color-white;
     font-family: $font-family-body;
     font-size: $font-size-xs;
@@ -490,7 +565,7 @@
     text-decoration: none;
     transition: background-color $transition-fast;
 
-    &:hover { background-color: $color-primary-light; }
+    &:hover { background-color: $color-secondary-dark; }
     &:focus-visible { @include focus-visible; }
   }
 }

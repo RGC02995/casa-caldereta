@@ -14,23 +14,25 @@
       </a>
     </div>
   </div>
-  <div class="home-hero__scroll-indicator" aria-hidden="true">
-    <span class="home-hero__scroll-line"></span>
-  </div>
 </section>
 
 <!-- ── HIGHLIGHTS ─────────────────────────────────────────────────────────── -->
 <section class="home-highlights">
   <div class="home-highlights__inner">
-    <header class="home-highlights__header">
+    <header class="home-highlights__header" scrollReveal>
       <p class="home-highlights__label">La casa</p>
       <h2 class="home-highlights__title">Un lugar pensado para ti</h2>
     </header>
     <ul class="home-highlights__grid">
-      @for (highlight of highlights; track highlight.label) {
-        <li class="home-highlights__item">
-          <span class="home-highlights__number" aria-hidden="true">{{ highlight.label }}</span>
+      @for (highlight of highlights; track highlight.title; let i = $index) {
+        <li class="home-highlights__item" scrollReveal [delay]="i * 100">
+          <div class="home-highlights__icon-wrap">
+            <svg class="home-highlights__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path [attr.d]="highlight.icon"/>
+            </svg>
+          </div>
           <h3 class="home-highlights__item-title">{{ highlight.title }}</h3>
+          <span class="home-highlights__item-accent" aria-hidden="true"></span>
           <p class="home-highlights__item-desc">{{ highlight.description }}</p>
         </li>
       }
@@ -41,13 +43,13 @@
 <!-- ── COMODIDADES ────────────────────────────────────────────────────────── -->
 <section class="home-amenities">
   <div class="home-amenities__inner">
-    <header class="home-amenities__header">
+    <header class="home-amenities__header" scrollReveal>
       <p class="home-amenities__label">Equipamiento</p>
       <h2 class="home-amenities__title">Todo lo que necesitas</h2>
     </header>
     <div class="home-amenities__groups">
-      @for (group of amenityGroups; track group.category) {
-        <div class="home-amenities__group">
+      @for (group of amenityGroups; track group.category; let i = $index) {
+        <div class="home-amenities__group" scrollReveal [delay]="i * 60">
           <h3 class="home-amenities__group-title">{{ group.category }}</h3>
           <ul class="home-amenities__chips">
             @for (item of group.items; track item) {
@@ -63,13 +65,13 @@
 <!-- ── GALERÍA PREVIEW ────────────────────────────────────────────────────── -->
 <section class="home-gallery">
   <div class="home-gallery__inner">
-    <header class="home-gallery__header">
+    <header class="home-gallery__header" scrollReveal>
       <p class="home-gallery__label">Imágenes</p>
       <h2 class="home-gallery__title">La casa en imágenes</h2>
     </header>
     <div class="home-gallery__grid" aria-label="Vista previa de la galería">
-      @for (photo of previewPhotos(); track photo.id) {
-        <div class="home-gallery__item">
+      @for (photo of previewPhotos(); track photo.id; let i = $index) {
+        <div class="home-gallery__item" scrollReveal [revealFrom]="'scale'" [delay]="i * 80">
           <img
             class="home-gallery__img"
             [src]="photo.url"
@@ -95,23 +97,54 @@
 <!-- ── RUTAS PREVIEW ──────────────────────────────────────────────────────── -->
 <section class="home-routes">
   <div class="home-routes__inner">
-    <header class="home-routes__header">
+    <header class="home-routes__header" scrollReveal>
       <p class="home-routes__label">Alrededores</p>
       <h2 class="home-routes__title">Qué hacer cerca</h2>
     </header>
     <ul class="home-routes__grid">
-      @for (route of previewRoutes(); track route.id) {
-        <li class="home-routes__card">
-          <span class="home-routes__tag">{{ typeLabel(route.type) }}</span>
-          <h3 class="home-routes__card-title">{{ route.title }}</h3>
-          <p class="home-routes__card-desc">{{ route.description }}</p>
+      @for (route of previewRoutes(); track route.id; let i = $index) {
+        <li class="home-routes__card" scrollReveal [delay]="i * 100">
+          <div class="home-routes__card-img">
+            @if (route.coverImageUrl) {
+              <img
+                class="home-routes__card-photo"
+                [src]="route.coverImageUrl"
+                [alt]="route.title"
+                loading="lazy"
+              />
+            } @else {
+              <div class="home-routes__card-placeholder" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M3 20h18"/>
+                  <path d="M6 20L12 5l6 15"/>
+                  <path d="M10 14l2-4 2 4"/>
+                </svg>
+              </div>
+            }
+            <span class="home-routes__card-badge">{{ typeLabel(route.type) }}</span>
+          </div>
+          <div class="home-routes__card-body">
+            <h3 class="home-routes__card-title">{{ route.title }}</h3>
+            <p class="home-routes__card-desc">{{ route.description }}</p>
+          </div>
         </li>
       } @empty {
-        @for (fallback of routePreviewFallbacks; track fallback.title) {
-          <li class="home-routes__card">
-            <span class="home-routes__tag">{{ fallback.tag }}</span>
-            <h3 class="home-routes__card-title">{{ fallback.title }}</h3>
-            <p class="home-routes__card-desc">{{ fallback.description }}</p>
+        @for (fallback of routePreviewFallbacks; track fallback.title; let i = $index) {
+          <li class="home-routes__card" scrollReveal [delay]="i * 100">
+            <div class="home-routes__card-img">
+              <div class="home-routes__card-placeholder" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M3 20h18"/>
+                  <path d="M6 20L12 5l6 15"/>
+                  <path d="M10 14l2-4 2 4"/>
+                </svg>
+              </div>
+              <span class="home-routes__card-badge">{{ fallback.tag }}</span>
+            </div>
+            <div class="home-routes__card-body">
+              <h3 class="home-routes__card-title">{{ fallback.title }}</h3>
+              <p class="home-routes__card-desc">{{ fallback.description }}</p>
+            </div>
           </li>
         }
       }
@@ -128,12 +161,12 @@
 <!-- ── BOOKING CTA ────────────────────────────────────────────────────────── -->
 <section class="home-booking-cta">
   <div class="home-booking-cta__inner">
-    <span class="home-booking-cta__rule" aria-hidden="true"></span>
-    <h2 class="home-booking-cta__title">¿Listo para reservar?</h2>
-    <p class="home-booking-cta__subtitle">
+    <span class="home-booking-cta__rule" aria-hidden="true" scrollReveal></span>
+    <h2 class="home-booking-cta__title" scrollReveal [delay]="100">¿Listo para reservar?</h2>
+    <p class="home-booking-cta__subtitle" scrollReveal [delay]="220">
       Comprueba disponibilidad y reserva tu estancia en Casa Caldereta.
     </p>
-    <a routerLink="/reservar" class="home-booking-cta__btn">
+    <a routerLink="/reservar" class="home-booking-cta__btn" scrollReveal [delay]="360">
       {{ 'home.hero.cta' | translate }}
     </a>
   </div>

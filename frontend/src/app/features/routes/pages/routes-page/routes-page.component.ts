@@ -4,6 +4,7 @@ import { map, catchError, of } from 'rxjs';
 import { RouteService } from '../../../../core/services/route.service';
 import { IRoute, RouteDifficulty, RouteType } from '../../../../core/models/route.model';
 import { SeoService } from '../../../../core/services/seo.service';
+import { ScrollRevealDirective } from '../../../../shared/directives/scroll-reveal.directive';
 
 const DIFFICULTY_LABELS: Record<RouteDifficulty, string> = {
   easy:     'Fácil',
@@ -21,7 +22,7 @@ const TYPE_LABELS: Record<RouteType, string> = {
 @Component({
   selector: 'routes-page',
   standalone: true,
-  imports: [],
+  imports: [ScrollRevealDirective],
   templateUrl: './routes-page.component.html',
   styleUrl: './routes-page.component.scss',
 })
@@ -70,7 +71,4 @@ export class RoutesPageComponent {
     return remaining > 0 ? `${hours}h ${remaining}min` : `${hours}h`;
   }
 
-  padNumber(n: number): string {
-    return n.toString().padStart(2, '0');
-  }
 }

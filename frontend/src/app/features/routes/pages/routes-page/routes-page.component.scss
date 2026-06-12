@@ -3,8 +3,8 @@
 
 // ── CABECERA ──────────────────────────────────────────────────────────────────
 .routes-hero {
-  background-color: $color-primary-dark;
-  padding-block: $space-20;
+  background: linear-gradient(155deg, $color-primary-dark 0%, $color-primary 100%);
+  padding-block: $space-24;
 
   &__inner {
     @include container;
@@ -16,7 +16,7 @@
 
   &__label {
     @include label-text;
-    color: rgba($color-secondary, 0.65);
+    color: rgba($color-secondary, 0.7);
     letter-spacing: $letter-spacing-wider;
   }
 
@@ -28,19 +28,19 @@
 
   &__subtitle {
     font-size: $font-size-md;
-    color: rgba($color-white, 0.5);
+    color: rgba($color-white, 0.6);
     margin: 0;
     font-weight: $font-weight-light;
   }
 }
 
-// ── SECCIÓN LISTA ─────────────────────────────────────────────────────────────
-.routes-list-section {
+// ── SECCIÓN ───────────────────────────────────────────────────────────────────
+.routes-section {
   background-color: $color-neutral-100;
 
   &__inner {
     @include container;
-    padding-block: $space-16;
+    padding-block: $space-20;
   }
 }
 
@@ -60,57 +60,93 @@
   }
 }
 
-// ── LISTA EDITORIAL ───────────────────────────────────────────────────────────
-.routes-list {
+// ── GRID ─────────────────────────────────────────────────────────────────────
+.routes-grid {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-8;
+
+  @include respond-to('md') { grid-template-columns: repeat(2, 1fr); }
+  @include respond-to('lg') { grid-template-columns: repeat(3, 1fr); }
 }
 
-// Cada entrada — diseño editorial tipo guía de viaje
-.routes-entry {
-  display: grid;
-  grid-template-columns: 48px 1fr;
-  column-gap: $space-6;
-  padding-block: $space-10;
-  border-top: 1px solid $color-neutral-200;
-  align-items: start;
+// ── CARD ─────────────────────────────────────────────────────────────────────
+.routes-card {
+  background-color: $color-white;
+  overflow: hidden;
+  @include flex-column;
+  transition: box-shadow $transition-normal, transform $transition-normal;
 
-  @include respond-to('md') {
-    grid-template-columns: 60px 1fr 220px;
-    column-gap: $space-8;
-    padding-block: $space-12;
+  &:hover {
+    box-shadow: $shadow-lg;
+    transform: translateY(-4px);
   }
 
-  @include respond-to('lg') {
-    grid-template-columns: 72px 1fr 280px;
-    padding-block: $space-16;
+  // — Imagen ─────────────────────────────────────────────────────────────────
+
+  &__img-wrap {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    background-color: $color-neutral-200;
   }
 
-  &:last-child {
-    border-bottom: 1px solid $color-neutral-200;
+  &__img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 600ms ease;
+
+    .routes-card:hover & { transform: scale(1.05); }
   }
 
-  // Número grande, tipografía ligera — marca editorial
-  &__number {
-    font-family: $font-family-heading;
-    font-size: $font-size-3xl;
-    font-weight: $font-weight-light;
-    color: $color-neutral-200;
-    line-height: 1;
-    padding-top: 4px;
-    user-select: none;
+  &__img-placeholder {
+    width: 100%;
+    height: 100%;
+    @include flex-center;
+    background: linear-gradient(135deg, $color-neutral-200 0%, $color-neutral-300 100%);
 
-    @include respond-to('lg') { font-size: $font-size-4xl; }
+    svg {
+      width: 52px;
+      height: 52px;
+      color: $color-neutral-400;
+      opacity: 0.6;
+    }
   }
 
-  &__content {
+  &__type-badge {
+    position: absolute;
+    top: $space-4;
+    left: $space-4;
+    background-color: rgba($color-primary-dark, 0.78);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: $color-white;
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    letter-spacing: $letter-spacing-wider;
+    text-transform: uppercase;
+    padding: $space-1 $space-3;
+  }
+
+  // — Cuerpo ─────────────────────────────────────────────────────────────────
+
+  &__body {
+    padding: $space-6;
     @include flex-column;
     gap: $space-3;
+    flex: 1;
   }
 
-  // Metadata en cápsula de texto pequeño — muy por encima del título
   &__meta {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
     font-family: $font-family-body;
     font-size: $font-size-xs;
     color: $color-neutral-400;
@@ -119,17 +155,8 @@
     margin: 0;
   }
 
-  &__sep {
-    color: $color-neutral-300;
-  }
+  &__sep { color: $color-neutral-300; }
 
-  &__difficulty {
-    &--easy     { color: $color-success; }
-    &--moderate { color: $color-warning; }
-    &--hard     { color: $color-error;   }
-  }
-
-  // Título con contraste fuerte — no igual que todos los demás h2
   &__title {
     font-family: $font-family-heading;
     font-size: $font-size-xl;
@@ -137,45 +164,40 @@
     color: $color-neutral-800;
     margin: 0;
     line-height: $line-height-tight;
-
-    @include respond-to('md')  { font-size: $font-size-2xl; }
-    @include respond-to('lg')  { font-size: $font-size-3xl; }
   }
 
   &__desc {
-    font-family: $font-family-body;
     font-size: $font-size-sm;
     color: $color-neutral-500;
     line-height: $line-height-relaxed;
     margin: 0;
-    max-width: 560px;
-
-    @include respond-to('md') { font-size: $font-size-base; }
+    flex: 1;
   }
 
-  // Imagen — solo visible en md+, tercera columna del grid
-  &__img-wrapper {
-    display: none;
+  &__difficulty {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    margin-top: auto;
+    padding-top: $space-3;
+    border-top: 1px solid $color-neutral-100;
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    letter-spacing: $letter-spacing-wide;
+    text-transform: uppercase;
 
-    @include respond-to('md') {
-      display: block;
-      overflow: hidden;
-      border-radius: $border-radius-md;
-      grid-column: 3;
-      grid-row: 1;
-      align-self: center;
-    }
+    &--easy     { color: $color-success; }
+    &--moderate { color: $color-warning; }
+    &--hard     { color: $color-error;   }
   }
 
-  &__img {
-    display: block;
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    object-fit: cover;
-    transition: transform 600ms ease;
-
-    .routes-entry:hover & {
-      transform: scale(1.03);
-    }
+  &__difficulty-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: $border-radius-full;
+    background-color: currentColor;
+    flex-shrink: 0;
   }
 }

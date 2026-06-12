@@ -2,8 +2,8 @@
 @use '../../../../styles/mixins' as *;
 
 .site-footer {
-  background-color: $color-neutral-800;
-  color: $color-neutral-300;
+  background-color: $color-primary;
+  color: rgba($color-white, 0.65);
 
   &__inner {
     @include container;
@@ -63,7 +63,7 @@
 
   &__tagline {
     font-size: $font-size-sm;
-    color: $color-neutral-400;
+    color: rgba($color-white, 0.55);
     line-height: $line-height-relaxed;
     max-width: 260px;
     margin: 0;
@@ -94,7 +94,7 @@
 
   &__link {
     font-size: $font-size-sm;
-    color: $color-neutral-400;
+    color: rgba($color-white, 0.6);
     text-decoration: none;
     transition: color $transition-fast;
 
@@ -112,7 +112,7 @@
 
   &__address-line {
     font-size: $font-size-sm;
-    color: $color-neutral-400;
+    color: rgba($color-white, 0.6);
   }
 
   // ── Barra inferior ────────────────────────────────────────────────────────────
@@ -138,13 +138,13 @@
 
   &__copyright {
     font-size: $font-size-xs;
-    color: $color-neutral-500;
+    color: rgba($color-white, 0.4);
     margin: 0;
   }
 
   &__license {
     font-size: $font-size-xs;
-    color: $color-neutral-500;
+    color: rgba($color-white, 0.4);
     margin: 0;
   }
 
