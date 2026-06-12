@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -19,6 +19,14 @@ interface Highlight {
 interface AmenityGroup {
   readonly category: string;
   readonly items:    readonly string[];
+}
+
+interface Review {
+  readonly author:  string;
+  readonly date:    string;
+  readonly rating:  number;
+  readonly text:    string;
+  readonly location: string;
 }
 
 interface RoutePreviewFallback {
@@ -71,8 +79,15 @@ export class HomePageComponent {
     { initialValue: [] as IRoute[] },
   );
 
-  readonly previewPhotos = computed(() => this._photos().slice(0, 4));
+  readonly heroPhoto     = computed(() => this._photos()[0] ?? null);
+  readonly previewPhotos = computed(() => this._photos().slice(1, 5));
   readonly previewRoutes = computed(() => this._routes().slice(0, 3));
+
+  readonly openAmenityIndex = signal<number | null>(0);
+
+  toggleAmenity(index: number): void {
+    this.openAmenityIndex.update(current => current === index ? null : index);
+  }
 
   difficultyLabel(difficulty: RouteDifficulty): string {
     return DIFFICULTY_LABELS[difficulty] ?? difficulty;
@@ -147,6 +162,30 @@ export class HomePageComponent {
     {
       category: 'Política del alojamiento',
       items: ['Uso exclusivo', '180m²', 'Mascotas bienvenidas'],
+    },
+  ];
+
+  readonly reviews: Review[] = [
+    {
+      author:   'Laura M.',
+      date:     'Mayo 2025',
+      rating:   5,
+      text:     'Una casa increíble. El jacuzzi con vistas a la montaña es simplemente mágico. Todo estaba impecable y la ubicación es perfecta para desconectar. Volvemos seguro.',
+      location: 'Valencia',
+    },
+    {
+      author:   'Carlos y Ana',
+      date:     'Abril 2025',
+      rating:   5,
+      text:     'Escapada perfecta para desconectar. La casa está equipada con todo lo que necesitas. El pueblo es precioso y la naturaleza alrededor es espectacular.',
+      location: 'Madrid',
+    },
+    {
+      author:   'Familia Rodríguez',
+      date:     'Agosto 2024',
+      rating:   5,
+      text:     'Fuimos con niños y mascotas y todo fue perfecto. El espacio es amplio, la casa acogedora y el propietario muy atento. Totalmente recomendable.',
+      location: 'Barcelona',
     },
   ];
 
