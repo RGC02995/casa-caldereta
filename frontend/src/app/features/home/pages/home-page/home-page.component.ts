@@ -92,7 +92,7 @@ export class HomePageComponent {
   );
 
   readonly heroPhoto     = computed(() => this._photos()[0] ?? null);
-  readonly previewPhotos = computed(() => this._photos().slice(1, 5));
+  readonly previewPhotos = computed(() => this._photos().slice(0, 4));
   readonly previewRoutes = computed(() => this._routes().slice(0, 3));
   readonly reviews       = this._reviews;
 
