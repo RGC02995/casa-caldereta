@@ -115,23 +115,42 @@
           </div>
 
           <div class="admin-routes__field admin-routes__field--full">
-            <label class="admin-routes__label" for="route-cover">URL imagen portada *</label>
-            <input
-              class="admin-routes__input"
-              id="route-cover"
-              type="text"
-              placeholder="https://res.cloudinary.com/..."
-              aria-required="true"
-              [value]="formData().coverImageUrl"
-              (input)="updateFormField('coverImageUrl', $any($event.target).value)"
-            />
-            @if (formData().coverImageUrl) {
-              <img
-                class="admin-routes__cover-preview"
-                [src]="formData().coverImageUrl"
-                alt="Vista previa imagen de portada"
-              />
-            }
+            <span class="admin-routes__label">Imagen de portada</span>
+            <div class="admin-routes__cover-picker">
+              @if (coverImagePreview()) {
+                <img
+                  class="admin-routes__cover-preview"
+                  [src]="coverImagePreview()"
+                  alt="Vista previa imagen de portada"
+                />
+              }
+              <div class="admin-routes__cover-actions">
+                <label class="admin-routes__cover-label" for="route-cover-file">
+                  @if (coverImageFile()) {
+                    Cambiar selección
+                  } @else if (currentCoverImageUrl()) {
+                    Cambiar imagen
+                  } @else {
+                    Seleccionar imagen
+                  }
+                </label>
+                <input
+                  class="admin-routes__cover-input"
+                  id="route-cover-file"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  (change)="onCoverImageSelected($event)"
+                />
+                @if (coverImageFile()) {
+                  <button class="admin-routes__cover-clear" type="button" (click)="clearCoverImage()">
+                    Quitar
+                  </button>
+                }
+              </div>
+              @if (coverImageFile()) {
+                <p class="admin-routes__cover-filename">{{ coverImageFile()!.name }}</p>
+              }
+            </div>
           </div>
 
         </div>

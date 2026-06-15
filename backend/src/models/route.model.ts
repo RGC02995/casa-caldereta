@@ -79,9 +79,9 @@ const routeSchema = new Schema<IRouteDocument>(
       required: true,
     },
     coverImageUrl: {
-      type:     String,
-      required: true,
-      trim:     true,
+      type:    String,
+      default: '',
+      trim:    true,
     },
     images: {
       type:    [String],

@@ -8,15 +8,14 @@ import { IRoute, IRoutePoint, RouteDifficulty, RouteType } from '../../../../cor
 type FormMode = 'hidden' | 'create' | 'edit';
 
 interface IRouteForm {
-  title:         string;
-  description:   string;
-  distance:      number;
-  duration:      number;
-  difficulty:    RouteDifficulty;
-  type:          RouteType;
-  coverImageUrl: string;
-  order:         number;
-  points:        IRoutPointFormRow[];
+  title:       string;
+  description: string;
+  distance:    number;
+  duration:    number;
+  difficulty:  RouteDifficulty;
+  type:        RouteType;
+  order:       number;
+  points:      IRoutPointFormRow[];
 }
 
 interface IRoutPointFormRow {
@@ -25,15 +24,14 @@ interface IRoutPointFormRow {
 }
 
 const EMPTY_FORM: IRouteForm = {
-  title:         '',
-  description:   '',
-  distance:      0,
-  duration:      0,
-  difficulty:    'easy',
-  type:          'hiking',
-  coverImageUrl: '',
-  order:         0,
-  points:        [],
+  title:       '',
+  description: '',
+  distance:    0,
+  duration:    0,
+  difficulty:  'easy',
+  type:        'hiking',
+  order:       0,
+  points:      [],
 };
 
 const DIFFICULTY_LABELS: Record<RouteDifficulty, string> = {
@@ -65,6 +63,10 @@ export class AdminRoutesComponent {
   readonly formMode     = signal<FormMode>('hidden');
   readonly editingId    = signal<string | null>(null);
   readonly formData     = signal<IRouteForm>({ ...EMPTY_FORM });
+
+  readonly coverImageFile         = signal<File | null>(null);
+  readonly coverImagePreview      = signal<string>('');
+  readonly currentCoverImageUrl   = signal<string>('');
 
   private readonly refresh$ = new BehaviorSubject<void>(undefined);
 
@@ -109,23 +111,28 @@ export class AdminRoutesComponent {
   openCreateForm(): void {
     this.formData.set({ ...EMPTY_FORM, points: [] });
     this.editingId.set(null);
+    this.coverImageFile.set(null);
+    this.coverImagePreview.set('');
+    this.currentCoverImageUrl.set('');
     this.actionError.set('');
     this.formMode.set('create');
   }
 
   openEditForm(route: IRoute): void {
     this.formData.set({
-      title:         route.title,
-      description:   route.description,
-      distance:      route.distance,
-      duration:      route.duration,
-      difficulty:    route.difficulty,
-      type:          route.type,
-      coverImageUrl: route.coverImageUrl,
-      order:         route.order,
-      points:        route.points.map(point => ({ name: point.name, description: point.description })),
+      title:       route.title,
+      description: route.description,
+      distance:    route.distance,
+      duration:    route.duration,
+      difficulty:  route.difficulty,
+      type:        route.type,
+      order:       route.order,
+      points:      route.points.map(point => ({ name: point.name, description: point.description })),
     });
     this.editingId.set(route.id);
+    this.coverImageFile.set(null);
+    this.currentCoverImageUrl.set(route.coverImageUrl);
+    this.coverImagePreview.set(route.coverImageUrl);
     this.actionError.set('');
     this.formMode.set('edit');
   }
@@ -134,6 +141,9 @@ export class AdminRoutesComponent {
     this.formMode.set('hidden');
     this.editingId.set(null);
     this.formData.set({ ...EMPTY_FORM });
+    this.coverImageFile.set(null);
+    this.coverImagePreview.set('');
+    this.currentCoverImageUrl.set('');
     this.actionError.set('');
   }
 
@@ -164,6 +174,19 @@ export class AdminRoutesComponent {
     });
   }
 
+  onCoverImageSelected(event: Event): void {
+    const inputElement = event.target as HTMLInputElement;
+    const file = inputElement.files?.[0];
+    if (!file) return;
+    this.coverImageFile.set(file);
+    this.coverImagePreview.set(URL.createObjectURL(file));
+  }
+
+  clearCoverImage(): void {
+    this.coverImageFile.set(null);
+    this.coverImagePreview.set(this.currentCoverImageUrl());
+  }
+
   onFormSubmit(event: Event): void {
     event.preventDefault();
     const currentForm = this.formData();
@@ -174,10 +197,6 @@ export class AdminRoutesComponent {
     }
     if (!currentForm.description.trim()) {
       this.actionError.set('La descripción es obligatoria.');
-      return;
-    }
-    if (!currentForm.coverImageUrl.trim()) {
-      this.actionError.set('La URL de la imagen de portada es obligatoria.');
       return;
     }
 
@@ -193,49 +212,43 @@ export class AdminRoutesComponent {
     this.actionError.set('');
 
     const routePayload = {
-      title:         currentForm.title.trim(),
-      description:   currentForm.description.trim(),
-      distance:      currentForm.distance,
-      duration:      currentForm.duration,
-      difficulty:    currentForm.difficulty,
-      type:          currentForm.type,
-      coverImageUrl: currentForm.coverImageUrl.trim(),
-      order:         currentForm.order,
-      points:        currentForm.points.map(point => ({
+      title:       currentForm.title.trim(),
+      description: currentForm.description.trim(),
+      distance:    currentForm.distance,
+      duration:    currentForm.duration,
+      difficulty:  currentForm.difficulty,
+      type:        currentForm.type,
+      order:       currentForm.order,
+      points:      currentForm.points.map(point => ({
         name:        point.name.trim(),
         description: point.description.trim(),
-      })),
+      })) as IRoutePoint[],
     };
 
+    const currentFormMode  = this.formMode();
     const currentEditingId = this.editingId();
+    const file             = this.coverImageFile();
 
-    if (this.formMode() === 'create') {
-      this.routeService.create({ ...routePayload, isPublished: false }).subscribe({
-        next: () => {
-          this.isSubmitting.set(false);
-          this.closeForm();
-          this.refresh$.next();
-        },
-        error: () => {
-          this.actionError.set('No se pudo guardar la ruta. Inténtalo de nuevo.');
-          this.isSubmitting.set(false);
-        },
-      });
-    } else if (this.formMode() === 'edit' && currentEditingId) {
-      this.routeService.update(currentEditingId, routePayload).subscribe({
-        next: () => {
-          this.isSubmitting.set(false);
-          this.closeForm();
-          this.refresh$.next();
-        },
-        error: () => {
-          this.actionError.set('No se pudo actualizar la ruta. Inténtalo de nuevo.');
-          this.isSubmitting.set(false);
-        },
-      });
-    } else {
-      this.isSubmitting.set(false);
-    }
+    const saveRequest = currentFormMode === 'create'
+      ? this.routeService.create({ ...routePayload, isPublished: false })
+      : this.routeService.update(currentEditingId!, routePayload);
+
+    saveRequest.pipe(
+      switchMap(response => {
+        const routeId = currentFormMode === 'create' ? response.data.id : currentEditingId!;
+        return file ? this.routeService.uploadCoverImage(routeId, file) : of(null);
+      }),
+    ).subscribe({
+      next: () => {
+        this.isSubmitting.set(false);
+        this.closeForm();
+        this.refresh$.next();
+      },
+      error: () => {
+        this.actionError.set('No se pudo guardar la ruta. Inténtalo de nuevo.');
+        this.isSubmitting.set(false);
+      },
+    });
   }
 
   togglePublished(route: IRoute): void {
@@ -274,5 +287,4 @@ export class AdminRoutesComponent {
       },
     });
   }
-
 }

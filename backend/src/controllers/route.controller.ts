@@ -82,11 +82,6 @@ export async function createRouteHandler(req: Request, res: Response): Promise<v
       res.status(400).json({ success: false, message: 'Tipo no válido. Valores: hiking, cycling, driving, walking' });
       return;
     }
-    if (!coverImageUrl || typeof coverImageUrl !== 'string' || coverImageUrl.trim().length === 0) {
-      res.status(400).json({ success: false, message: 'La imagen de portada es obligatoria' });
-      return;
-    }
-
     const sanitizedPoints: IRoutePoint[] = Array.isArray(points)
       ? (points as IRoutePoint[]).filter(
           (pointItem): pointItem is IRoutePoint =>
@@ -108,7 +103,7 @@ export async function createRouteHandler(req: Request, res: Response): Promise<v
       duration,
       difficulty,
       type,
-      coverImageUrl: coverImageUrl.trim(),
+      coverImageUrl: typeof coverImageUrl === 'string' ? coverImageUrl.trim() : '',
       images:        sanitizedImages,
       points:        sanitizedPoints,
       isPublished:   isPublished === true,
@@ -194,6 +189,27 @@ export async function toggleRoutePublishedHandler(req: Request<{ id: string }>, 
     res.status(200).json({ success: true, data: updatedRoute });
   } catch {
     res.status(500).json({ success: false, message: 'Error al cambiar el estado de publicación' });
+  }
+}
+
+export async function uploadRouteCoverImageHandler(req: Request<{ id: string }>, res: Response): Promise<void> {
+  if (!isValidObjectId(req.params.id)) {
+    res.status(400).json({ success: false, message: 'ID no válido' });
+    return;
+  }
+  if (!req.file) {
+    res.status(400).json({ success: false, message: 'No se ha enviado ninguna imagen' });
+    return;
+  }
+  try {
+    const updatedRoute = await routeService.uploadCoverImage(req.params.id, req.file.buffer);
+    if (!updatedRoute) {
+      res.status(404).json({ success: false, message: 'Ruta no encontrada' });
+      return;
+    }
+    res.status(200).json({ success: true, data: updatedRoute });
+  } catch {
+    res.status(500).json({ success: false, message: 'Error al subir la imagen de portada' });
   }
 }
 

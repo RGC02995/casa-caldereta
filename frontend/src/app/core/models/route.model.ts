@@ -28,17 +28,17 @@ export interface IRoute {
 }
 
 export interface IRouteCreateRequest {
-  readonly title:         string;
-  readonly description:   string;
-  readonly distance:      number;
-  readonly duration:      number;
-  readonly difficulty:    RouteDifficulty;
-  readonly type:          RouteType;
-  readonly coverImageUrl: string;
-  readonly images?:       string[];
-  readonly points?:       IRoutePoint[];
-  readonly isPublished?:  boolean;
-  readonly order?:        number;
+  readonly title:          string;
+  readonly description:    string;
+  readonly distance:       number;
+  readonly duration:       number;
+  readonly difficulty:     RouteDifficulty;
+  readonly type:           RouteType;
+  readonly coverImageUrl?: string;
+  readonly images?:        string[];
+  readonly points?:        IRoutePoint[];
+  readonly isPublished?:   boolean;
+  readonly order?:         number;
 }
 
 export interface IRouteUpdateRequest {

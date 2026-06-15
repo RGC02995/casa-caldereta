@@ -1,4 +1,6 @@
+import { UploadApiResponse } from 'cloudinary';
 import { RouteModel, IRouteDocument, RouteDifficulty, RouteType, IRoutePoint } from '../models/route.model';
+import { cloudinary } from '../config/cloudinary';
 import { withId } from '../utils/mongoose.util';
 
 export interface ICreateRouteData {
@@ -115,6 +117,33 @@ class RouteService {
     const doc = await RouteModel.findByIdAndUpdate(
       id,
       { $set: { isPublished: !current.isPublished } },
+      { returnDocument: 'after', runValidators: true },
+    ).lean<IRouteDocument>();
+
+    return doc ? withId(doc) : null;
+  }
+
+  async uploadCoverImage(id: string, buffer: Buffer): Promise<IRouteDocument | null> {
+    const uploadResult = await new Promise<UploadApiResponse>((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          folder:         'casa-caldereta/rutas',
+          resource_type:  'image',
+          transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+        },
+        (error, result) => {
+          if (error || !result) {
+            reject(error ?? new Error('Error desconocido al subir la imagen'));
+          } else {
+            resolve(result);
+          }
+        },
+      ).end(buffer);
+    });
+
+    const doc = await RouteModel.findByIdAndUpdate(
+      id,
+      { $set: { coverImageUrl: uploadResult.secure_url } },
       { returnDocument: 'after', runValidators: true },
     ).lean<IRouteDocument>();
 

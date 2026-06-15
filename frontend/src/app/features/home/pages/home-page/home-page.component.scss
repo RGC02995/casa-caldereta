@@ -243,10 +243,6 @@
     transition: background-color $transition-normal;
 
     &:hover { background-color: rgba($color-primary, 0.03); }
-
-    &--offset {
-      @include respond-to('md') { margin-top: $space-8; }
-    }
   }
 
   &__icon {

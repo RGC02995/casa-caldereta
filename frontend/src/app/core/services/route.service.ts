@@ -32,6 +32,12 @@ export class RouteService {
     return this.api.patch<IRoute>(`routes/${id}/published`, {});
   }
 
+  uploadCoverImage(id: string, file: File): Observable<ApiResponse<IRoute>> {
+    const formData = new FormData();
+    formData.append('coverImage', file);
+    return this.api.upload<IRoute>(`routes/${id}/cover-image`, formData);
+  }
+
   delete(id: string): Observable<ApiResponse<void>> {
     return this.api.delete<void>(`routes/${id}`);
   }
