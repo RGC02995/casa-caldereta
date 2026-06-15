@@ -1,12 +1,15 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { DatePipe } from '@angular/common';
 import { TranslatePipe } from '@ngx-translate/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map, catchError, of } from 'rxjs';
+import { map, catchError, of, switchMap, timer } from 'rxjs';
 import { PhotoService } from '../../../../core/services/photo.service';
 import { RouteService } from '../../../../core/services/route.service';
+import { ReviewService } from '../../../../core/services/review.service';
 import { IPhoto } from '../../../../core/models/photo.model';
 import { IRoute, RouteDifficulty, RouteType } from '../../../../core/models/route.model';
+import { IReview, ICreateReview } from '../../../../core/models/review.model';
 import { SeoService } from '../../../../core/services/seo.service';
 import { ScrollRevealDirective } from '../../../../shared/directives/scroll-reveal.directive';
 
@@ -19,14 +22,6 @@ interface Highlight {
 interface AmenityGroup {
   readonly category: string;
   readonly items:    readonly string[];
-}
-
-interface Review {
-  readonly author:  string;
-  readonly date:    string;
-  readonly rating:  number;
-  readonly text:    string;
-  readonly location: string;
 }
 
 interface RoutePreviewFallback {
@@ -43,16 +38,19 @@ const TYPE_LABELS: Record<RouteType, string> = {
   hiking: 'Senderismo', cycling: 'Ciclismo', driving: 'En coche', walking: 'A pie',
 };
 
+const POLL_INTERVAL_MS = 60_000;
+
 @Component({
   selector: 'home-page',
   standalone: true,
-  imports: [RouterLink, TranslatePipe, ScrollRevealDirective],
+  imports: [RouterLink, DatePipe, TranslatePipe, ScrollRevealDirective],
   templateUrl: './home-page.component.html',
   styleUrl: './home-page.component.scss',
 })
 export class HomePageComponent {
-  private readonly photoService = inject(PhotoService);
-  private readonly routeService = inject(RouteService);
+  private readonly photoService  = inject(PhotoService);
+  private readonly routeService  = inject(RouteService);
+  private readonly reviewService = inject(ReviewService);
 
   constructor() {
     inject(SeoService).setPage({
@@ -63,10 +61,14 @@ export class HomePageComponent {
     });
   }
 
+  // ── Datos remotos con polling cada 60 s ──────────────────────────────────
+
   private readonly _photos = toSignal(
-    this.photoService.getAll().pipe(
-      map(response => response.data),
-      catchError(() => of([] as IPhoto[])),
+    timer(0, POLL_INTERVAL_MS).pipe(
+      switchMap(() => this.photoService.getAll().pipe(
+        map(response => response.data),
+        catchError(() => of([] as IPhoto[])),
+      )),
     ),
     { initialValue: [] as IPhoto[] },
   );
@@ -79,15 +81,86 @@ export class HomePageComponent {
     { initialValue: [] as IRoute[] },
   );
 
+  private readonly _reviews = toSignal(
+    timer(0, POLL_INTERVAL_MS).pipe(
+      switchMap(() => this.reviewService.getApproved().pipe(
+        map(response => response.data),
+        catchError(() => of([] as IReview[])),
+      )),
+    ),
+    { initialValue: [] as IReview[] },
+  );
+
   readonly heroPhoto     = computed(() => this._photos()[0] ?? null);
   readonly previewPhotos = computed(() => this._photos().slice(1, 5));
   readonly previewRoutes = computed(() => this._routes().slice(0, 3));
+  readonly reviews       = this._reviews;
+
+  // ── Acordeón de comodidades ───────────────────────────────────────────────
 
   readonly openAmenityIndex = signal<number | null>(0);
 
   toggleAmenity(index: number): void {
     this.openAmenityIndex.update(current => current === index ? null : index);
   }
+
+  // ── Formulario de reseña ─────────────────────────────────────────────────
+
+  readonly reviewFormVisible = signal(false);
+  readonly reviewFormSending = signal(false);
+  readonly reviewFormSuccess = signal(false);
+  readonly reviewFormError   = signal('');
+
+  readonly reviewAuthor   = signal('');
+  readonly reviewLocation = signal('');
+  readonly reviewRating   = signal(5);
+  readonly reviewText     = signal('');
+
+  setRating(value: number): void {
+    this.reviewRating.set(value);
+  }
+
+  toggleReviewForm(): void {
+    this.reviewFormVisible.update(visible => !visible);
+    this.reviewFormSuccess.set(false);
+    this.reviewFormError.set('');
+  }
+
+  submitReview(event: Event): void {
+    event.preventDefault();
+
+    const author   = this.reviewAuthor().trim();
+    const location = this.reviewLocation().trim();
+    const rating   = this.reviewRating();
+    const text     = this.reviewText().trim();
+
+    if (!author || !location || !text || text.length < 10) {
+      this.reviewFormError.set('Por favor completa todos los campos (mínimo 10 caracteres en la reseña).');
+      return;
+    }
+
+    const data: ICreateReview = { author, location, rating, text };
+
+    this.reviewFormSending.set(true);
+    this.reviewFormError.set('');
+
+    this.reviewService.submit(data).subscribe({
+      next: () => {
+        this.reviewFormSending.set(false);
+        this.reviewFormSuccess.set(true);
+        this.reviewAuthor.set('');
+        this.reviewLocation.set('');
+        this.reviewRating.set(5);
+        this.reviewText.set('');
+      },
+      error: () => {
+        this.reviewFormSending.set(false);
+        this.reviewFormError.set('No se pudo enviar la reseña. Inténtalo de nuevo más tarde.');
+      },
+    });
+  }
+
+  // ── Labels helpers ────────────────────────────────────────────────────────
 
   difficultyLabel(difficulty: RouteDifficulty): string {
     return DIFFICULTY_LABELS[difficulty] ?? difficulty;
@@ -96,6 +169,8 @@ export class HomePageComponent {
   typeLabel(type: RouteType): string {
     return TYPE_LABELS[type] ?? type;
   }
+
+  // ── Contenido estático ────────────────────────────────────────────────────
 
   readonly highlights: Highlight[] = [
     {
@@ -165,30 +240,6 @@ export class HomePageComponent {
     },
   ];
 
-  readonly reviews: Review[] = [
-    {
-      author:   'Laura M.',
-      date:     'Mayo 2025',
-      rating:   5,
-      text:     'Una casa increíble. El jacuzzi con vistas a la montaña es simplemente mágico. Todo estaba impecable y la ubicación es perfecta para desconectar. Volvemos seguro.',
-      location: 'Valencia',
-    },
-    {
-      author:   'Carlos y Ana',
-      date:     'Abril 2025',
-      rating:   5,
-      text:     'Escapada perfecta para desconectar. La casa está equipada con todo lo que necesitas. El pueblo es precioso y la naturaleza alrededor es espectacular.',
-      location: 'Madrid',
-    },
-    {
-      author:   'Familia Rodríguez',
-      date:     'Agosto 2024',
-      rating:   5,
-      text:     'Fuimos con niños y mascotas y todo fue perfecto. El espacio es amplio, la casa acogedora y el propietario muy atento. Totalmente recomendable.',
-      location: 'Barcelona',
-    },
-  ];
-
   readonly routePreviewFallbacks: RoutePreviewFallback[] = [
     {
       tag:         'Naturaleza',
@@ -206,4 +257,6 @@ export class HomePageComponent {
       description: 'Vinos, naranjas y cocina valenciana de kilómetro cero.',
     },
   ];
+
+  readonly ratingStars = [1, 2, 3, 4, 5] as const;
 }

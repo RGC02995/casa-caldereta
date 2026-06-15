@@ -121,30 +121,146 @@
 <!-- ── RESEÑAS ────────────────────────────────────────────────────────────── -->
 <section class="home-reviews">
   <div class="home-reviews__inner">
+
     <div class="home-reviews__heading" scrollReveal>
-      <p class="home-reviews__label">Opiniones</p>
-      <h2 class="home-reviews__title">Lo que dicen nuestros huéspedes</h2>
+      <div class="home-reviews__heading-text">
+        <p class="home-reviews__label">Opiniones</p>
+        <h2 class="home-reviews__title">Lo que dicen nuestros huéspedes</h2>
+      </div>
+      <button
+        class="home-reviews__add-btn"
+        type="button"
+        (click)="toggleReviewForm()"
+        [attr.aria-expanded]="reviewFormVisible()"
+      >
+        @if (reviewFormVisible()) { Cancelar } @else { Dejar una reseña }
+      </button>
     </div>
-    <ul class="home-reviews__list">
-      @for (review of reviews; track review.author; let i = $index) {
-        <li class="home-reviews__card" scrollReveal [delay]="i * 80">
-          <div class="home-reviews__stars" [attr.aria-label]="review.rating + ' de 5 estrellas'">
-            @for (star of [1, 2, 3, 4, 5]; track star) {
-              <svg class="home-reviews__star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-              </svg>
-            }
+
+    @if (reviewFormVisible()) {
+      <div class="home-reviews__form-wrap" scrollReveal>
+        @if (reviewFormSuccess()) {
+          <div class="home-reviews__form-success" role="status">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 12l2 2 4-4"/>
+              <circle cx="12" cy="12" r="10"/>
+            </svg>
+            <p>¡Gracias por tu reseña! Será publicada tras su revisión.</p>
           </div>
-          <blockquote class="home-reviews__quote">
-            <p class="home-reviews__text">&ldquo;{{ review.text }}&rdquo;</p>
-            <footer class="home-reviews__author">
-              <strong class="home-reviews__author-name">{{ review.author }}</strong>
-              <span class="home-reviews__author-meta">{{ review.location }} · {{ review.date }}</span>
-            </footer>
-          </blockquote>
-        </li>
-      }
-    </ul>
+        } @else {
+          <form class="home-reviews__form" (submit)="submitReview($event)" novalidate>
+            <div class="home-reviews__form-row">
+              <div class="home-reviews__form-field">
+                <label class="home-reviews__form-label" for="review-author">Tu nombre</label>
+                <input
+                  class="home-reviews__form-input"
+                  id="review-author"
+                  type="text"
+                  autocomplete="name"
+                  placeholder="Laura M."
+                  maxlength="80"
+                  [value]="reviewAuthor()"
+                  (input)="reviewAuthor.set($any($event.target).value)"
+                />
+              </div>
+              <div class="home-reviews__form-field">
+                <label class="home-reviews__form-label" for="review-location">Ciudad de origen</label>
+                <input
+                  class="home-reviews__form-input"
+                  id="review-location"
+                  type="text"
+                  autocomplete="address-level2"
+                  placeholder="Valencia"
+                  maxlength="80"
+                  [value]="reviewLocation()"
+                  (input)="reviewLocation.set($any($event.target).value)"
+                />
+              </div>
+            </div>
+
+            <fieldset class="home-reviews__form-rating">
+              <legend class="home-reviews__form-label">Puntuación</legend>
+              <div class="home-reviews__rating-stars" role="radiogroup" aria-label="Puntuación de 1 a 5 estrellas">
+                @for (star of ratingStars; track star) {
+                  <button
+                    class="home-reviews__rating-star"
+                    [class.home-reviews__rating-star--active]="star <= reviewRating()"
+                    type="button"
+                    [attr.aria-label]="star + ' estrella' + (star > 1 ? 's' : '')"
+                    [attr.aria-pressed]="star === reviewRating()"
+                    (click)="setRating(star)"
+                  >
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                  </button>
+                }
+              </div>
+            </fieldset>
+
+            <div class="home-reviews__form-field">
+              <label class="home-reviews__form-label" for="review-text">Tu reseña</label>
+              <textarea
+                class="home-reviews__form-textarea"
+                id="review-text"
+                rows="4"
+                placeholder="Cuéntanos tu experiencia en Casa Caldereta…"
+                maxlength="800"
+                [value]="reviewText()"
+                (input)="reviewText.set($any($event.target).value)"
+              ></textarea>
+              <span class="home-reviews__form-hint">{{ reviewText().length }}/800</span>
+            </div>
+
+            @if (reviewFormError()) {
+              <p class="home-reviews__form-error" role="alert">{{ reviewFormError() }}</p>
+            }
+
+            <button
+              class="home-reviews__form-submit"
+              type="submit"
+              [disabled]="reviewFormSending()"
+            >
+              @if (reviewFormSending()) { Enviando… } @else { Enviar reseña }
+            </button>
+          </form>
+        }
+      </div>
+    }
+
+    @if (reviews().length > 0) {
+      <ul class="home-reviews__list">
+        @for (review of reviews(); track review.id; let i = $index) {
+          <li class="home-reviews__card" scrollReveal [delay]="i * 80">
+            <div class="home-reviews__stars" [attr.aria-label]="review.rating + ' de 5 estrellas'">
+              @for (star of ratingStars; track star) {
+                <svg
+                  class="home-reviews__star"
+                  [class.home-reviews__star--empty]="star > review.rating"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              }
+            </div>
+            <blockquote class="home-reviews__quote">
+              <p class="home-reviews__text">&ldquo;{{ review.text }}&rdquo;</p>
+              <footer class="home-reviews__author">
+                <strong class="home-reviews__author-name">{{ review.author }}</strong>
+                <span class="home-reviews__author-meta">
+                  {{ review.location }} · {{ review.createdAt | date:'MMMM yyyy' }}
+                </span>
+              </footer>
+            </blockquote>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="home-reviews__empty">Sé el primero en dejar una reseña.</p>
+    }
+
   </div>
 </section>
 

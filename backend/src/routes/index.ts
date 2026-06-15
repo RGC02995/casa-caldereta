@@ -5,6 +5,7 @@ import photoRouter         from './photo.routes';
 import routeRouter         from './route.routes';
 import pricingRuleRouter   from './pricing-rule.routes';
 import blockedPeriodRouter from './blocked-period.routes';
+import reviewRouter        from './review.routes';
 
 const apiRouter = Router();
 
@@ -18,5 +19,6 @@ apiRouter.use('/photos',          photoRouter);
 apiRouter.use('/routes',          routeRouter);
 apiRouter.use('/pricing-rules',   pricingRuleRouter);
 apiRouter.use('/blocked-periods', blockedPeriodRouter);
+apiRouter.use('/reviews',         reviewRouter);
 
 export default apiRouter;
