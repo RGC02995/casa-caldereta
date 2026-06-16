@@ -1,0 +1,164 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+@use 'sass:color';
+
+.booking-cal {
+  background-color: $color-white;
+  border-radius: $border-radius-lg;
+  padding: $space-6;
+  box-shadow: $shadow-sm;
+  flex-shrink: 0;
+
+  @include respond-to('lg') { width: 380px; }
+
+  &__header {
+    @include flex-between;
+    margin-bottom: $space-6;
+    align-items: center;
+  }
+
+  &__nav {
+    @include button-reset;
+    @include flex-center;
+    width: 36px;
+    height: 36px;
+    border-radius: $border-radius-sm;
+    color: $color-neutral-600;
+    font-size: $font-size-md;
+    transition: background-color $transition-fast, color $transition-fast;
+
+    &:hover:not(:disabled) {
+      background-color: $color-neutral-100;
+      color: $color-primary;
+    }
+
+    &:disabled { opacity: 0.3; cursor: not-allowed; }
+    &:focus-visible { @include focus-visible; }
+  }
+
+  &__month {
+    font-family: $font-family-heading;
+    font-size: $font-size-md;
+    font-weight: $font-weight-regular;
+    color: $color-neutral-800;
+    text-transform: capitalize;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: $space-5;
+  }
+
+  &__weekday {
+    @include flex-center;
+    height: 36px;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    letter-spacing: $letter-spacing-wide;
+    color: $color-neutral-400;
+    text-transform: uppercase;
+  }
+
+  &__day-empty {
+    aspect-ratio: 1 / 1;
+  }
+
+  &__day {
+    @include button-reset;
+    @include flex-center;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: $border-radius-full;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-700;
+    transition:
+      background-color $transition-fast,
+      color $transition-fast;
+
+    &:not(:disabled):not(.booking-cal__day--check-in):not(.booking-cal__day--check-out):hover {
+      background-color: $color-neutral-100;
+      cursor: pointer;
+    }
+
+    &:focus-visible { @include focus-visible; }
+
+    &--today {
+      font-weight: $font-weight-bold;
+      color: $color-primary;
+    }
+
+    &--check-in,
+    &--check-out {
+      background-color: $color-secondary;
+      color: $color-white;
+      font-weight: $font-weight-semibold;
+    }
+
+    &--in-range {
+      background-color: rgba($color-secondary, 0.15);
+      border-radius: $border-radius-sm;
+      color: $color-neutral-700;
+    }
+
+    &--past,
+    &:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    &--booked {
+      background-color: $color-neutral-200;
+      color: $color-neutral-400;
+      text-decoration: line-through;
+    }
+
+    &--blocked {
+      background-color: color.adjust($color-error, $lightness: 38%);
+      color: color.adjust($color-error, $lightness: 10%);
+      text-decoration: line-through;
+    }
+  }
+
+  &__load-error {
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    color: $color-error;
+    background-color: color.adjust($color-error, $lightness: 42%);
+    border-radius: $border-radius-sm;
+    padding: $space-3;
+    margin-bottom: $space-4;
+  }
+
+  &__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-4;
+    justify-content: center;
+    padding-top: $space-4;
+    border-top: 1px solid $color-neutral-100;
+  }
+
+  &__legend-item {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    font-size: $font-size-xs;
+    color: $color-neutral-500;
+  }
+
+  &__legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: $border-radius-full;
+    flex-shrink: 0;
+
+    &--selected { background-color: $color-secondary; }
+    &--range    { background-color: rgba($color-secondary, 0.3); }
+    &--booked   { background-color: $color-neutral-300; }
+    &--blocked  { background-color: color.adjust($color-error, $lightness: 20%); }
+  }
+}

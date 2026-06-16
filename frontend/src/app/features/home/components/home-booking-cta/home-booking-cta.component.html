@@ -1,0 +1,16 @@
+<section class="home-booking-cta">
+  <div class="home-booking-cta__inner">
+    <div class="home-booking-cta__left" scrollReveal>
+      <p class="home-booking-cta__label">Reservas</p>
+      <h2 class="home-booking-cta__title">¿Listo para<br>reservar?</h2>
+    </div>
+    <div class="home-booking-cta__right" scrollReveal [revealFrom]="'right'" [delay]="100">
+      <p class="home-booking-cta__subtitle">
+        Comprueba disponibilidad y reserva tu estancia en Casa Caldereta. Uso exclusivo para ti y los tuyos.
+      </p>
+      <a routerLink="/reservar" class="home-booking-cta__btn">
+        {{ 'home.hero.cta' | translate }}
+      </a>
+    </div>
+  </div>
+</section>

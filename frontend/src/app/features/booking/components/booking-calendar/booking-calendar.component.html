@@ -1,0 +1,78 @@
+<div class="booking-cal">
+
+  @if (loadError()) {
+    <p class="booking-cal__load-error" role="alert">{{ loadError() }}</p>
+  }
+
+  <div class="booking-cal__header">
+    <button
+      type="button"
+      class="booking-cal__nav"
+      (click)="goToPreviousMonth()"
+      [disabled]="isPrevMonthDisabled()"
+      aria-label="Mes anterior"
+    >&#8592;</button>
+
+    <span class="booking-cal__month">{{ monthLabel() }}</span>
+
+    <button
+      type="button"
+      class="booking-cal__nav"
+      (click)="goToNextMonth()"
+      aria-label="Mes siguiente"
+    >&#8594;</button>
+  </div>
+
+  <div class="booking-cal__grid" role="grid" [attr.aria-label]="monthLabel()">
+
+    @for (dayName of weekDays; track dayName) {
+      <div class="booking-cal__weekday" role="columnheader" aria-readonly="true">
+        {{ dayName }}
+      </div>
+    }
+
+    @for (day of calendarDays(); track $index) {
+      @if (day.date) {
+        <button
+          type="button"
+          role="gridcell"
+          class="booking-cal__day"
+          [class.booking-cal__day--today]="day.isToday"
+          [class.booking-cal__day--check-in]="day.isCheckIn"
+          [class.booking-cal__day--check-out]="day.isCheckOut"
+          [class.booking-cal__day--in-range]="day.isInRange"
+          [class.booking-cal__day--past]="day.isPast"
+          [class.booking-cal__day--booked]="day.isBooked"
+          [class.booking-cal__day--blocked]="day.isBlocked"
+          [disabled]="day.isDisabled"
+          (click)="onDayClick(day)"
+          [attr.aria-label]="day.dayNumber + ' ' + monthLabel()"
+          [attr.aria-pressed]="day.isCheckIn || day.isCheckOut"
+        >{{ day.dayNumber }}</button>
+      } @else {
+        <div class="booking-cal__day-empty" role="gridcell" aria-hidden="true"></div>
+      }
+    }
+
+  </div>
+
+  <div class="booking-cal__legend" aria-hidden="true">
+    <div class="booking-cal__legend-item">
+      <span class="booking-cal__legend-dot booking-cal__legend-dot--selected"></span>
+      Entrada / Salida
+    </div>
+    <div class="booking-cal__legend-item">
+      <span class="booking-cal__legend-dot booking-cal__legend-dot--range"></span>
+      Estancia
+    </div>
+    <div class="booking-cal__legend-item">
+      <span class="booking-cal__legend-dot booking-cal__legend-dot--booked"></span>
+      Reservado
+    </div>
+    <div class="booking-cal__legend-item">
+      <span class="booking-cal__legend-dot booking-cal__legend-dot--blocked"></span>
+      No disponible
+    </div>
+  </div>
+
+</div>

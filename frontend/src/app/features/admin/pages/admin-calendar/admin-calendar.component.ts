@@ -1,7 +1,5 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { HttpErrorResponse } from '@angular/common/http';
-import { DatePipe, CurrencyPipe } from '@angular/common';
 import { BehaviorSubject, switchMap, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { PricingRuleService } from '../../../../core/services/pricing-rule.service';
@@ -10,23 +8,13 @@ import { BookingService } from '../../../../core/services/booking.service';
 import { IPricingRule } from '../../../../core/models/pricing-rule.model';
 import { IBlockedPeriod } from '../../../../core/models/blocked-period.model';
 import { IBooking } from '../../../../core/models/booking.model';
-
-const WEEKDAY_LABELS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-
-interface IAdminCalendarDay {
-  readonly day:           number;
-  readonly dateStr:       string;
-  readonly isBlocked:     boolean;
-  readonly blockedPeriod: IBlockedPeriod | null;
-  readonly booking:       IBooking | null;
-  readonly price:         number | null;
-  readonly isToday:       boolean;
-  readonly isPast:        boolean;
-}
+import { AdminCalendarViewComponent, IAdminCalendarDay } from '../../components/admin-calendar-view/admin-calendar-view.component';
+import { AdminCalendarPanelComponent } from '../../components/admin-calendar-panel/admin-calendar-panel.component';
 
 @Component({
-  selector: 'admin-calendar',
-  imports: [DatePipe, CurrencyPipe],
+  selector:    'admin-calendar',
+  standalone:  true,
+  imports:     [AdminCalendarViewComponent, AdminCalendarPanelComponent],
   templateUrl: './admin-calendar.component.html',
   styleUrl:    './admin-calendar.component.scss',
 })
@@ -35,15 +23,9 @@ export class AdminCalendarComponent {
   private readonly blockedService = inject(BlockedPeriodService);
   private readonly bookingService = inject(BookingService);
 
-  readonly weekdays = WEEKDAY_LABELS;
-
-  readonly loadError         = signal('');
-  readonly pricingError      = signal('');
-  readonly blockedError      = signal('');
-  readonly processingId      = signal<string | null>(null);
-  readonly activePanel       = signal<'pricing' | 'blocked'>('pricing');
-  readonly isSubmittingPrice = signal(false);
-  readonly isSubmittingBlock = signal(false);
+  readonly loadError  = signal('');
+  readonly viewYear   = signal(new Date().getFullYear());
+  readonly viewMonth  = signal(new Date().getMonth());
 
   private readonly pricingRefresh$  = new BehaviorSubject<void>(undefined);
   private readonly blockedRefresh$  = new BehaviorSubject<void>(undefined);
@@ -82,36 +64,6 @@ export class AdminCalendarComponent {
     { initialValue: [] as IBooking[] },
   );
 
-  readonly viewYear  = signal(new Date().getFullYear());
-  readonly viewMonth = signal(new Date().getMonth());
-
-  // Pricing form
-  readonly priceLabel     = signal('');
-  readonly priceStart     = signal('');
-  readonly priceEnd       = signal('');
-  readonly pricePerNight  = signal<number | null>(null);
-  readonly priceMinNights = signal(1);
-  readonly editingRuleId  = signal<string | null>(null);
-
-  // Blocked form
-  readonly blockStart  = signal('');
-  readonly blockEnd    = signal('');
-  readonly blockReason = signal('');
-
-  readonly priceFormValid = computed(() =>
-    this.priceLabel().trim().length > 0 &&
-    this.priceStart().length > 0 &&
-    this.priceEnd().length > 0 &&
-    this.pricePerNight() !== null &&
-    (this.pricePerNight() ?? 0) >= 1 &&
-    this.priceMinNights() >= 1
-  );
-
-  readonly blockFormValid = computed(() =>
-    this.blockStart().length > 0 &&
-    this.blockEnd().length > 0
-  );
-
   readonly viewMonthLabel = computed(() =>
     new Date(this.viewYear(), this.viewMonth(), 1)
       .toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
@@ -128,7 +80,7 @@ export class AdminCalendarComponent {
 
     const firstDay    = new Date(year, month, 1);
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const startPad    = (firstDay.getDay() + 6) % 7; // Monday-based
+    const startPad    = (firstDay.getDay() + 6) % 7;
 
     const cells: (IAdminCalendarDay | null)[] = Array.from({ length: startPad }, () => null);
 
@@ -153,7 +105,7 @@ export class AdminCalendarComponent {
         return date >= checkIn && date < checkOut;
       }) ?? null;
 
-      const matchingRules = rules.filter(r => {
+      const matchingRules  = rules.filter(r => {
         const start = new Date(r.startDate);
         const end   = new Date(r.endDate);
         start.setHours(0, 0, 0, 0);
@@ -161,15 +113,13 @@ export class AdminCalendarComponent {
         return date >= start && date <= end;
       });
 
-      const lastMatchingRule = matchingRules.at(-1);
-
       cells.push({
         day:           d,
         dateStr,
         isBlocked:     blockedPeriod !== null,
         blockedPeriod,
         booking,
-        price:         lastMatchingRule ? lastMatchingRule.pricePerNight : null,
+        price:         matchingRules.at(-1)?.pricePerNight ?? null,
         isToday:       dateStr === todayStr,
         isPast:        dateStr < todayStr,
       });
@@ -196,136 +146,6 @@ export class AdminCalendarComponent {
     }
   }
 
-  startEditRule(rule: IPricingRule): void {
-    this.editingRuleId.set(rule.id);
-    this.priceLabel.set(rule.label);
-    this.priceStart.set(rule.startDate.slice(0, 10));
-    this.priceEnd.set(rule.endDate.slice(0, 10));
-    this.pricePerNight.set(rule.pricePerNight);
-    this.priceMinNights.set(rule.minNights);
-    this.pricingError.set('');
-  }
-
-  cancelEditRule(): void {
-    this.editingRuleId.set(null);
-    this.resetPriceForm();
-  }
-
-  onPricingSubmit(event: Event): void {
-    event.preventDefault();
-    if (!this.priceFormValid() || this.isSubmittingPrice()) return;
-
-    const price = this.pricePerNight();
-    if (price === null) return;
-
-    const data = {
-      label:         this.priceLabel().trim(),
-      startDate:     this.priceStart(),
-      endDate:       this.priceEnd(),
-      pricePerNight: price,
-      minNights:     this.priceMinNights(),
-    };
-
-    this.isSubmittingPrice.set(true);
-    this.pricingError.set('');
-
-    const editingId = this.editingRuleId();
-    const request$  = editingId
-      ? this.pricingService.update(editingId, data)
-      : this.pricingService.create(data);
-
-    request$.subscribe({
-      next: () => {
-        this.editingRuleId.set(null);
-        this.resetPriceForm();
-        this.isSubmittingPrice.set(false);
-        this.pricingRefresh$.next();
-      },
-      error: (err: HttpErrorResponse) => {
-        const message = err.error?.message as string | undefined;
-        this.pricingError.set(message ?? 'No se pudo guardar la regla. Inténtalo de nuevo.');
-        this.isSubmittingPrice.set(false);
-      },
-    });
-  }
-
-  deleteRule(rule: IPricingRule): void {
-    if (this.processingId()) return;
-    if (!confirm(`${rule.label}\n\n¿Eliminar esta regla de precio? Esta acción no se puede deshacer.`)) return;
-
-    this.processingId.set(rule.id);
-    this.pricingError.set('');
-
-    this.pricingService.delete(rule.id).subscribe({
-      next: () => {
-        this.processingId.set(null);
-        this.pricingRefresh$.next();
-      },
-      error: () => {
-        this.pricingError.set('No se pudo eliminar la regla. Inténtalo de nuevo.');
-        this.processingId.set(null);
-      },
-    });
-  }
-
-  onBlockedSubmit(event: Event): void {
-    event.preventDefault();
-    if (!this.blockFormValid() || this.isSubmittingBlock()) return;
-
-    this.isSubmittingBlock.set(true);
-    this.blockedError.set('');
-
-    const reason = this.blockReason().trim();
-    this.blockedService.create({
-      startDate: this.blockStart(),
-      endDate:   this.blockEnd(),
-      ...(reason ? { reason } : {}),
-    }).subscribe({
-      next: () => {
-        this.resetBlockForm();
-        this.isSubmittingBlock.set(false);
-        this.blockedRefresh$.next();
-      },
-      error: (err: HttpErrorResponse) => {
-        const message = err.error?.message as string | undefined;
-        this.blockedError.set(message ?? 'No se pudo crear el bloqueo. Inténtalo de nuevo.');
-        this.isSubmittingBlock.set(false);
-      },
-    });
-  }
-
-  deleteBlockedPeriod(period: IBlockedPeriod): void {
-    if (this.processingId()) return;
-    const startFormatted = period.startDate.slice(0, 10).split('-').reverse().join('/');
-    const endFormatted   = period.endDate.slice(0, 10).split('-').reverse().join('/');
-    if (!confirm(`${startFormatted} – ${endFormatted}\n\n¿Eliminar este bloqueo? Las fechas volverán a estar disponibles.`)) return;
-
-    this.processingId.set(period.id);
-    this.blockedError.set('');
-
-    this.blockedService.delete(period.id).subscribe({
-      next: () => {
-        this.processingId.set(null);
-        this.blockedRefresh$.next();
-      },
-      error: () => {
-        this.blockedError.set('No se pudo eliminar el bloqueo. Inténtalo de nuevo.');
-        this.processingId.set(null);
-      },
-    });
-  }
-
-  private resetPriceForm(): void {
-    this.priceLabel.set('');
-    this.priceStart.set('');
-    this.priceEnd.set('');
-    this.pricePerNight.set(null);
-    this.priceMinNights.set(1);
-  }
-
-  private resetBlockForm(): void {
-    this.blockStart.set('');
-    this.blockEnd.set('');
-    this.blockReason.set('');
-  }
+  onPricingChanged(): void { this.pricingRefresh$.next(); }
+  onBlockedChanged(): void { this.blockedRefresh$.next(); }
 }

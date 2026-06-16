@@ -1,0 +1,21 @@
+<section class="home-highlights">
+  <div class="home-highlights__inner">
+    <div class="home-highlights__heading" scrollReveal>
+      <p class="home-highlights__label">La casa</p>
+      <h2 class="home-highlights__title">Un lugar pensado<br>para ti</h2>
+    </div>
+    <ul class="home-highlights__list">
+      @for (highlight of highlights; track highlight.title; let i = $index) {
+        <li class="home-highlights__item" scrollReveal [delay]="i * 80">
+          <svg class="home-highlights__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path [attr.d]="highlight.icon"/>
+          </svg>
+          <div class="home-highlights__item-body">
+            <h3 class="home-highlights__item-title">{{ highlight.title }}</h3>
+            <p class="home-highlights__item-desc">{{ highlight.description }}</p>
+          </div>
+        </li>
+      }
+    </ul>
+  </div>
+</section>

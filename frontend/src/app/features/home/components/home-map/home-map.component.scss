@@ -1,0 +1,92 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+.home-map {
+  background-color: $color-neutral-100;
+
+  &__inner {
+    @include container;
+    padding-block: $space-20;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $space-10;
+
+    @include respond-to('lg') {
+      grid-template-columns: 1fr 1.4fr;
+      gap: $space-16;
+      align-items: center;
+    }
+  }
+
+  &__info {
+    @include flex-column;
+    gap: $space-6;
+  }
+
+  &__label {
+    @include label-text;
+    color: $color-accent;
+  }
+
+  &__title {
+    font-family: $font-family-heading;
+    font-size: clamp(#{$font-size-2xl}, 4vw, #{$font-size-3xl});
+    font-weight: $font-weight-light;
+    color: $color-primary-dark;
+    margin: 0;
+    line-height: $line-height-tight;
+    letter-spacing: $letter-spacing-tight;
+  }
+
+  &__distances {
+    @include flex-column;
+    gap: $space-3;
+    margin: 0;
+    padding: 0;
+  }
+
+  &__distance-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: $space-4;
+    padding-bottom: $space-3;
+    border-bottom: 1px solid $color-neutral-200;
+
+    &:last-child { border-bottom: none; }
+  }
+
+  &__distance-label {
+    font-size: $font-size-sm;
+    color: $color-neutral-600;
+  }
+
+  &__distance-value {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-primary;
+    white-space: nowrap;
+  }
+
+  &__address {
+    font-style: normal;
+    font-size: $font-size-sm;
+    color: $color-neutral-500;
+    line-height: $line-height-relaxed;
+  }
+
+  &__embed {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+
+    @include respond-to('lg') { aspect-ratio: 16 / 10; }
+  }
+
+  &__iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+}

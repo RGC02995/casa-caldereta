@@ -3,8 +3,8 @@ import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
-import { SiteHeaderComponent } from './shared/components/site-header/site-header.component';
-import { SiteFooterComponent } from './shared/components/site-footer/site-footer.component';
+import { SiteHeaderComponent } from './core/layout/site-header/site-header.component';
+import { SiteFooterComponent } from './core/layout/site-footer/site-footer.component';
 import { CookieBannerComponent } from './shared/components/cookie-banner/cookie-banner.component';
 
 @Component({

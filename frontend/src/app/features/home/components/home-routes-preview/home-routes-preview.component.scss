@@ -1,0 +1,165 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+.home-routes {
+  background-color: $color-primary;
+
+  &__inner {
+    @include container;
+    padding-block: $space-20;
+    @include flex-column;
+    gap: $space-12;
+  }
+
+  &__header {
+    @include flex-column;
+    gap: $space-3;
+    align-items: center;
+    text-align: center;
+  }
+
+  &__label {
+    @include label-text;
+    color: rgba($color-secondary, 0.85);
+  }
+
+  &__title {
+    @include heading-lg;
+    color: $color-white;
+    margin: 0;
+  }
+
+  &__grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $space-6;
+
+    @include respond-to('md') { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  &__card {
+    background-color: rgba($color-black, 0.2);
+    border: 1px solid rgba($color-white, 0.1);
+    overflow: hidden;
+    @include flex-column;
+    transition: background-color $transition-normal, border-color $transition-normal, transform $transition-normal;
+
+    &:hover {
+      background-color: rgba($color-black, 0.3);
+      border-color: rgba($color-white, 0.18);
+      transform: translateY(-3px);
+    }
+  }
+
+  &__card-img {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 3 / 2;
+    background-color: rgba($color-black, 0.25);
+  }
+
+  &__card-photo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.85;
+    transition: transform 600ms ease, opacity 400ms ease;
+
+    .home-routes__card:hover & {
+      transform: scale(1.05);
+      opacity: 1;
+    }
+  }
+
+  &__card-placeholder {
+    width: 100%;
+    height: 100%;
+    @include flex-center;
+    background: linear-gradient(135deg, rgba($color-primary-light, 0.25) 0%, rgba($color-primary-dark, 0.5) 100%);
+
+    svg {
+      width: 44px;
+      height: 44px;
+      color: rgba($color-white, 0.25);
+    }
+  }
+
+  &__card-badge {
+    position: absolute;
+    top: $space-3;
+    left: $space-3;
+    background-color: $color-secondary;
+    color: $color-white;
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    letter-spacing: $letter-spacing-wider;
+    text-transform: uppercase;
+    padding: $space-1 $space-3;
+  }
+
+  &__card-body {
+    padding: $space-5;
+    @include flex-column;
+    gap: $space-2;
+    flex: 1;
+  }
+
+  &__card-title {
+    font-family: $font-family-heading;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-light;
+    color: $color-white;
+    margin: 0;
+    line-height: $line-height-tight;
+    letter-spacing: $letter-spacing-wide;
+  }
+
+  &__card-desc {
+    font-size: $font-size-sm;
+    color: rgba($color-white, 0.6);
+    line-height: $line-height-relaxed;
+    margin: 0;
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: center;
+
+    .home-section-link {
+      color: $color-secondary;
+      &:hover { color: $color-secondary-light; }
+    }
+  }
+}
+
+.home-section-link {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  letter-spacing: $letter-spacing-wide;
+  text-decoration: none;
+  color: $color-primary;
+  transition: gap $transition-fast, color $transition-fast;
+
+  &:hover {
+    gap: $space-4;
+    color: $color-primary-light;
+  }
+
+  &:focus-visible { @include focus-visible; }
+
+  &__arrow {
+    display: inline-block;
+    transition: transform $transition-fast;
+  }
+
+  &:hover &__arrow { transform: translateX(4px); }
+}

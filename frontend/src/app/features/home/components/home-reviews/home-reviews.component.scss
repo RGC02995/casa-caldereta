@@ -1,0 +1,258 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+.home-reviews {
+  background-color: $color-white;
+
+  &__inner {
+    @include container;
+    padding-block: $space-20;
+    @include flex-column;
+    gap: $space-12;
+  }
+
+  &__heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: $space-4;
+    flex-wrap: wrap;
+  }
+
+  &__heading-text {
+    @include flex-column;
+    gap: $space-3;
+  }
+
+  &__label {
+    @include label-text;
+    color: $color-accent;
+  }
+
+  &__title {
+    font-family: $font-family-heading;
+    font-size: clamp(#{$font-size-xl}, 3vw, #{$font-size-2xl});
+    font-weight: $font-weight-light;
+    color: $color-primary-dark;
+    margin: 0;
+    line-height: $line-height-tight;
+    max-width: 480px;
+  }
+
+  &__add-btn {
+    flex-shrink: 0;
+    background: none;
+    border: 1px solid $color-primary;
+    color: $color-primary;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    padding: $space-2 $space-5;
+    cursor: pointer;
+    transition: background-color $transition-fast, color $transition-fast;
+    white-space: nowrap;
+
+    &:hover {
+      background-color: $color-primary;
+      color: $color-white;
+    }
+  }
+
+  &__form-wrap {
+    background-color: $color-neutral-100;
+    padding: $space-8 $space-6;
+
+    @include respond-to('md') { padding: $space-10 $space-8; }
+  }
+
+  &__form {
+    @include flex-column;
+    gap: $space-6;
+  }
+
+  &__form-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $space-4;
+
+    @include respond-to('md') { grid-template-columns: 1fr 1fr; }
+  }
+
+  &__form-field {
+    @include flex-column;
+    gap: $space-2;
+  }
+
+  &__form-label {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-primary-dark;
+  }
+
+  &__form-input,
+  &__form-textarea {
+    background-color: $color-white;
+    border: 1px solid $color-neutral-300;
+    color: $color-neutral-800;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    padding: $space-3 $space-4;
+    width: 100%;
+    transition: border-color $transition-fast;
+    outline: none;
+
+    &:focus { border-color: $color-primary; }
+  }
+
+  &__form-textarea {
+    resize: vertical;
+    min-height: 110px;
+  }
+
+  &__form-hint {
+    font-size: $font-size-xs;
+    color: $color-neutral-400;
+    text-align: right;
+  }
+
+  &__form-rating {
+    border: none;
+    padding: 0;
+    margin: 0;
+    @include flex-column;
+    gap: $space-3;
+  }
+
+  &__rating-stars {
+    display: flex;
+    gap: $space-2;
+  }
+
+  &__rating-star {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    color: $color-neutral-300;
+    transition: color $transition-fast, transform $transition-fast;
+
+    svg { width: 100%; height: 100%; display: block; }
+
+    &--active { color: $color-secondary; }
+
+    &:hover,
+    &:focus-visible {
+      color: $color-secondary;
+      transform: scale(1.15);
+      outline: none;
+    }
+  }
+
+  &__form-error {
+    font-size: $font-size-sm;
+    color: $color-error;
+    margin: 0;
+  }
+
+  &__form-submit {
+    align-self: flex-start;
+    background-color: $color-primary;
+    border: none;
+    color: $color-white;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    padding: $space-3 $space-8;
+    cursor: pointer;
+    transition: background-color $transition-fast, opacity $transition-fast;
+
+    &:hover:not(:disabled) { background-color: $color-primary-dark; }
+    &:disabled { opacity: 0.6; cursor: not-allowed; }
+  }
+
+  &__form-success {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    color: $color-success;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+
+    svg { width: 24px; height: 24px; flex-shrink: 0; }
+  }
+
+  &__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $space-4;
+
+    @include respond-to('md') { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  &__card {
+    background-color: $color-neutral-100;
+    padding: $space-8 $space-6;
+    @include flex-column;
+    gap: $space-5;
+    border-left: 3px solid $color-accent;
+  }
+
+  &__stars {
+    display: flex;
+    gap: 3px;
+  }
+
+  &__star {
+    width: 16px;
+    height: 16px;
+    color: $color-secondary;
+
+    &--empty { color: $color-neutral-300; }
+  }
+
+  &__quote {
+    margin: 0;
+    padding: 0;
+    @include flex-column;
+    gap: $space-4;
+    flex: 1;
+  }
+
+  &__text {
+    font-size: $font-size-sm;
+    color: $color-neutral-700;
+    line-height: $line-height-relaxed;
+    margin: 0;
+    font-style: italic;
+  }
+
+  &__author {
+    @include flex-column;
+    gap: $space-1;
+  }
+
+  &__author-name {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-primary-dark;
+  }
+
+  &__author-meta {
+    font-size: $font-size-xs;
+    color: $color-neutral-500;
+    letter-spacing: $letter-spacing-wide;
+    text-transform: capitalize;
+  }
+
+  &__empty {
+    font-size: $font-size-sm;
+    color: $color-neutral-400;
+    font-style: italic;
+    margin: 0;
+  }
+}

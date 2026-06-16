@@ -1,0 +1,71 @@
+<section class="admin-gallery__upload-section">
+  <h2 class="admin-gallery__section-title">Subir nueva foto</h2>
+
+  <form class="admin-gallery__upload-form" (submit)="onUploadSubmit($event)">
+
+    <div class="admin-gallery__upload-dropzone" [class.admin-gallery__upload-dropzone--has-preview]="previewUrl()">
+      @if (previewUrl()) {
+        <img class="admin-gallery__upload-preview" [src]="previewUrl()!" alt="Vista previa de la imagen seleccionada" />
+      } @else {
+        <span class="admin-gallery__upload-placeholder" aria-hidden="true">
+          Haz clic para seleccionar una imagen
+        </span>
+      }
+      <input
+        #fileInput
+        class="admin-gallery__upload-input"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        aria-label="Seleccionar imagen para subir (JPEG, PNG o WebP, máx. 10 MB)"
+        (change)="onFileSelected($event)"
+      />
+    </div>
+
+    <div class="admin-gallery__upload-fields">
+      <div class="admin-gallery__field">
+        <label class="admin-gallery__label" for="upload-alt">Texto alternativo (alt)</label>
+        <input
+          class="admin-gallery__input"
+          id="upload-alt"
+          type="text"
+          placeholder="Ej: Salón principal con chimenea"
+          [value]="uploadAlt()"
+          (input)="uploadAlt.set($any($event.target).value)"
+        />
+      </div>
+
+      <div class="admin-gallery__field">
+        <label class="admin-gallery__label" for="upload-category">Categoría</label>
+        <select
+          class="admin-gallery__select"
+          id="upload-category"
+          [value]="uploadCategory()"
+          (change)="uploadCategory.set($any($event.target).value)"
+        >
+          @for (categoryOption of categories; track categoryOption.value) {
+            <option [value]="categoryOption.value">{{ categoryOption.label }}</option>
+          }
+        </select>
+      </div>
+
+      <button
+        class="admin-gallery__upload-btn"
+        type="submit"
+        [disabled]="isUploading() || !selectedFile()"
+        [attr.aria-busy]="isUploading() || null"
+      >
+        @if (isUploading()) {
+          <span class="admin-gallery__upload-spinner" aria-hidden="true"></span>
+          Subiendo...
+        } @else {
+          Subir foto
+        }
+      </button>
+    </div>
+
+  </form>
+
+  @if (uploadError()) {
+    <p class="admin-gallery__action-error" role="alert">{{ uploadError() }}</p>
+  }
+</section>

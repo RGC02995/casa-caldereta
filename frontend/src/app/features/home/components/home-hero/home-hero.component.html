@@ -1,0 +1,30 @@
+<section class="home-hero">
+  <div class="home-hero__text">
+    <p class="home-hero__label">Aielo de Rugat · Valencia · 180m²</p>
+    <h1 class="home-hero__title">
+      <span class="home-hero__title-line">Casa</span>
+      <span class="home-hero__title-line home-hero__title-line--gold">Caldereta</span>
+    </h1>
+    <p class="home-hero__subtitle">{{ 'home.hero.subtitle' | translate }}</p>
+    <div class="home-hero__actions">
+      <a routerLink="/reservar" class="home-hero__cta home-hero__cta--primary">
+        {{ 'home.hero.cta' | translate }}
+      </a>
+      <a routerLink="/galeria" class="home-hero__cta home-hero__cta--ghost">
+        Ver la casa
+      </a>
+    </div>
+    <ul class="home-hero__pills" aria-label="Características principales">
+      <li class="home-hero__pill">Hasta 6 personas</li>
+      <li class="home-hero__pill">Jacuzzi privado</li>
+      <li class="home-hero__pill">Mascotas bienvenidas</li>
+    </ul>
+  </div>
+  <div class="home-hero__media" aria-hidden="true">
+    @if (heroPhoto()) {
+      <img class="home-hero__img" [src]="heroPhoto()!.url" alt="" loading="eager" />
+    } @else {
+      <div class="home-hero__img-placeholder"></div>
+    }
+  </div>
+</section>

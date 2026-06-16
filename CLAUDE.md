@@ -226,6 +226,47 @@ Diseño de lujo estilo boutique (inspiración: ritualdeterra.com). Monorepo Angu
 - [x] Frontend desplegado en Vercel: `https://casa-caldereta-frontend.vercel.app`
 - [x] Backend desplegado en Railway: `https://backend-production-d85c.up.railway.app`
 
+### Post-despliegue — Mejoras (2026-06-15)
+- [x] Fix home gallery: `previewPhotos` de `slice(1,5)` a `slice(0,4)` — fotos Cloudinary visibles en home
+- [x] Fix highlights desktop: eliminado `--offset` margin-top en cards para altura uniforme
+- [x] Rutas admin: subida de imagen de portada (file picker + preview + Cloudinary) — `POST /routes/:id/cover-image`
+- [x] Sistema de reseñas completo: backend (modelo/servicio/controlador/rutas) + frontend público + admin
+- [x] Reorganización frontend — estructura profesional Angular:
+  - `site-header` y `site-footer` movidos a `core/layout/`
+  - `not-found-page` movido a `core/pages/`
+  - `_legal-page.scss` movido a `features/legal/` (co-ubicado con su feature)
+  - ~23 directorios vacíos del scaffolding eliminados
+  - Guards en `core/auth/` (decisión deliberada: son 100% del dominio auth)
+
+### Barrido frontend — Extracción de componentes ✅ COMPLETADO (2026-06-16)
+Objetivo: reducir páginas grandes a orquestadoras delgadas + componentes presentacionales reutilizables.
+Patrón: página orquestadora (datos + servicios) → componentes hijos vía `input<T>()` / `output<T>()`.
+
+- [x] `home-page` → extraídos: `home-hero`, `home-highlights`, `home-amenities`, `home-gallery-preview`, `home-routes-preview`, `home-cta` (6 componentes en `features/home/components/`)
+- [x] `booking-page` → extraídos: `booking-hero`, `booking-calendar`, `booking-request-panel` (3 componentes en `features/booking/components/`)
+  - Página: 382 TS → ~100 / 283 HTML → ~22 líneas
+  - `checkIn`/`checkOut` son señales de la página; calendario emite cambios via output
+  - 409 conflict: panel emite `conflictDetected` → página resetea fechas y recarga
+- [x] `admin-routes` → extraídos: `admin-route-form`, `admin-route-list` (2 componentes en `features/admin/components/`)
+  - Página: 290 TS → ~100 / 419 HTML → ~33 líneas
+  - `admin-route-form`: dueño de `formData` + coverImageFile; usa `effect()` para pre-rellenar al editar; emite `IRouteFormSubmitEvent`
+  - `admin-route-list`: tabla+tarjetas responsive; emite editRoute/togglePublished/deleteRoute
+  - Bug fix: errores de validación ahora locales en el form (`validationError`), no en el banner de página
+  - Fix budget: SCSS de 692 líneas repartido entre 3 ficheros → warning de budget desaparece
+- [x] `admin-calendar` → extraídos: `admin-calendar-panel`, `admin-pricing-rules`, `admin-blocked-periods` (3 componentes en `features/admin/components/`)
+  - Página: 331 TS → ~100 / 357 HTML → ~25 líneas
+- [x] `admin-bookings` → extraído: `admin-booking-list` (1 componente en `features/admin/components/`)
+  - Página: 127 TS → ~85 / 202 HTML → ~50 líneas
+  - `guestName` viaja en los eventos `IBookingStatusChangeEvent` / `IBookingDeleteEvent` — la página no busca en array
+  - `__badge` duplicado intencionalmente en page SCSS (leyenda usa clases badge pero View Encapsulation impide herencia del hijo)
+- [x] `admin-gallery` → extraídos: `admin-gallery-upload` (smart), `admin-gallery-grid` (dumb) (2 componentes en `features/admin/components/`)
+  - Página: 154 TS → ~65 / 136 HTML → ~18 líneas / 421 SCSS → ~15 líneas
+  - `admin-gallery-upload`: inyecta `PhotoService`, dueño de `viewChild<fileInput>`, estado de subida, `onUploadSubmit()`, `resetUploadForm()`; emite `uploadCompleted`
+  - `admin-gallery-grid`: dumb, recibe `photos`/`processingId`/`activeFilter`/`loadError`/`deleteError`; emite `filterChanged`/`deleteRequested`
+  - Errores separados: `uploadError` (interno al upload) vs `deleteError` (señal en página, pasada al grid)
+
+**Total barrido:** 16 componentes nuevos en `features/*/components/` — todas las páginas grandes convertidas en orquestadoras delgadas.
+
 ---
 
 ## Datos legales
@@ -255,3 +296,6 @@ Diseño de lujo estilo boutique (inspiración: ritualdeterra.com). Monorepo Angu
 | fase 5 completa | Calendario y precios: PricingRule + BlockedPeriod — backend seguro + admin calendar |
 | fase 6+7 completas | Emails Resend + SEO + admin reactivo |
 | fase 8 completa | Despliegue: Vercel + Railway + MongoDB Atlas + fixes trust proxy/CORS |
+| feat: reseñas + fix home gallery + rutas imagen | Sistema reseñas completo, fix previewPhotos slice, subida imagen rutas admin |
+| refactor: reorganización frontend | site-header/footer → core/layout, not-found → core/pages, _legal-page → features/legal, 23 dirs vacíos eliminados |
+| refactor: barrido frontend — extracción componentes | 16 componentes nuevos: home×6, booking×3, admin-routes×2, admin-calendar×3, admin-bookings×1, admin-gallery×2 |

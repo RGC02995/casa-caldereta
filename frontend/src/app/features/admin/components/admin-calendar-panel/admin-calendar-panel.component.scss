@@ -1,0 +1,271 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+@use 'sass:color';
+
+.admin-calendar {
+
+  &__panel {
+    background-color: $color-white;
+    border: 1px solid $color-neutral-200;
+    border-radius: $border-radius-md;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+
+  &__panel-tabs {
+    display: flex;
+    border-bottom: 1px solid $color-neutral-200;
+    background-color: $color-neutral-100;
+  }
+
+  &__panel-tab {
+    flex: 1;
+    padding: $space-3 $space-4;
+    min-height: 44px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-neutral-500;
+    cursor: pointer;
+    transition: color 120ms ease, border-color 120ms ease;
+
+    &:hover { color: $color-neutral-800; }
+
+    &--active {
+      color: $color-primary;
+      border-bottom-color: $color-primary;
+      background-color: $color-white;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $color-primary;
+      outline-offset: -2px;
+    }
+  }
+
+  &__panel-content {
+    padding: $space-5 $space-6;
+  }
+
+  &__panel-heading {
+    font-family: $font-family-body;
+    font-size: 11px;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-500;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    margin: 0 0 $space-4;
+  }
+
+  // ── FORM ──────────────────────────────────────────────────
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: $space-4;
+    margin-bottom: $space-5;
+    padding-bottom: $space-5;
+    border-bottom: 1px solid $color-neutral-200;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+  }
+
+  &__field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $space-3;
+  }
+
+  &__label {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-neutral-700;
+  }
+
+  &__input {
+    padding: 10px 14px;
+    border: 1.5px solid $color-neutral-300;
+    border-radius: $border-radius-sm;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-800;
+    background-color: $color-white;
+    transition: border-color 140ms ease, box-shadow 140ms ease;
+    outline: none;
+    width: 100%;
+
+    &:focus,
+    &:focus-visible {
+      border-color: $color-primary;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+    }
+  }
+
+  &__form-error {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: color.adjust($color-error, $lightness: -8%);
+    padding: $space-3 $space-4;
+    background-color: rgba($color-error, 0.07);
+    border-left: 3px solid $color-error;
+    border-radius: $border-radius-sm;
+  }
+
+  &__form-actions {
+    display: flex;
+    gap: $space-3;
+    justify-content: flex-end;
+  }
+
+  // ── BUTTONS ───────────────────────────────────────────────
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px $space-5;
+    min-height: 40px;
+    border-radius: $border-radius-sm;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+    transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+    border: 1px solid transparent;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $color-primary;
+      outline-offset: 2px;
+    }
+
+    &--primary {
+      background-color: $color-primary;
+      color: $color-white;
+      font-weight: $font-weight-semibold;
+      letter-spacing: 0.02em;
+
+      &:hover:not(:disabled) { background-color: $color-primary-dark; }
+    }
+
+    &--ghost {
+      background-color: $color-white;
+      border-color: $color-neutral-200;
+      color: $color-neutral-600;
+
+      &:hover:not(:disabled) {
+        background-color: $color-neutral-100;
+        border-color: $color-neutral-300;
+        color: $color-neutral-800;
+      }
+    }
+
+    &--danger {
+      background-color: $color-white;
+      border-color: rgba($color-error, 0.24);
+      color: $color-error;
+
+      &:hover:not(:disabled) {
+        background-color: rgba($color-error, 0.07);
+        border-color: rgba($color-error, 0.4);
+      }
+
+      &:focus-visible { outline-color: $color-error; }
+    }
+
+    &--sm {
+      padding: 6px $space-3;
+      font-size: $font-size-xs;
+      min-height: 30px;
+
+      @include respond-below('md') {
+        min-height: 44px;
+        padding: $space-2 $space-4;
+      }
+    }
+  }
+
+  // ── RULE LIST ─────────────────────────────────────────────
+
+  &__rule-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+  }
+
+  &__rule-item {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: $space-3;
+    padding: $space-3 $space-4;
+    background-color: $color-neutral-100;
+    border-radius: $border-radius-sm;
+    border: 1px solid $color-neutral-200;
+    transition: opacity 120ms ease;
+
+    &--processing {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+  }
+
+  &__rule-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  &__rule-label {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-neutral-800;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__rule-dates {
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    color: $color-neutral-500;
+  }
+
+  &__rule-price {
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    color: $color-primary;
+    font-weight: $font-weight-semibold;
+  }
+
+  &__rule-actions {
+    display: flex;
+    gap: $space-2;
+    flex-shrink: 0;
+  }
+
+  &__empty {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-400;
+    padding: $space-4 0;
+    text-align: center;
+  }
+}

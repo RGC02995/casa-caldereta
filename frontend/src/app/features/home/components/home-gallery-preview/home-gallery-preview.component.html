@@ -1,0 +1,23 @@
+<section class="home-gallery">
+  <div class="home-gallery__inner">
+    <div class="home-gallery__header" scrollReveal>
+      <p class="home-gallery__label">Imágenes</p>
+      <h2 class="home-gallery__title">La casa en imágenes</h2>
+      <a routerLink="/galeria" class="home-section-link home-gallery__cta">
+        Ver galería completa
+        <span class="home-section-link__arrow" aria-hidden="true">→</span>
+      </a>
+    </div>
+    <div class="home-gallery__bento" aria-label="Vista previa de la galería">
+      @for (photo of photos(); track photo.id; let i = $index) {
+        <div class="home-gallery__cell home-gallery__cell--{{ i + 1 }}" scrollReveal [revealFrom]="'scale'" [delay]="i * 60">
+          <img class="home-gallery__img" [src]="photo.url" [alt]="photo.alt" loading="lazy" />
+        </div>
+      } @empty {
+        @for (n of [1, 2, 3, 4]; track n) {
+          <div class="home-gallery__cell home-gallery__cell--{{ n }}"></div>
+        }
+      }
+    </div>
+  </div>
+</section>

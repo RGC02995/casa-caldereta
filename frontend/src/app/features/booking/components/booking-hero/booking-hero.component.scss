@@ -1,0 +1,19 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+.booking-hero {
+  background-color: $color-neutral-800;
+  padding-block: $space-20;
+
+  &__inner {
+    @include container;
+    @include flex-column;
+    align-items: center;
+    text-align: center;
+    gap: $space-4;
+  }
+
+  &__label    { @include label-text; color: $color-secondary; }
+  &__title    { @include heading-xl; color: $color-white; margin: 0; }
+  &__subtitle { font-size: $font-size-md; color: rgba($color-white, 0.65); margin: 0; }
+}

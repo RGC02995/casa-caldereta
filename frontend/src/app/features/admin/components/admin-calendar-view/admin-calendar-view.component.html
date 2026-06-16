@@ -1,0 +1,69 @@
+<section class="admin-calendar__cal-section" aria-label="Calendario mensual">
+
+  <div class="admin-calendar__cal-nav">
+    <button
+      class="admin-calendar__cal-nav-btn"
+      type="button"
+      (click)="prevMonth.emit()"
+      aria-label="Mes anterior"
+    >&#8249;</button>
+
+    <span class="admin-calendar__cal-month" aria-live="polite" aria-atomic="true">{{ viewMonthLabel() }}</span>
+
+    <button
+      class="admin-calendar__cal-nav-btn"
+      type="button"
+      (click)="nextMonth.emit()"
+      aria-label="Mes siguiente"
+    >&#8250;</button>
+  </div>
+
+  <div class="admin-calendar__cal-legend" role="group" aria-label="Leyenda del calendario">
+    <span class="admin-calendar__legend-item admin-calendar__legend-item--booked">Reservado</span>
+    <span class="admin-calendar__legend-item admin-calendar__legend-item--blocked">Bloqueado</span>
+    <span class="admin-calendar__legend-item admin-calendar__legend-item--priced">Con precio</span>
+  </div>
+
+  <div class="admin-calendar__grid" role="grid" [attr.aria-label]="viewMonthLabel()">
+
+    @for (weekday of weekdays; track weekday) {
+      <div class="admin-calendar__grid-weekday" role="columnheader">{{ weekday }}</div>
+    }
+
+    @for (cell of calendarCells(); track $index) {
+      @if (cell === null) {
+        <div class="admin-calendar__grid-cell admin-calendar__grid-cell--empty" role="gridcell" aria-hidden="true"></div>
+      } @else {
+        <div
+          class="admin-calendar__grid-cell"
+          role="gridcell"
+          [class.admin-calendar__grid-cell--today]="cell.isToday"
+          [class.admin-calendar__grid-cell--past]="cell.isPast"
+          [class.admin-calendar__grid-cell--booked]="cell.booking !== null"
+          [class.admin-calendar__grid-cell--blocked]="cell.isBlocked"
+          [attr.aria-label]="cell.dateStr
+            + (cell.booking ? ' — ' + (cell.booking.status === 'confirmed' ? 'Confirmada' : 'Pendiente') : '')
+            + (cell.isBlocked ? ' — Bloqueado' : '')
+            + (cell.price !== null && !cell.booking && !cell.isBlocked ? ' — ' + cell.price + '€/noche' : '')"
+        >
+          <span class="admin-calendar__grid-day">{{ cell.day }}</span>
+
+          @if (cell.price !== null && !cell.booking && !cell.isBlocked) {
+            <span class="admin-calendar__grid-price" aria-hidden="true">{{ cell.price | currency:'EUR':'symbol':'1.0-0':'es' }}</span>
+          }
+
+          @if (cell.booking) {
+            <span class="admin-calendar__grid-badge admin-calendar__grid-badge--booked" aria-hidden="true">
+              {{ cell.booking.status === 'confirmed' ? 'Conf.' : 'Pen.' }}
+            </span>
+          }
+
+          @if (cell.isBlocked) {
+            <span class="admin-calendar__grid-badge admin-calendar__grid-badge--blocked" aria-hidden="true">Bloq.</span>
+          }
+        </div>
+      }
+    }
+
+  </div>
+</section>

@@ -1,0 +1,38 @@
+<section class="home-amenities">
+  <div class="home-amenities__inner">
+    <div class="home-amenities__heading" scrollReveal>
+      <p class="home-amenities__label">Equipamiento</p>
+      <h2 class="home-amenities__title">Todo lo que<br>necesitas</h2>
+    </div>
+    <div class="home-amenities__accordion" role="list">
+      @for (group of amenityGroups; track group.category; let i = $index) {
+        <div class="home-amenities__entry" [class.home-amenities__entry--open]="openAmenityIndex() === i" role="listitem">
+          <button
+            class="home-amenities__trigger"
+            type="button"
+            [attr.aria-expanded]="openAmenityIndex() === i"
+            [attr.aria-controls]="'amenity-panel-' + i"
+            (click)="toggleAmenity(i)"
+          >
+            <span class="home-amenities__trigger-text">{{ group.category }}</span>
+            <span class="home-amenities__trigger-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 9l-7 7-7-7"/>
+              </svg>
+            </span>
+          </button>
+          <ul
+            class="home-amenities__panel"
+            [id]="'amenity-panel-' + i"
+            role="region"
+            [attr.hidden]="openAmenityIndex() !== i ? true : null"
+          >
+            @for (item of group.items; track item) {
+              <li class="home-amenities__panel-item">{{ item }}</li>
+            }
+          </ul>
+        </div>
+      }
+    </div>
+  </div>
+</section>

@@ -1,0 +1,97 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+.home-highlights {
+  background-color: $color-neutral-100;
+
+  &__inner {
+    @include container;
+    padding-block: $space-20;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $space-12;
+
+    @include respond-to('lg') {
+      grid-template-columns: 1fr 2fr;
+      gap: $space-16;
+      align-items: start;
+    }
+  }
+
+  &__heading {
+    @include flex-column;
+    gap: $space-4;
+
+    @include respond-to('lg') {
+      position: sticky;
+      top: $space-24;
+    }
+  }
+
+  &__label {
+    @include label-text;
+    color: $color-accent;
+  }
+
+  &__title {
+    font-family: $font-family-heading;
+    font-size: clamp(#{$font-size-2xl}, 4vw, #{$font-size-3xl});
+    font-weight: $font-weight-light;
+    color: $color-primary-dark;
+    margin: 0;
+    line-height: $line-height-tight;
+    letter-spacing: $letter-spacing-tight;
+  }
+
+  &__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $space-1;
+
+    @include respond-to('md') { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  &__item {
+    display: flex;
+    gap: $space-5;
+    padding: $space-8 $space-6;
+    background-color: $color-white;
+    transition: background-color $transition-normal;
+
+    &:hover { background-color: rgba($color-primary, 0.03); }
+  }
+
+  &__icon {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: $color-accent;
+    transition: color $transition-fast;
+
+    .home-highlights__item:hover & { color: $color-primary; }
+  }
+
+  &__item-body {
+    @include flex-column;
+    gap: $space-2;
+  }
+
+  &__item-title {
+    font-family: $font-family-heading;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-light;
+    color: $color-primary-dark;
+    margin: 0;
+  }
+
+  &__item-desc {
+    font-size: $font-size-sm;
+    color: $color-neutral-600;
+    line-height: $line-height-relaxed;
+    margin: 0;
+  }
+}
