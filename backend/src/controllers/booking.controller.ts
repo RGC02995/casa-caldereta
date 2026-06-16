@@ -4,7 +4,8 @@ import { bookingService, ICreateBookingData } from '../services/booking.service'
 import { BookingStatus } from '../models/booking.model';
 import { emailService } from '../services/email.service';
 
-const VALID_STATUSES: BookingStatus[] = ['pending', 'confirmed', 'cancelled', 'completed'];
+const VALID_STATUSES: BookingStatus[] = ['pending_payment', 'pending', 'confirmed', 'cancelled', 'completed'];
+
 const PHONE_REGEX = /^\+?[\d\s\-]{6,20}$/;
 
 export async function getAllBookingsHandler(_req: Request, res: Response): Promise<void> {
@@ -164,5 +165,91 @@ export async function deleteBookingHandler(req: Request<{ id: string }>, res: Re
     res.status(200).json({ success: true, message: 'Reserva eliminada' });
   } catch {
     res.status(500).json({ success: false, message: 'Error al eliminar la reserva' });
+  }
+}
+
+export async function createCheckoutSessionHandler(req: Request, res: Response): Promise<void> {
+  const { checkIn, checkOut, guestName, guestEmail, guestPhone, guests, notes } =
+    req.body as Partial<ICreateBookingData>;
+
+  if (!checkIn || !checkOut || !guestName || !guestEmail || !guestPhone || guests === undefined) {
+    res.status(400).json({ success: false, message: 'Faltan campos obligatorios' });
+    return;
+  }
+
+  if (typeof guestName !== 'string' || guestName.trim().length < 2 || guestName.trim().length > 100) {
+    res.status(400).json({ success: false, message: 'El nombre debe tener entre 2 y 100 caracteres' });
+    return;
+  }
+
+  if (typeof guestEmail !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail.trim())) {
+    res.status(400).json({ success: false, message: 'Email no válido' });
+    return;
+  }
+
+  if (typeof guests !== 'number' || !Number.isInteger(guests) || guests < 1 || guests > 20) {
+    res.status(400).json({ success: false, message: 'El número de huéspedes debe ser entre 1 y 20' });
+    return;
+  }
+
+  if (typeof guestPhone !== 'string' || !PHONE_REGEX.test(guestPhone.trim())) {
+    res.status(400).json({ success: false, message: 'Teléfono no válido' });
+    return;
+  }
+
+  if (notes !== undefined && (typeof notes !== 'string' || notes.trim().length > 500)) {
+    res.status(400).json({ success: false, message: 'El mensaje no puede superar los 500 caracteres' });
+    return;
+  }
+
+  try {
+    const bookingData: ICreateBookingData = {
+      checkIn,
+      checkOut,
+      guestName:  guestName.trim(),
+      guestEmail: guestEmail.trim(),
+      guestPhone: guestPhone.trim(),
+      guests,
+    };
+
+    const trimmedNotes = notes?.trim();
+    if (trimmedNotes) bookingData.notes = trimmedNotes;
+
+    const result = await bookingService.createCheckoutSession(bookingData);
+    res.status(201).json({ success: true, data: result, message: 'Sesión de pago creada' });
+  } catch (error) {
+    if (error instanceof Error) {
+      if ((error as NodeJS.ErrnoException & { code?: string }).code === 'DATE_CONFLICT') {
+        res.status(409).json({ success: false, message: error.message });
+        return;
+      }
+      if (error.message.includes('fecha') || error.message.includes('válid')) {
+        res.status(400).json({ success: false, message: error.message });
+        return;
+      }
+    }
+    res.status(500).json({ success: false, message: 'Error al crear la sesión de pago' });
+  }
+}
+
+export async function refundBookingHandler(req: Request<{ id: string }>, res: Response): Promise<void> {
+  if (!isValidObjectId(req.params.id)) {
+    res.status(400).json({ success: false, message: 'ID no válido' });
+    return;
+  }
+
+  try {
+    const booking = await bookingService.refund(req.params.id);
+    res.status(200).json({ success: true, data: booking, message: 'Reembolso procesado y reserva cancelada' });
+
+    void emailService.sendGuestRefundCancellation(booking);
+  } catch (error) {
+    if (error instanceof Error) {
+      const code = (error as NodeJS.ErrnoException & { code?: string }).code;
+      if (code === 'NOT_FOUND')     { res.status(404).json({ success: false, message: error.message }); return; }
+      if (code === 'INVALID_STATUS') { res.status(422).json({ success: false, message: error.message }); return; }
+      if (code === 'NO_PAYMENT')     { res.status(422).json({ success: false, message: error.message }); return; }
+    }
+    res.status(500).json({ success: false, message: 'Error al procesar el reembolso' });
   }
 }

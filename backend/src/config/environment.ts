@@ -29,4 +29,9 @@ export const env = {
   resendFromEmail:     process.env['RESEND_FROM_EMAIL'] ?? 'onboarding@resend.dev',
   ownerEmail:          process.env['OWNER_EMAIL'] ?? process.env['ADMIN_EMAIL'] ?? '',
   resendOverrideTo:    process.env['RESEND_OVERRIDE_TO'] ?? '',
+  // Stripe
+  stripeSecretKey:     requireEnv('STRIPE_SECRET_KEY'),
+  stripeWebhookSecret: requireEnv('STRIPE_WEBHOOK_SECRET'),
+  // URL del frontend — necesaria para success_url y cancel_url de Stripe Checkout
+  frontendUrl:         requireEnv('FRONTEND_URL'),
 } as const;

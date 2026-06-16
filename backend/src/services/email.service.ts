@@ -132,6 +132,49 @@ function ownerNewBookingHtml(data: ITemplateData): string {
   );
 }
 
+function ownerPaymentReceivedHtml(data: ITemplateData): string {
+  const { booking } = data;
+  const notesBlock  = booking.notes
+    ? `<div style="margin-top:20px;padding:16px;background:#F9F7F4;border-left:3px solid #C9A96E;">
+        <p style="margin:0;font-family:Arial,sans-serif;font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;">Notas del hu&#233;sped</p>
+        <p style="margin:8px 0 0;font-family:Arial,sans-serif;font-size:13px;color:#555;">${booking.notes}</p>
+       </div>`
+    : '';
+
+  return emailWrapper(
+    'Pago recibido — reserva confirmada',
+    `<h2 style="margin:0 0 4px;font-size:20px;font-weight:400;color:#2C2C2C;">&#10003; Pago recibido — Reserva confirmada</h2>
+    <p style="margin:0 0 24px;font-size:12px;color:#999;font-family:Arial,sans-serif;">Confirmada el ${formatDateTime()}</p>
+    <p style="margin:0 0 4px;font-size:16px;color:#2C2C2C;"><strong>${booking.guestName}</strong></p>
+    <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:13px;color:#666;">
+      <a href="mailto:${booking.guestEmail}" style="color:#C9A96E;text-decoration:none;">${booking.guestEmail}</a>
+    </p>
+    <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:13px;color:#666;">${booking.guestPhone}</p>
+    <div style="margin-top:12px;padding:10px 14px;background:#F0FDF4;border-left:3px solid #22C55E;font-family:Arial,sans-serif;font-size:12px;color:#166534;">
+      El pago ha sido procesado autom&#225;ticamente por Stripe. No es necesaria ninguna acci&#243;n adicional.
+    </div>
+    ${detailsTable(data)}
+    ${notesBlock}`,
+  );
+}
+
+function guestRefundCancellationHtml(data: ITemplateData): string {
+  const { booking } = data;
+  return emailWrapper(
+    'Reserva cancelada y reembolso procesado',
+    `<h2 style="margin:0 0 16px;font-size:20px;font-weight:400;color:#2C2C2C;">Reserva cancelada</h2>
+    <p style="margin:0 0 20px;font-size:14px;color:#555;font-family:Arial,sans-serif;line-height:1.7;">
+      Hola, <strong>${booking.guestName}</strong>. Tu reserva en <strong>Casa Caldereta</strong> ha sido cancelada
+      y el importe abonado ha sido reembolsado &#237;ntegramente. El reembolso puede tardar entre 5 y 10 d&#237;as h&#225;biles
+      en aparecer en tu estado de cuenta.
+    </p>
+    ${detailsTable(data)}
+    <p style="margin:20px 0 0;font-size:13px;color:#888;font-family:Arial,sans-serif;line-height:1.6;">
+      Esperamos tener la oportunidad de recibirte en Casa Caldereta en otra ocasi&#243;n.
+    </p>`,
+  );
+}
+
 function guestBookingReceivedHtml(data: ITemplateData): string {
   const { booking } = data;
   return emailWrapper(
@@ -231,6 +274,56 @@ class EmailService {
       subject: 'Hemos recibido tu solicitud de reserva — Casa Caldereta',
       html:    guestBookingReceivedHtml({ booking, checkIn, checkOut }),
       text:    `Hola ${booking.guestName}, hemos recibido tu solicitud para Casa Caldereta del ${checkIn} al ${checkOut} (${guests}). Importe estimado: ${booking.totalPrice} €. Nos pondremos en contacto contigo en breve.`,
+    });
+  }
+
+  async notifyOwnerPaymentReceived(booking: IBookingDocument): Promise<void> {
+    if (!this.client || !env.ownerEmail) return;
+
+    const checkIn  = formatDate(booking.checkIn);
+    const checkOut = formatDate(booking.checkOut);
+
+    await this.send({
+      to:      env.ownerEmail,
+      subject: `Pago recibido — ${booking.guestName} · ${checkIn}`,
+      html:    ownerPaymentReceivedHtml({ booking, checkIn, checkOut }),
+      text:    [
+        `Pago confirmado de ${booking.guestName}.`,
+        `Email: ${booking.guestEmail} | Tel: ${booking.guestPhone}`,
+        `Check-in: ${checkIn}`,
+        `Check-out: ${checkOut}`,
+        `Huéspedes: ${booking.guests} | Total pagado: ${booking.totalPrice} €`,
+        booking.notes ? `Notas: ${booking.notes}` : '',
+      ].filter(Boolean).join('\n'),
+    });
+  }
+
+  async sendGuestPaymentConfirmed(booking: IBookingDocument): Promise<void> {
+    if (!this.client) return;
+
+    const checkIn  = formatDate(booking.checkIn);
+    const checkOut = formatDate(booking.checkOut);
+    const guests   = `${booking.guests} persona${booking.guests === 1 ? '' : 's'}`;
+
+    await this.send({
+      to:      booking.guestEmail,
+      subject: 'Reserva confirmada — Casa Caldereta',
+      html:    guestStatusUpdateHtml({ booking, checkIn, checkOut, newStatus: 'confirmed' }),
+      text:    `Hola ${booking.guestName}, tu reserva en Casa Caldereta del ${checkIn} al ${checkOut} (${guests}) está confirmada. El importe de ${booking.totalPrice} € ha sido procesado. ¡Te esperamos!`,
+    });
+  }
+
+  async sendGuestRefundCancellation(booking: IBookingDocument): Promise<void> {
+    if (!this.client) return;
+
+    const checkIn  = formatDate(booking.checkIn);
+    const checkOut = formatDate(booking.checkOut);
+
+    await this.send({
+      to:      booking.guestEmail,
+      subject: 'Reserva cancelada y reembolso procesado — Casa Caldereta',
+      html:    guestRefundCancellationHtml({ booking, checkIn, checkOut }),
+      text:    `Hola ${booking.guestName}, tu reserva del ${checkIn} al ${checkOut} ha sido cancelada y el importe de ${booking.totalPrice} € ha sido reembolsado. El reembolso puede tardar entre 5 y 10 días hábiles.`,
     });
   }
 

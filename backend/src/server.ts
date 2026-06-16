@@ -7,6 +7,7 @@ import { env } from './config/environment';
 import { connectDatabase } from './config/database';
 import { globalRateLimiter } from './middleware/rate-limit.middleware';
 import apiRouter from './routes/index';
+import { stripeWebhookHandler } from './controllers/stripe-webhook.controller';
 
 const app = express();
 
@@ -21,6 +22,11 @@ app.use(cors({
 if (env.nodeEnv !== 'production') {
   app.use(morgan('dev'));
 }
+
+// El webhook de Stripe DEBE montarse antes de express.json().
+// Stripe verifica la firma usando el body RAW (Buffer). Si express.json() procesa
+// el body primero, la firma falla y cualquiera podría forjar eventos de pago.
+app.post('/webhooks/stripe', express.raw({ type: 'application/json' }), stripeWebhookHandler);
 
 app.use(express.json({ limit: '10kb' }));
 app.use(cookieParser());

@@ -26,9 +26,7 @@ export class BookingRequestPanelComponent {
   readonly totalPrice = input(0);
 
   readonly conflictDetected = output<void>();
-  readonly newRequest       = output<void>();
 
-  readonly isSubmitted  = signal(false);
   readonly isSubmitting = signal(false);
   readonly submitError  = signal('');
 
@@ -110,12 +108,12 @@ export class BookingRequestPanelComponent {
       ...(notes ? { notes } : {}),
     };
 
-    this.bookingService.create(requestData)
+    this.bookingService.createCheckoutSession(requestData)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-      next: () => {
-        this.isSubmitted.set(true);
-        this.isSubmitting.set(false);
+      next: (response) => {
+        // Redirige a Stripe Checkout — salida de la SPA
+        window.location.assign(response.data.sessionUrl);
       },
       error: (err: HttpErrorResponse) => {
         this.isSubmitting.set(false);
@@ -124,25 +122,10 @@ export class BookingRequestPanelComponent {
           this.conflictDetected.emit();
         } else {
           const message = err.error?.message as string | undefined;
-          this.submitError.set(message ?? 'No se pudo enviar la solicitud. Inténtalo de nuevo.');
+          this.submitError.set(message ?? 'No se pudo preparar el pago. Inténtalo de nuevo.');
         }
       },
     });
   }
 
-  resetBooking(): void {
-    this.nameValue.set('');
-    this.emailValue.set('');
-    this.phoneValue.set('');
-    this.guestsValue.set(2);
-    this.messageValue.set('');
-    this.privacyChecked.set(false);
-    this.nameTouched.set(false);
-    this.emailTouched.set(false);
-    this.phoneTouched.set(false);
-    this.privacyTouched.set(false);
-    this.isSubmitted.set(false);
-    this.submitError.set('');
-    this.newRequest.emit();
-  }
 }

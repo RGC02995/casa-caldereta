@@ -1,4 +1,4 @@
-export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
+export type BookingStatus = 'pending_payment' | 'pending' | 'confirmed' | 'cancelled' | 'completed';
 
 export interface IBooking {
   readonly id:         string;
@@ -22,6 +22,12 @@ export interface IBookingRequest {
   readonly guestPhone: string;
   readonly guests:     number;
   readonly notes?:     string;
+}
+
+export interface ICheckoutSessionResult {
+  readonly sessionUrl:  string;
+  readonly bookingId:   string;
+  readonly totalPrice:  number;
 }
 
 // Respuesta del endpoint público /availability — solo fechas, sin datos del huésped

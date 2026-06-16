@@ -113,9 +113,4 @@ export class BookingPageComponent {
     this.refresh$.next();
   }
 
-  onNewRequest(): void {
-    this.checkIn.set(null);
-    this.checkOut.set(null);
-    this.refresh$.next();
-  }
 }

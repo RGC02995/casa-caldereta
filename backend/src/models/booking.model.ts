@@ -1,19 +1,22 @@
 import { Document, Model, Schema, model } from 'mongoose';
 
-export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
+export type BookingStatus = 'pending_payment' | 'pending' | 'confirmed' | 'cancelled' | 'completed';
 
 export interface IBookingDocument extends Document {
-  checkIn:    Date;
-  checkOut:   Date;
-  guestName:  string;
-  guestEmail: string;
-  guestPhone: string;
-  guests:      number;
-  totalPrice: number;
-  status:     BookingStatus;
-  notes?:     string;
-  createdAt:  Date;
-  updatedAt:  Date;
+  checkIn:                Date;
+  checkOut:               Date;
+  guestName:              string;
+  guestEmail:             string;
+  guestPhone:             string;
+  guests:                 number;
+  totalPrice:             number;
+  status:                 BookingStatus;
+  notes?:                 string;
+  stripeSessionId?:       string;
+  stripePaymentIntentId?: string;
+  stripeSessionExpiresAt?: Date;
+  createdAt:              Date;
+  updatedAt:              Date;
 }
 
 const bookingSchema = new Schema<IBookingDocument>(
@@ -58,13 +61,25 @@ const bookingSchema = new Schema<IBookingDocument>(
     },
     status: {
       type:    String,
-      enum:    ['pending', 'confirmed', 'cancelled', 'completed'] as BookingStatus[],
+      enum:    ['pending_payment', 'pending', 'confirmed', 'cancelled', 'completed'] as BookingStatus[],
       default: 'pending' as BookingStatus,
     },
     notes: {
       type:      String,
       trim:      true,
       maxlength: 500,
+    },
+    stripeSessionId: {
+      type:   String,
+      sparse: true,
+      index:  true,
+    },
+    stripePaymentIntentId: {
+      type:   String,
+      sparse: true,
+    },
+    stripeSessionExpiresAt: {
+      type: Date,
     },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } },

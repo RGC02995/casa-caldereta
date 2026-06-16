@@ -21,17 +21,19 @@ interface IStatusTransition {
 }
 
 const STATUS_TRANSITIONS: Record<BookingStatus, IStatusTransition[]> = {
-  pending:   [{ label: 'Confirmar', status: 'confirmed' }, { label: 'Cancelar', status: 'cancelled' }],
-  confirmed: [{ label: 'Completar', status: 'completed' }, { label: 'Cancelar', status: 'cancelled' }],
-  cancelled: [],
-  completed: [],
+  pending_payment: [],
+  pending:         [{ label: 'Confirmar', status: 'confirmed' }, { label: 'Cancelar', status: 'cancelled' }],
+  confirmed:       [{ label: 'Completar', status: 'completed' }, { label: 'Cancelar', status: 'cancelled' }],
+  cancelled:       [],
+  completed:       [],
 };
 
 const STATUS_LABELS: Record<BookingStatus, string> = {
-  pending:   'Pendiente',
-  confirmed: 'Confirmada',
-  cancelled: 'Cancelada',
-  completed: 'Completada',
+  pending_payment: 'Pago pendiente',
+  pending:         'Pendiente',
+  confirmed:       'Confirmada',
+  cancelled:       'Cancelada',
+  completed:       'Completada',
 };
 
 @Component({

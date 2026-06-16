@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { ApiResponse } from '../models/api-response.model';
-import { IBooking, IBookingAvailability, IBookingRequest, BookingStatus } from '../models/booking.model';
+import { IBooking, IBookingAvailability, IBookingRequest, ICheckoutSessionResult, BookingStatus } from '../models/booking.model';
 
 @Injectable({ providedIn: 'root' })
 export class BookingService {
@@ -31,6 +31,14 @@ export class BookingService {
 
   updateStatus(id: string, status: BookingStatus): Observable<ApiResponse<IBooking>> {
     return this.api.patch<IBooking>(`bookings/${id}/status`, { status });
+  }
+
+  createCheckoutSession(data: IBookingRequest): Observable<ApiResponse<ICheckoutSessionResult>> {
+    return this.api.post<ICheckoutSessionResult>('bookings/checkout', data);
+  }
+
+  refundBooking(id: string): Observable<ApiResponse<IBooking>> {
+    return this.api.post<IBooking>(`bookings/${id}/refund`, {});
   }
 
   delete(id: string): Observable<ApiResponse<void>> {
