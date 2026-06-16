@@ -1,5 +1,5 @@
-import { Component, inject, signal, computed } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Component, inject, signal, computed, DestroyRef } from '@angular/core';
+import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { BehaviorSubject, switchMap, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
@@ -16,6 +16,7 @@ type ReviewFilter = 'all' | 'pending' | 'approved';
 })
 export class AdminReviewsComponent {
   private readonly reviewService = inject(ReviewService);
+  private readonly destroyRef    = inject(DestroyRef);
 
   readonly loadError    = signal('');
   readonly actionError  = signal('');
@@ -57,7 +58,9 @@ export class AdminReviewsComponent {
     this.processingId.set(reviewId);
     this.actionError.set('');
 
-    this.reviewService.approve(reviewId).subscribe({
+    this.reviewService.approve(reviewId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: () => {
         this.processingId.set(null);
         this.refresh$.next();
@@ -76,7 +79,9 @@ export class AdminReviewsComponent {
     this.processingId.set(reviewId);
     this.actionError.set('');
 
-    this.reviewService.delete(reviewId).subscribe({
+    this.reviewService.delete(reviewId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: () => {
         this.processingId.set(null);
         this.refresh$.next();

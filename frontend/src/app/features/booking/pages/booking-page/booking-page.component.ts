@@ -1,7 +1,8 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { differenceInCalendarDays } from 'date-fns';
 import { map, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { BehaviorSubject, of, switchMap } from 'rxjs';
 import { BookingService } from '../../../../core/services/booking.service';
 import { BlockedPeriodService } from '../../../../core/services/blocked-period.service';
 import { PricingRuleService } from '../../../../core/services/pricing-rule.service';
@@ -16,24 +17,55 @@ import { BookingRequestPanelComponent } from '../../components/booking-request-p
 const DEFAULT_PRICE_PER_NIGHT = 150;
 
 @Component({
-  selector: 'booking-page',
-  standalone: true,
-  imports: [BookingHeroComponent, BookingCalendarComponent, BookingRequestPanelComponent],
+  selector:    'booking-page',
+  standalone:  true,
+  imports:     [BookingHeroComponent, BookingCalendarComponent, BookingRequestPanelComponent],
   templateUrl: './booking-page.component.html',
-  styleUrl: './booking-page.component.scss',
+  styleUrl:    './booking-page.component.scss',
 })
 export class BookingPageComponent {
   private readonly bookingService = inject(BookingService);
   private readonly blockedService = inject(BlockedPeriodService);
   private readonly pricingService = inject(PricingRuleService);
 
-  readonly bookedRanges   = signal<IBookingAvailability[]>([]);
-  readonly blockedPeriods = signal<IBlockedPeriod[]>([]);
-  readonly pricingRules   = signal<IPricingRule[]>([]);
-  readonly loadError      = signal('');
+  readonly loadError = signal('');
+  readonly checkIn   = signal<Date | null>(null);
+  readonly checkOut  = signal<Date | null>(null);
 
-  readonly checkIn  = signal<Date | null>(null);
-  readonly checkOut = signal<Date | null>(null);
+  private readonly refresh$ = new BehaviorSubject<void>(undefined);
+
+  readonly bookedRanges = toSignal(
+    this.refresh$.pipe(
+      switchMap(() => this.bookingService.getAvailability().pipe(
+        map(r => r.data),
+        catchError(() => {
+          this.loadError.set('No se pudo comprobar la disponibilidad. Algunas fechas pueden no estar actualizadas.');
+          return of([] as IBookingAvailability[]);
+        }),
+      )),
+    ),
+    { initialValue: [] as IBookingAvailability[] },
+  );
+
+  readonly blockedPeriods = toSignal(
+    this.refresh$.pipe(
+      switchMap(() => this.blockedService.getAll().pipe(
+        map(r => r.data),
+        catchError(() => of([] as IBlockedPeriod[])),
+      )),
+    ),
+    { initialValue: [] as IBlockedPeriod[] },
+  );
+
+  readonly pricingRules = toSignal(
+    this.refresh$.pipe(
+      switchMap(() => this.pricingService.getAll().pipe(
+        map(r => r.data),
+        catchError(() => of([] as IPricingRule[])),
+      )),
+    ),
+    { initialValue: [] as IPricingRule[] },
+  );
 
   readonly nights = computed(() => {
     const checkInDate  = this.checkIn();
@@ -73,38 +105,17 @@ export class BookingPageComponent {
       canonicalPath: '/reservar',
       keywords:      'reservar casa rural Valencia, disponibilidad alojamiento Aielo de Rugat, reserva casa vacaciones Valencia',
     });
-    this.loadData();
   }
 
   onConflict(): void {
     this.checkIn.set(null);
     this.checkOut.set(null);
-    this.loadData();
+    this.refresh$.next();
   }
 
   onNewRequest(): void {
     this.checkIn.set(null);
     this.checkOut.set(null);
-    this.loadData();
-  }
-
-  private loadData(): void {
-    this.bookingService.getAvailability().pipe(
-      map(response => response.data),
-      catchError(() => {
-        this.loadError.set('No se pudo comprobar la disponibilidad. Algunas fechas pueden no estar actualizadas.');
-        return of([] as IBookingAvailability[]);
-      }),
-    ).subscribe(ranges => this.bookedRanges.set(ranges));
-
-    this.blockedService.getAll().pipe(
-      map(response => response.data),
-      catchError(() => of([] as IBlockedPeriod[])),
-    ).subscribe(periods => this.blockedPeriods.set(periods));
-
-    this.pricingService.getAll().pipe(
-      map(response => response.data),
-      catchError(() => of([] as IPricingRule[])),
-    ).subscribe(rules => this.pricingRules.set(rules));
+    this.refresh$.next();
   }
 }

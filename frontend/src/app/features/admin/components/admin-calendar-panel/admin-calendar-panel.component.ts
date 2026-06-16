@@ -1,4 +1,5 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe, CurrencyPipe } from '@angular/common';
 import { PricingRuleService } from '../../../../core/services/pricing-rule.service';
@@ -16,6 +17,7 @@ import { IBlockedPeriod } from '../../../../core/models/blocked-period.model';
 export class AdminCalendarPanelComponent {
   private readonly pricingService = inject(PricingRuleService);
   private readonly blockedService = inject(BlockedPeriodService);
+  private readonly destroyRef     = inject(DestroyRef);
 
   readonly pricingRules   = input<IPricingRule[]>([]);
   readonly blockedPeriods = input<IBlockedPeriod[]>([]);
@@ -93,7 +95,7 @@ export class AdminCalendarPanelComponent {
       ? this.pricingService.update(editingId, data)
       : this.pricingService.create(data);
 
-    request$.subscribe({
+    request$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.editingRuleId.set(null);
         this.resetPriceForm();
@@ -115,7 +117,9 @@ export class AdminCalendarPanelComponent {
     this.processingId.set(rule.id);
     this.pricingError.set('');
 
-    this.pricingService.delete(rule.id).subscribe({
+    this.pricingService.delete(rule.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: () => {
         this.processingId.set(null);
         this.pricingChanged.emit();
@@ -139,7 +143,7 @@ export class AdminCalendarPanelComponent {
       startDate: this.blockStart(),
       endDate:   this.blockEnd(),
       ...(reason ? { reason } : {}),
-    }).subscribe({
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.resetBlockForm();
         this.isSubmittingBlock.set(false);
@@ -162,7 +166,9 @@ export class AdminCalendarPanelComponent {
     this.processingId.set(period.id);
     this.blockedError.set('');
 
-    this.blockedService.delete(period.id).subscribe({
+    this.blockedService.delete(period.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: () => {
         this.processingId.set(null);
         this.blockedChanged.emit();

@@ -1,5 +1,5 @@
-import { Component, inject, signal, computed } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Component, inject, signal, computed, DestroyRef } from '@angular/core';
+import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BehaviorSubject, switchMap, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { BookingService } from '../../../../core/services/booking.service';
@@ -27,6 +27,7 @@ const STATUS_CONFIRMATIONS: Partial<Record<BookingStatus, string>> = {
 })
 export class AdminBookingsComponent {
   private readonly bookingService = inject(BookingService);
+  private readonly destroyRef     = inject(DestroyRef);
 
   readonly loadError    = signal('');
   readonly actionError  = signal('');
@@ -64,7 +65,9 @@ export class AdminBookingsComponent {
     this.processingId.set(event.bookingId);
     this.actionError.set('');
 
-    this.bookingService.updateStatus(event.bookingId, event.newStatus).subscribe({
+    this.bookingService.updateStatus(event.bookingId, event.newStatus)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: () => {
         this.processingId.set(null);
         this.refresh$.next();
@@ -83,7 +86,9 @@ export class AdminBookingsComponent {
     this.processingId.set(event.bookingId);
     this.actionError.set('');
 
-    this.bookingService.delete(event.bookingId).subscribe({
+    this.bookingService.delete(event.bookingId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: () => {
         this.processingId.set(null);
         this.refresh$.next();

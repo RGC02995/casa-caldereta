@@ -267,6 +267,23 @@ Patrón: página orquestadora (datos + servicios) → componentes hijos vía `in
 
 **Total barrido:** 16 componentes nuevos en `features/*/components/` — todas las páginas grandes convertidas en orquestadoras delgadas.
 
+### Barrido señales — Auditoría reactiva ✅ COMPLETADO (2026-06-16)
+Objetivo: eliminar suscripciones manuales sin protección ante destroy en todos los componentes.
+Skill usada: `/barrido-señales` (`.claude/commands/barrido-señales.md`)
+
+- [x] **Tipo A** — `booking-page`: `loadData()` con 3 `subscribe()` → `BehaviorSubject + toSignal()` × 3; `switchMap` cancela peticiones solapadas
+- [x] **Tipo B** — `admin-routes`: `DestroyRef` + `takeUntilDestroyed` en 3 handlers (onFormSubmit, onTogglePublished, onDeleteRoute)
+- [x] **Tipo B** — `admin-calendar-panel`: `DestroyRef` + `takeUntilDestroyed` en 4 handlers (onPricingSubmit, deleteRule, onBlockedSubmit, deleteBlockedPeriod)
+- [x] **Tipo B** — `admin-gallery-upload`: `DestroyRef` + `takeUntilDestroyed` en 1 handler (onUploadSubmit)
+- [x] **Tipo B** — `admin-gallery`: `DestroyRef` + `takeUntilDestroyed` en 1 handler (onDeleteRequested)
+- [x] **Tipo B** — `admin-login`: `DestroyRef` + `takeUntilDestroyed` en 1 handler (onSubmit)
+- [x] **Tipo B** — `admin-reviews`: `DestroyRef` + `takeUntilDestroyed` en 2 handlers (approveReview, deleteReview)
+- [x] **Tipo B** — `admin-bookings`: `DestroyRef` + `takeUntilDestroyed` en 2 handlers (onStatusChange, onDeleteRequested)
+- [x] **Tipo B** — `booking-request-panel`: `DestroyRef` + `takeUntilDestroyed` en 1 handler (submitBooking)
+- [x] **Tipo B** — `home-reviews`: `DestroyRef` + `takeUntilDestroyed` en 1 handler (submitReview)
+
+**Ignorados correctamente:** `auth.service.ts` logout (fire-and-forget sin callbacks), `ngOnDestroy` en modal/gallery-lightbox/site-header/scroll-reveal (limpieza DOM, no RxJS).
+
 ---
 
 ## Datos legales
@@ -299,3 +316,4 @@ Patrón: página orquestadora (datos + servicios) → componentes hijos vía `in
 | feat: reseñas + fix home gallery + rutas imagen | Sistema reseñas completo, fix previewPhotos slice, subida imagen rutas admin |
 | refactor: reorganización frontend | site-header/footer → core/layout, not-found → core/pages, _legal-page → features/legal, 23 dirs vacíos eliminados |
 | refactor: barrido frontend — extracción componentes | 16 componentes nuevos: home×6, booking×3, admin-routes×2, admin-calendar×3, admin-bookings×1, admin-gallery×2 |
+| refactor: barrido señales — auditoría reactiva | booking-page Tipo A + 9 componentes Tipo B: DestroyRef + takeUntilDestroyed en 16 handlers |

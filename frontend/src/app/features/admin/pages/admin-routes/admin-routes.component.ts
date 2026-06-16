@@ -1,5 +1,5 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Component, computed, inject, signal, DestroyRef } from '@angular/core';
+import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BehaviorSubject, switchMap, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { RouteService } from '../../../../core/services/route.service';
@@ -18,6 +18,7 @@ type FormMode = 'hidden' | 'create' | 'edit';
 })
 export class AdminRoutesComponent {
   private readonly routeService = inject(RouteService);
+  private readonly destroyRef   = inject(DestroyRef);
 
   readonly loadError    = signal('');
   readonly actionError  = signal('');
@@ -81,6 +82,7 @@ export class AdminRoutesComponent {
           ? this.routeService.uploadCoverImage(routeId, event.coverImageFile)
           : of(null);
       }),
+      takeUntilDestroyed(this.destroyRef),
     ).subscribe({
       next: () => {
         this.isSubmitting.set(false);
@@ -99,7 +101,9 @@ export class AdminRoutesComponent {
     this.processingId.set(route.id);
     this.actionError.set('');
 
-    this.routeService.togglePublished(route.id).subscribe({
+    this.routeService.togglePublished(route.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: () => {
         this.processingId.set(null);
         this.refresh$.next();
@@ -118,7 +122,9 @@ export class AdminRoutesComponent {
     this.processingId.set(route.id);
     this.actionError.set('');
 
-    this.routeService.delete(route.id).subscribe({
+    this.routeService.delete(route.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: () => {
         this.processingId.set(null);
         this.refresh$.next();

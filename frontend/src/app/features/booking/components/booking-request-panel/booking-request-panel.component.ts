@@ -1,4 +1,5 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { format } from 'date-fns';
@@ -17,6 +18,7 @@ const PHONE_REGEX = /^\+?[\d\s\-]{6,20}$/;
 })
 export class BookingRequestPanelComponent {
   private readonly bookingService = inject(BookingService);
+  private readonly destroyRef     = inject(DestroyRef);
 
   readonly checkIn    = input<Date | null>(null);
   readonly checkOut   = input<Date | null>(null);
@@ -108,7 +110,9 @@ export class BookingRequestPanelComponent {
       ...(notes ? { notes } : {}),
     };
 
-    this.bookingService.create(requestData).subscribe({
+    this.bookingService.create(requestData)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: () => {
         this.isSubmitted.set(true);
         this.isSubmitting.set(false);

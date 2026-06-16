@@ -1,5 +1,5 @@
-import { Component, inject, signal, computed } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Component, inject, signal, computed, DestroyRef } from '@angular/core';
+import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BehaviorSubject, switchMap, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { PhotoService } from '../../../../core/services/photo.service';
@@ -21,6 +21,7 @@ type CategoryFilter = 'all' | PhotoCategory;
 })
 export class AdminGalleryComponent {
   private readonly photoService = inject(PhotoService);
+  private readonly destroyRef   = inject(DestroyRef);
 
   readonly loadError    = signal('');
   readonly deleteError  = signal('');
@@ -60,7 +61,9 @@ export class AdminGalleryComponent {
     this.processingId.set(event.photoId);
     this.deleteError.set('');
 
-    this.photoService.delete(event.photoId).subscribe({
+    this.photoService.delete(event.photoId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: () => {
         this.processingId.set(null);
         this.refresh$.next();

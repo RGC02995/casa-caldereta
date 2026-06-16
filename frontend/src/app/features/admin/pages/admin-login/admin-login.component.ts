@@ -1,4 +1,5 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../../core/auth/auth.service';
@@ -12,6 +13,7 @@ import { AuthService } from '../../../../core/auth/auth.service';
 export class AdminLoginComponent {
   private readonly authService = inject(AuthService);
   private readonly router      = inject(Router);
+  private readonly destroyRef  = inject(DestroyRef);
 
   readonly emailValue      = signal('');
   readonly passwordValue   = signal('');
@@ -60,7 +62,7 @@ export class AdminLoginComponent {
     this.authService.login({
       email:    this.emailValue().trim(),
       password: this.passwordValue(),
-    }).subscribe({
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         void this.router.navigate(['/admin']);
       },

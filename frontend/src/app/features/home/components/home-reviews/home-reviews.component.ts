@@ -1,4 +1,5 @@
-import { Component, inject, input, signal } from '@angular/core';
+import { Component, inject, input, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { ScrollRevealDirective } from '../../../../shared/directives/scroll-reveal.directive';
 import { ReviewService } from '../../../../core/services/review.service';
@@ -15,6 +16,7 @@ export class HomeReviewsComponent {
   readonly reviews = input<IReview[]>([]);
 
   private readonly reviewService = inject(ReviewService);
+  private readonly destroyRef    = inject(DestroyRef);
 
   readonly reviewFormVisible = signal(false);
   readonly reviewFormSending = signal(false);
@@ -56,7 +58,9 @@ export class HomeReviewsComponent {
     this.reviewFormSending.set(true);
     this.reviewFormError.set('');
 
-    this.reviewService.submit(data).subscribe({
+    this.reviewService.submit(data)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: () => {
         this.reviewFormSending.set(false);
         this.reviewFormSuccess.set(true);

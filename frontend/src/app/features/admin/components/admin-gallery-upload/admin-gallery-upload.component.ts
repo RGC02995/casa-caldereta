@@ -1,4 +1,5 @@
-import { Component, inject, signal, viewChild, ElementRef, output } from '@angular/core';
+import { Component, inject, signal, viewChild, ElementRef, output, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PhotoService } from '../../../../core/services/photo.service';
 import { PhotoCategory } from '../../../../core/models/photo.model';
 
@@ -11,6 +12,7 @@ import { PhotoCategory } from '../../../../core/models/photo.model';
 })
 export class AdminGalleryUploadComponent {
   private readonly photoService = inject(PhotoService);
+  private readonly destroyRef   = inject(DestroyRef);
 
   readonly fileInputRef = viewChild.required<ElementRef<HTMLInputElement>>('fileInput');
 
@@ -57,7 +59,9 @@ export class AdminGalleryUploadComponent {
     this.isUploading.set(true);
     this.uploadError.set('');
 
-    this.photoService.upload(file, alt, this.uploadCategory()).subscribe({
+    this.photoService.upload(file, alt, this.uploadCategory())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: () => {
         this.isUploading.set(false);
         this.resetUploadForm();
