@@ -12,6 +12,10 @@ export interface IBooking {
   readonly status:                 BookingStatus;
   readonly notes?:                 string;
   readonly stripePaymentIntentId?: string;
+  readonly checkedInAt?:           string;
+  readonly checkedOutAt?:          string;
+  readonly guestFormSubmittedAt?:  string;
+  readonly preArrivalEmailSentAt?: string;
   readonly createdAt:              string;
 }
 

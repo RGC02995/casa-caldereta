@@ -43,3 +43,12 @@ export const reviewSubmitLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+// Formulario público de check-in — defensa en profundidad (los tokens son 256 bits, no adivinables)
+export const checkinFormRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: { success: false, message: 'Demasiados intentos. Prueba de nuevo en una hora.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});

@@ -5,7 +5,9 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { BehaviorSubject, switchMap, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { BookingService } from '../../../../core/services/booking.service';
+import { CheckinService } from '../../../../core/services/checkin.service';
 import { IBooking } from '../../../../core/models/booking.model';
+import { ITodayActivity } from '../../../../core/models/checkin.model';
 
 type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
 
@@ -28,7 +30,8 @@ const STATUS_LABELS: Record<BookingStatus, string> = {
   styleUrl:    './admin-dashboard.component.scss',
 })
 export class AdminDashboardComponent {
-  private readonly bookingService = inject(BookingService);
+  private readonly bookingService  = inject(BookingService);
+  private readonly checkinService  = inject(CheckinService);
 
   readonly today          = new Date();
   readonly todayFormatted = new Date().toLocaleDateString('es-ES', {
@@ -36,8 +39,10 @@ export class AdminDashboardComponent {
   }).replace(/^\w/, c => c.toUpperCase());
 
   readonly bookingsError = signal('');
+  readonly todayError    = signal('');
 
-  private readonly refresh$ = new BehaviorSubject<void>(undefined);
+  private readonly refresh$      = new BehaviorSubject<void>(undefined);
+  private readonly todayRefresh$ = new BehaviorSubject<void>(undefined);
 
   readonly upcomingBookings = toSignal(
     this.refresh$.pipe(
@@ -73,11 +78,29 @@ export class AdminDashboardComponent {
       .sort((a, b) => new Date(a.checkIn).getTime() - new Date(b.checkIn).getTime())[0] ?? null;
   });
 
+  readonly todayActivity = toSignal(
+    this.todayRefresh$.pipe(
+      switchMap(() => this.checkinService.getTodayActivity().pipe(
+        map(r => r.data),
+        catchError(() => {
+          this.todayError.set('No se pudo cargar la actividad de hoy.');
+          return of({ checkIns: [], checkOuts: [] } as ITodayActivity);
+        }),
+      )),
+    ),
+    { initialValue: { checkIns: [], checkOuts: [] } as ITodayActivity },
+  );
+
+  readonly hasTodayActivity = computed(() =>
+    this.todayActivity().checkIns.length > 0 || this.todayActivity().checkOuts.length > 0,
+  );
+
   readonly quickLinks: IQuickLink[] = [
-    { label: 'Ver reservas',    route: '/admin/reservas'   },
-    { label: 'Calendario',      route: '/admin/calendario' },
-    { label: 'Gestionar fotos', route: '/admin/fotos'      },
-    { label: 'Gestionar rutas', route: '/admin/rutas'      },
+    { label: 'Ver reservas',    route: '/admin/reservas'      },
+    { label: 'Calendario',      route: '/admin/calendario'    },
+    { label: 'Gestionar fotos', route: '/admin/fotos'         },
+    { label: 'Gestionar rutas', route: '/admin/rutas'         },
+    { label: 'Configuración',   route: '/admin/configuracion' },
   ];
 
   statusLabel(status: string): string {

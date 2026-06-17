@@ -41,7 +41,16 @@
           <tr class="admin-bookings__table-row"
               [class.admin-bookings__table-row--processing]="processingId() === booking.id"
               [attr.aria-busy]="processingId() === booking.id || null">
-            <td class="admin-bookings__table-td admin-bookings__table-td--name">{{ booking.guestName }}</td>
+            <td class="admin-bookings__table-td admin-bookings__table-td--name">
+              {{ booking.guestName }}
+              @if (booking.checkedInAt) {
+                <span class="admin-bookings__checkin-chip admin-bookings__checkin-chip--in">En casa</span>
+              } @else if (booking.guestFormSubmittedAt) {
+                <span class="admin-bookings__checkin-chip admin-bookings__checkin-chip--form">Formulario</span>
+              } @else if (booking.preArrivalEmailSentAt) {
+                <span class="admin-bookings__checkin-chip admin-bookings__checkin-chip--email">Email enviado</span>
+              }
+            </td>
             <td class="admin-bookings__table-td">{{ booking.guestEmail }}</td>
             <td class="admin-bookings__table-td">{{ booking.guestPhone }}</td>
             <td class="admin-bookings__table-td">{{ booking.checkIn | date: 'dd/MM/yyyy' }}</td>
@@ -55,6 +64,50 @@
             </td>
             <td class="admin-bookings__table-td">
               <div class="admin-bookings__actions">
+                @if (booking.status === 'confirmed') {
+                  <button
+                    class="admin-bookings__action-btn admin-bookings__action-btn--send-form"
+                    type="button"
+                    [attr.aria-label]="'Enviar formulario de pre-llegada a ' + booking.guestName"
+                    [disabled]="processingId() !== null"
+                    (click)="onSendFormRequested(booking.id, booking.guestName)"
+                  >
+                    {{ booking.preArrivalEmailSentAt ? 'Reenviar formulario' : 'Enviar formulario' }}
+                  </button>
+                }
+                @if (booking.status === 'confirmed' && !booking.checkedInAt) {
+                  <button
+                    class="admin-bookings__action-btn admin-bookings__action-btn--check-in"
+                    type="button"
+                    [attr.aria-label]="'Registrar entrada de ' + booking.guestName"
+                    [disabled]="processingId() !== null"
+                    (click)="onCheckInRequested(booking.id, booking.guestName)"
+                  >
+                    Registrar entrada
+                  </button>
+                }
+                @if (booking.status === 'confirmed' && booking.checkedInAt && !booking.checkedOutAt) {
+                  <button
+                    class="admin-bookings__action-btn admin-bookings__action-btn--check-out"
+                    type="button"
+                    [attr.aria-label]="'Registrar salida de ' + booking.guestName"
+                    [disabled]="processingId() !== null"
+                    (click)="onCheckOutRequested(booking.id, booking.guestName)"
+                  >
+                    Registrar salida
+                  </button>
+                }
+                @if (booking.guestFormSubmittedAt) {
+                  <button
+                    class="admin-bookings__action-btn admin-bookings__action-btn--travelers"
+                    type="button"
+                    [attr.aria-label]="'Ver viajeros de la reserva de ' + booking.guestName"
+                    [disabled]="processingId() !== null"
+                    (click)="viewTravelersRequested.emit(booking.id)"
+                  >
+                    Ver viajeros
+                  </button>
+                }
                 @for (transition of getTransitions(booking.status); track transition.status) {
                   <button
                     class="admin-bookings__action-btn admin-bookings__action-btn--{{ transition.status }}"
@@ -138,6 +191,50 @@
         </div>
 
         <div class="admin-bookings__card-actions">
+          @if (booking.status === 'confirmed') {
+            <button
+              class="admin-bookings__action-btn admin-bookings__action-btn--send-form"
+              type="button"
+              [attr.aria-label]="'Enviar formulario de pre-llegada a ' + booking.guestName"
+              [disabled]="processingId() !== null"
+              (click)="onSendFormRequested(booking.id, booking.guestName)"
+            >
+              {{ booking.preArrivalEmailSentAt ? 'Reenviar formulario' : 'Enviar formulario' }}
+            </button>
+          }
+          @if (booking.status === 'confirmed' && !booking.checkedInAt) {
+            <button
+              class="admin-bookings__action-btn admin-bookings__action-btn--check-in"
+              type="button"
+              [attr.aria-label]="'Registrar entrada de ' + booking.guestName"
+              [disabled]="processingId() !== null"
+              (click)="onCheckInRequested(booking.id, booking.guestName)"
+            >
+              Registrar entrada
+            </button>
+          }
+          @if (booking.status === 'confirmed' && booking.checkedInAt && !booking.checkedOutAt) {
+            <button
+              class="admin-bookings__action-btn admin-bookings__action-btn--check-out"
+              type="button"
+              [attr.aria-label]="'Registrar salida de ' + booking.guestName"
+              [disabled]="processingId() !== null"
+              (click)="onCheckOutRequested(booking.id, booking.guestName)"
+            >
+              Registrar salida
+            </button>
+          }
+          @if (booking.guestFormSubmittedAt) {
+            <button
+              class="admin-bookings__action-btn admin-bookings__action-btn--travelers"
+              type="button"
+              [attr.aria-label]="'Ver viajeros de la reserva de ' + booking.guestName"
+              [disabled]="processingId() !== null"
+              (click)="viewTravelersRequested.emit(booking.id)"
+            >
+              Ver viajeros
+            </button>
+          }
           @for (transition of getTransitions(booking.status); track transition.status) {
             <button
               class="admin-bookings__action-btn admin-bookings__action-btn--{{ transition.status }}"

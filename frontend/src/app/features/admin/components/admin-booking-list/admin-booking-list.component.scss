@@ -297,5 +297,46 @@
       border-color: rgba($color-error, 0.24);
       color: $color-error;
     }
+
+    &--send-form:hover:not(:disabled) {
+      background-color: rgba($color-primary, 0.06);
+      border-color: rgba($color-primary, 0.25);
+      color: $color-primary-dark;
+    }
+
+    &--check-in:hover:not(:disabled) {
+      background-color: rgba($color-success, 0.08);
+      border-color: rgba($color-success, 0.28);
+      color: color.adjust($color-success, $lightness: -8%);
+    }
+
+    &--check-out:hover:not(:disabled) {
+      background-color: rgba($color-warning, 0.08);
+      border-color: rgba($color-warning, 0.28);
+      color: color.adjust($color-warning, $lightness: -12%);
+    }
+
+    &--travelers:hover:not(:disabled) {
+      background-color: rgba($color-primary, 0.06);
+      border-color: rgba($color-primary, 0.25);
+      color: $color-primary-dark;
+    }
+  }
+
+  // ── CHIPS DE ESTADO CHECK-IN ───────────────────────────
+
+  &__checkin-chip {
+    display: inline-block;
+    font-family: $font-family-body;
+    font-size: 10px;
+    font-weight: $font-weight-semibold;
+    padding: 1px 7px;
+    border-radius: $border-radius-full;
+    margin-left: $space-2;
+    white-space: nowrap;
+
+    &--in    { background-color: rgba($color-success, 0.12); color: color.adjust($color-success, $lightness: -8%); }
+    &--form  { background-color: rgba($color-primary, 0.10); color: $color-primary-dark; }
+    &--email { background-color: $color-neutral-200;         color: $color-neutral-600; }
   }
 }

@@ -49,7 +49,87 @@
       (statusChanged)="onStatusChange($event)"
       (deleteRequested)="onDeleteRequested($event)"
       (refundRequested)="onRefundRequested($event)"
+      (sendFormRequested)="onSendFormRequested($event)"
+      (checkInRequested)="onCheckInRequested($event)"
+      (checkOutRequested)="onCheckOutRequested($event)"
+      (viewTravelersRequested)="onViewTravelersRequested($event)"
     />
+  }
+
+  @if (travelersBookingId()) {
+    <section class="admin-bookings__travelers" aria-label="Viajeros registrados">
+      <div class="admin-bookings__travelers-header">
+        <div>
+          <h2 class="admin-bookings__travelers-title">Viajeros registrados</h2>
+          <p class="admin-bookings__travelers-subtitle">{{ travelersGuestName() }}</p>
+        </div>
+        <button
+          class="admin-bookings__travelers-close"
+          type="button"
+          aria-label="Cerrar panel de viajeros"
+          (click)="closeTravelers()"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      @if (travelersLoading()) {
+        <p class="admin-bookings__travelers-empty">Cargando viajeros...</p>
+      } @else if (travelersError()) {
+        <p class="admin-bookings__travelers-error" role="alert">{{ travelersError() }}</p>
+      } @else if (travelersData().length === 0) {
+        <p class="admin-bookings__travelers-empty">No hay viajeros registrados para esta reserva.</p>
+      } @else {
+        <div class="admin-bookings__travelers-table-wrapper">
+          <table class="admin-bookings__travelers-table" aria-label="Listado de viajeros">
+            <thead>
+              <tr>
+                <th class="admin-bookings__travelers-th">#</th>
+                <th class="admin-bookings__travelers-th">Tipo doc.</th>
+                <th class="admin-bookings__travelers-th">Nº Documento</th>
+                <th class="admin-bookings__travelers-th">Nº Soporte</th>
+                <th class="admin-bookings__travelers-th">Apellido 1</th>
+                <th class="admin-bookings__travelers-th">Apellido 2</th>
+                <th class="admin-bookings__travelers-th">Nombre</th>
+                <th class="admin-bookings__travelers-th">Sexo</th>
+                <th class="admin-bookings__travelers-th">F. Nacimiento</th>
+                <th class="admin-bookings__travelers-th">Nacionalidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (traveler of travelersData(); track traveler.id; let i = $index) {
+                <tr class="admin-bookings__travelers-row">
+                  <td class="admin-bookings__travelers-td admin-bookings__travelers-td--num">{{ i + 1 }}</td>
+                  <td class="admin-bookings__travelers-td">{{ traveler.tipoDocumento }}</td>
+                  <td class="admin-bookings__travelers-td admin-bookings__travelers-td--mono">{{ traveler.numDocumento }}</td>
+                  <td class="admin-bookings__travelers-td admin-bookings__travelers-td--mono">{{ traveler.numSoporte ?? '—' }}</td>
+                  <td class="admin-bookings__travelers-td">{{ traveler.apellido1 }}</td>
+                  <td class="admin-bookings__travelers-td">{{ traveler.apellido2 ?? '—' }}</td>
+                  <td class="admin-bookings__travelers-td">{{ traveler.nombre }}</td>
+                  <td class="admin-bookings__travelers-td admin-bookings__travelers-td--center">{{ traveler.sexo }}</td>
+                  <td class="admin-bookings__travelers-td">{{ traveler.fechaNacimiento | date:'dd/MM/yyyy' }}</td>
+                  <td class="admin-bookings__travelers-td">{{ traveler.pais }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="admin-bookings__travelers-footer">
+          <button
+            class="admin-bookings__travelers-copy"
+            type="button"
+            (click)="copyForSesHospederia()"
+          >
+            {{ copySuccess() ? 'Copiado' : 'Copiar para SES.HOSPEDERÍA' }}
+          </button>
+          <p class="admin-bookings__travelers-hint">
+            Copia los datos al portapapeles para introducirlos en el portal de registro del Ministerio del Interior.
+          </p>
+        </div>
+      }
+    </section>
   }
 
 </div>

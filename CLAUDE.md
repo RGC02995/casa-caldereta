@@ -302,7 +302,44 @@ Skill usada: `/barrido-señales` (`.claude/commands/barrido-señales.md`)
 - **Licencia turística:** CV-VUT0058371-V ✅
 - **Normativa:** LSSI, RGPD, LOPDGDD, Ley 15/2018 Turisme CV, Decreto 92/2009
 
+### Auditoría de seguridad ✅ COMPLETADA (2026-06-17)
+- [x] TTL index en `RefreshTokenModel` — ya estaba implementado correctamente
+- [x] `CORS_ORIGIN_PROD` obligatoria en producción — `requireEnv()` condicional; el servidor no arranca si falta en Railway
+- [x] Rate limiters específicos por endpoint público:
+  - `publicRateLimiter` (30 req/min) → `GET /bookings/availability`, `GET /reviews`
+  - `checkoutRateLimiter` (3 req/5min) → `POST /bookings/checkout` (previene abuso de sesiones Stripe)
+  - `reviewSubmitLimiter` (5 req/hora) → `POST /reviews` (previene spam)
+- Nivel de seguridad auditado: **8.5/10** — apto para producción
+
+### Sistema de check-in/out — RD 933/2021 ✅ COMPLETADO (2026-06-17)
+- [x] **Backend Fase A:**
+  - `booking.model.ts` — +6 campos: `guestFormToken` (SHA-256, select:false), expiry, submitted, checkedInAt, checkedOutAt, preArrivalEmailSentAt
+  - `checkin-settings.model.ts` — singleton con `checkInTime`/`checkOutTime` (defaults 16:00/11:00)
+  - `traveler-document.model.ts` — todos los campos RD 933/2021 (SES.HOSPEDERÍA)
+  - `checkin.service.ts` — token 256 bits + hash SHA-256, single-use, expiry, cron 09:00 pre-llegada 3 días antes
+  - `checkin.controller.ts` — 9 handlers (2 públicos + 7 admin), try/catch completo
+  - `checkin.routes.ts` — rutas literales antes que `/:bookingId` (evita conflictos Express)
+  - `checkinFormRateLimiter` (10 req/hora) + montado en `/api/v1/checkin`
+  - Email pre-llegada con enlace seguro + aviso RD 933/2021
+  - Cron job diario 09:00 en `server.ts`
+- [x] **Frontend Fase B:**
+  - `checkin.model.ts` + `checkin.service.ts` — modelo e interfaces Angular
+  - `booking.model.ts` — +4 campos opcionales (checkedInAt, checkedOutAt, guestFormSubmittedAt, preArrivalEmailSentAt)
+  - Dashboard "Hoy" — sección check-ins/check-outs del día desde `/checkin/today`
+  - `admin-booking-list` — botones "Enviar formulario", "Registrar entrada/salida", "Ver viajeros" + chips de estado
+  - `admin-bookings` — 3 handlers nuevos + panel de viajeros con "Copiar para SES.HOSPEDERÍA"
+  - `admin-checkin-settings` — página `/admin/configuracion` para gestionar horarios
+  - Sidebar y quickLinks actualizados con enlace a Configuración
+- [x] **Frontend Fase C — Formulario público** ✅ COMPLETADO (2026-06-17):
+  - Ruta `/checkin/:token` en Angular — pública, sin authGuard
+  - `checkin-form.component.ts/html/scss` en `features/checkin/checkin-form/`
+  - 5 estados: loading → invalid / already-submitted / form → success
+  - Formulario con `signal<TravelerFormData[]>`, `@for track $index`, validación en submit
+  - Campos RD 933/2021: tipoDocumento, numDocumento, numSoporte?, apellido1/2, nombre, sexo, fechaNacimiento, pais, paisResidencia?
+  - `ICheckinFormInfo` + `ITravelerInput` en `checkin.model.ts`; `getForm()` + `submitForm()` en `checkin.service.ts`
+
 ## Pendientes / Preguntas abiertas
+- [x] ~~Sistema check-in — Fase C~~ completado
 - [ ] **Comprar dominio en Namecheap** (primer paso antes de configurar DNS, Vercel, Railway, Resend)
 - [ ] Tras comprar dominio: actualizar `CORS_ORIGIN_PROD` en Railway, `BASE_URL` en `seo.service.ts`, DNS records, Vercel custom domain, Resend domain verification, `RESEND_FROM_EMAIL`
 
@@ -330,3 +367,5 @@ Skill usada: `/barrido-señales` (`.claude/commands/barrido-señales.md`)
 | refactor: barrido señales — auditoría reactiva | booking-page Tipo A + 9 componentes Tipo B: DestroyRef + takeUntilDestroyed en 16 handlers |
 | feat: integración Stripe — pago completo al reservar | Stripe Checkout + webhook Railway + confirmación automática + reembolso desde admin |
 | feat: admin reservas — botón reembolso Stripe y estados actualizados | Botón "Reembolsar y cancelar" para confirmed+Stripe, filtro pending eliminado, leyenda actualizada |
+| security: CORS_ORIGIN_PROD required en prod + rate limiters por endpoint público | requireEnv CORS en producción + publicRateLimiter/checkoutRateLimiter/reviewSubmitLimiter |
+| feat: check-in/out + registro RD 933/2021 | Backend: token SHA-256 + cron emails + 9 endpoints. Admin: sección Hoy, botones checkin, panel viajeros, configuración horarios |

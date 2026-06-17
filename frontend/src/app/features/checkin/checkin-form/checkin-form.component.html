@@ -1,0 +1,306 @@
+<div class="checkin-form">
+
+  @switch (state()) {
+
+    @case ('loading') {
+      <div class="checkin-form__loading">
+        <div class="checkin-form__spinner" role="status" aria-label="Cargando formulario..."></div>
+        <p class="checkin-form__loading-text">Verificando enlace...</p>
+      </div>
+    }
+
+    @case ('invalid') {
+      <div class="checkin-form__message checkin-form__message--error">
+        <svg class="checkin-form__message-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <h1 class="checkin-form__message-title">Enlace no válido</h1>
+        <p class="checkin-form__message-body">
+          Este enlace de registro no es válido o ha expirado. Si necesitas un nuevo enlace, contacta con el propietario de la vivienda.
+        </p>
+      </div>
+    }
+
+    @case ('already-submitted') {
+      <div class="checkin-form__message checkin-form__message--success">
+        <svg class="checkin-form__message-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22,4 12,14.01 9,11.01"/>
+        </svg>
+        <h1 class="checkin-form__message-title">Registro ya completado</h1>
+        <p class="checkin-form__message-body">
+          Los datos de los viajeros ya han sido registrados. No es necesario volver a enviar el formulario.
+        </p>
+      </div>
+    }
+
+    @case ('success') {
+      <div class="checkin-form__message checkin-form__message--success">
+        <svg class="checkin-form__message-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22,4 12,14.01 9,11.01"/>
+        </svg>
+        <h1 class="checkin-form__message-title">¡Registro enviado!</h1>
+        <p class="checkin-form__message-body">
+          Gracias por completar el registro. Hemos recibido los datos de los viajeros correctamente. ¡Nos vemos en Casa Caldereta!
+        </p>
+      </div>
+    }
+
+    @case ('form') {
+      @if (formInfo(); as info) {
+
+        <header class="checkin-form__header">
+          <h1 class="checkin-form__title">Registro de viajeros</h1>
+          <p class="checkin-form__subtitle">Casa Caldereta · Aielo de Rugat, Valencia</p>
+        </header>
+
+        <section class="checkin-form__booking" aria-label="Detalles de la reserva">
+          <div class="checkin-form__booking-item">
+            <span class="checkin-form__booking-label">Titular</span>
+            <span class="checkin-form__booking-value">{{ info.guestName }}</span>
+          </div>
+          <div class="checkin-form__booking-item">
+            <span class="checkin-form__booking-label">Check-in</span>
+            <span class="checkin-form__booking-value">{{ checkInDisplay() }} · {{ info.checkInTime }}h</span>
+          </div>
+          <div class="checkin-form__booking-item">
+            <span class="checkin-form__booking-label">Check-out</span>
+            <span class="checkin-form__booking-value">{{ checkOutDisplay() }} · {{ info.checkOutTime }}h</span>
+          </div>
+          <div class="checkin-form__booking-item">
+            <span class="checkin-form__booking-label">Viajeros</span>
+            <span class="checkin-form__booking-value">{{ info.guests }}</span>
+          </div>
+        </section>
+
+        <div class="checkin-form__notice" role="note">
+          <svg class="checkin-form__notice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <p class="checkin-form__notice-text">
+            El registro de viajeros es obligatorio conforme al
+            <strong>Real Decreto 933/2021</strong> (SES.HOSPEDERÍA).
+            Los datos serán comunicados a las autoridades competentes.
+          </p>
+        </div>
+
+        <form
+          class="checkin-form__form"
+          (submit)="onSubmit($event)"
+          novalidate
+          aria-label="Formulario de registro de viajeros"
+        >
+
+          @for (traveler of travelers(); track $index; let i = $index) {
+            <div class="checkin-form__traveler">
+
+              <div class="checkin-form__traveler-header">
+                <h2 class="checkin-form__traveler-title">Viajero {{ i + 1 }}</h2>
+                @if (travelers().length > 1) {
+                  <button
+                    class="checkin-form__traveler-remove"
+                    type="button"
+                    (click)="removeTraveler(i)"
+                    [attr.aria-label]="'Eliminar viajero ' + (i + 1)"
+                  >Eliminar</button>
+                }
+              </div>
+
+              <div class="checkin-form__traveler-grid">
+
+                <div class="checkin-form__field">
+                  <label class="checkin-form__label" [for]="'tipoDocumento-' + i">
+                    Tipo de documento <span class="checkin-form__required" aria-hidden="true">*</span>
+                  </label>
+                  <select
+                    class="checkin-form__select"
+                    [id]="'tipoDocumento-' + i"
+                    [value]="traveler.tipoDocumento"
+                    (change)="updateField(i, 'tipoDocumento', $event)"
+                  >
+                    @for (tipo of TIPOS_DOCUMENTO; track tipo) {
+                      <option [value]="tipo">{{ tipo }}</option>
+                    }
+                  </select>
+                </div>
+
+                <div class="checkin-form__field">
+                  <label class="checkin-form__label" [for]="'numDocumento-' + i">
+                    Número de documento <span class="checkin-form__required" aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    class="checkin-form__input"
+                    [id]="'numDocumento-' + i"
+                    type="text"
+                    [value]="traveler.numDocumento"
+                    (input)="updateField(i, 'numDocumento', $event)"
+                    placeholder="Ej: 12345678A"
+                    autocomplete="off"
+                  />
+                </div>
+
+                <div class="checkin-form__field checkin-form__field--full">
+                  <label class="checkin-form__label" [for]="'numSoporte-' + i">
+                    Nº soporte
+                    <span class="checkin-form__optional">(opcional — reverso DNI/NIE)</span>
+                  </label>
+                  <input
+                    class="checkin-form__input"
+                    [id]="'numSoporte-' + i"
+                    type="text"
+                    [value]="traveler.numSoporte"
+                    (input)="updateField(i, 'numSoporte', $event)"
+                    autocomplete="off"
+                  />
+                </div>
+
+                <div class="checkin-form__field">
+                  <label class="checkin-form__label" [for]="'apellido1-' + i">
+                    Primer apellido <span class="checkin-form__required" aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    class="checkin-form__input"
+                    [id]="'apellido1-' + i"
+                    type="text"
+                    [value]="traveler.apellido1"
+                    (input)="updateField(i, 'apellido1', $event)"
+                    autocomplete="family-name"
+                  />
+                </div>
+
+                <div class="checkin-form__field">
+                  <label class="checkin-form__label" [for]="'apellido2-' + i">
+                    Segundo apellido
+                    <span class="checkin-form__optional">(opcional)</span>
+                  </label>
+                  <input
+                    class="checkin-form__input"
+                    [id]="'apellido2-' + i"
+                    type="text"
+                    [value]="traveler.apellido2"
+                    (input)="updateField(i, 'apellido2', $event)"
+                  />
+                </div>
+
+                <div class="checkin-form__field">
+                  <label class="checkin-form__label" [for]="'nombre-' + i">
+                    Nombre <span class="checkin-form__required" aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    class="checkin-form__input"
+                    [id]="'nombre-' + i"
+                    type="text"
+                    [value]="traveler.nombre"
+                    (input)="updateField(i, 'nombre', $event)"
+                    autocomplete="given-name"
+                  />
+                </div>
+
+                <div class="checkin-form__field">
+                  <label class="checkin-form__label" [for]="'sexo-' + i">
+                    Sexo <span class="checkin-form__required" aria-hidden="true">*</span>
+                  </label>
+                  <select
+                    class="checkin-form__select"
+                    [id]="'sexo-' + i"
+                    [value]="traveler.sexo"
+                    (change)="updateField(i, 'sexo', $event)"
+                  >
+                    <option value="" disabled>Seleccionar</option>
+                    <option value="H">Hombre</option>
+                    <option value="M">Mujer</option>
+                  </select>
+                </div>
+
+                <div class="checkin-form__field">
+                  <label class="checkin-form__label" [for]="'fechaNacimiento-' + i">
+                    Fecha de nacimiento <span class="checkin-form__required" aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    class="checkin-form__input"
+                    [id]="'fechaNacimiento-' + i"
+                    type="date"
+                    [value]="traveler.fechaNacimiento"
+                    (change)="updateField(i, 'fechaNacimiento', $event)"
+                  />
+                </div>
+
+                <div class="checkin-form__field">
+                  <label class="checkin-form__label" [for]="'pais-' + i">
+                    Nacionalidad <span class="checkin-form__required" aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    class="checkin-form__input"
+                    [id]="'pais-' + i"
+                    type="text"
+                    [value]="traveler.pais"
+                    (input)="updateField(i, 'pais', $event)"
+                    placeholder="Ej: España, Francia..."
+                    autocomplete="country-name"
+                  />
+                </div>
+
+                <div class="checkin-form__field checkin-form__field--full">
+                  <label class="checkin-form__label" [for]="'paisResidencia-' + i">
+                    País de residencia
+                    <span class="checkin-form__optional">(si difiere de la nacionalidad)</span>
+                  </label>
+                  <input
+                    class="checkin-form__input"
+                    [id]="'paisResidencia-' + i"
+                    type="text"
+                    [value]="traveler.paisResidencia"
+                    (input)="updateField(i, 'paisResidencia', $event)"
+                    placeholder="Ej: Alemania"
+                    autocomplete="country-name"
+                  />
+                </div>
+
+              </div>
+            </div>
+          }
+
+          @if (canAddTraveler()) {
+            <button
+              class="checkin-form__add-traveler"
+              type="button"
+              (click)="addTraveler()"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Añadir viajero
+            </button>
+          }
+
+          @if (submitError()) {
+            <p class="checkin-form__error" role="alert">{{ submitError() }}</p>
+          }
+
+          <div class="checkin-form__submit">
+            <button
+              class="checkin-form__submit-btn"
+              type="submit"
+              [disabled]="submitting()"
+            >
+              {{ submitting() ? 'Enviando...' : 'Enviar registro' }}
+            </button>
+            <p class="checkin-form__submit-hint">
+              Los campos marcados con <span aria-hidden="true">*</span> son obligatorios.
+            </p>
+          </div>
+
+        </form>
+
+      }
+    }
+
+  }
+
+</div>

@@ -6,6 +6,7 @@ import routeRouter         from './route.routes';
 import pricingRuleRouter   from './pricing-rule.routes';
 import blockedPeriodRouter from './blocked-period.routes';
 import reviewRouter        from './review.routes';
+import checkinRouter       from './checkin.routes';
 
 const apiRouter = Router();
 
@@ -20,5 +21,6 @@ apiRouter.use('/routes',          routeRouter);
 apiRouter.use('/pricing-rules',   pricingRuleRouter);
 apiRouter.use('/blocked-periods', blockedPeriodRouter);
 apiRouter.use('/reviews',         reviewRouter);
+apiRouter.use('/checkin',         checkinRouter);
 
 export default apiRouter;

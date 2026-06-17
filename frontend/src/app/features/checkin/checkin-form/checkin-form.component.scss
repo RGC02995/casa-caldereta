@@ -1,0 +1,386 @@
+@use '../../../../styles/variables' as *;
+@use '../../../../styles/mixins' as *;
+@use 'sass:color';
+
+.checkin-form {
+  min-height: 60vh;
+  padding: $space-12 $space-5 $space-16;
+  max-width: 680px;
+  margin: 0 auto;
+
+  @include respond-to('md') {
+    padding: $space-16 $space-6 $space-20;
+  }
+
+  // ─── Loading ─────────────────────────────────────────────────────────────────
+
+  &__loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: $space-4;
+    min-height: 40vh;
+  }
+
+  &__spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid $color-neutral-200;
+    border-top-color: $color-primary;
+    border-radius: 50%;
+    animation: checkin-spin 0.8s linear infinite;
+  }
+
+  &__loading-text {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-400;
+    margin: 0;
+  }
+
+  // ─── Message states ───────────────────────────────────────────────────────────
+
+  &__message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: $space-12 $space-6;
+    gap: $space-4;
+
+    &--error .checkin-form__message-icon  { color: $color-error;   }
+    &--success .checkin-form__message-icon { color: $color-success; }
+  }
+
+  &__message-icon {
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+  }
+
+  &__message-title {
+    font-family: $font-family-heading;
+    font-size: $font-size-2xl;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-800;
+    margin: 0;
+    letter-spacing: $letter-spacing-tight;
+  }
+
+  &__message-body {
+    font-family: $font-family-body;
+    font-size: $font-size-base;
+    color: $color-neutral-500;
+    margin: 0;
+    max-width: 440px;
+    line-height: $line-height-relaxed;
+  }
+
+  // ─── Header ──────────────────────────────────────────────────────────────────
+
+  &__header {
+    margin-bottom: $space-8;
+    text-align: center;
+  }
+
+  &__title {
+    font-family: $font-family-heading;
+    font-size: $font-size-2xl;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-800;
+    letter-spacing: $letter-spacing-tight;
+    margin: 0 0 $space-2;
+
+    @include respond-to('md') {
+      font-size: $font-size-3xl;
+    }
+  }
+
+  &__subtitle {
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    color: $color-neutral-400;
+    margin: 0;
+    letter-spacing: $letter-spacing-wide;
+    text-transform: uppercase;
+  }
+
+  // ─── Booking summary ─────────────────────────────────────────────────────────
+
+  &__booking {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background-color: $color-neutral-200;
+    border: 1px solid $color-neutral-200;
+    border-radius: $border-radius-md;
+    overflow: hidden;
+    margin-bottom: $space-5;
+  }
+
+  &__booking-item {
+    display: flex;
+    flex-direction: column;
+    gap: $space-1;
+    padding: $space-4 $space-5;
+    background-color: $color-white;
+  }
+
+  &__booking-label {
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    color: $color-neutral-400;
+    text-transform: uppercase;
+    letter-spacing: $letter-spacing-wider;
+    font-weight: $font-weight-semibold;
+  }
+
+  &__booking-value {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-800;
+    font-weight: $font-weight-medium;
+  }
+
+  // ─── Legal notice ─────────────────────────────────────────────────────────────
+
+  &__notice {
+    display: flex;
+    align-items: flex-start;
+    gap: $space-3;
+    padding: $space-4;
+    background-color: rgba($color-primary, 0.05);
+    border-left: 3px solid $color-primary;
+    border-radius: $border-radius-sm;
+    margin-bottom: $space-8;
+  }
+
+  &__notice-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: $color-primary;
+    margin-top: 2px;
+  }
+
+  &__notice-text {
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    color: $color-neutral-600;
+    margin: 0;
+    line-height: $line-height-relaxed;
+  }
+
+  // ─── Form ────────────────────────────────────────────────────────────────────
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: $space-5;
+  }
+
+  // ─── Traveler card ───────────────────────────────────────────────────────────
+
+  &__traveler {
+    background-color: $color-white;
+    border: 1px solid $color-neutral-200;
+    border-radius: $border-radius-md;
+    overflow: hidden;
+    box-shadow: $shadow-sm;
+  }
+
+  &__traveler-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $space-4 $space-5;
+    background-color: $color-neutral-100;
+    border-bottom: 1px solid $color-neutral-200;
+  }
+
+  &__traveler-title {
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-600;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: $letter-spacing-wider;
+  }
+
+  &__traveler-remove {
+    padding: 4px $space-3;
+    border: 1px solid $color-neutral-300;
+    border-radius: $border-radius-sm;
+    background-color: $color-white;
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    color: $color-neutral-500;
+    cursor: pointer;
+    transition: border-color $transition-fast, color $transition-fast;
+
+    &:hover { border-color: $color-error; color: $color-error; }
+
+    &:focus-visible { @include focus-visible; }
+  }
+
+  &__traveler-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background-color: $color-neutral-200;
+  }
+
+  // ─── Field ───────────────────────────────────────────────────────────────────
+
+  &__field {
+    padding: $space-4 $space-5;
+    background-color: $color-white;
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+
+    &--full {
+      grid-column: 1 / -1;
+    }
+  }
+
+  &__label {
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-700;
+    display: flex;
+    align-items: center;
+    gap: $space-1;
+    flex-wrap: wrap;
+    line-height: 1.4;
+  }
+
+  &__required {
+    color: $color-error;
+  }
+
+  &__optional {
+    color: $color-neutral-400;
+    font-weight: $font-weight-regular;
+    font-size: $font-size-xs;
+  }
+
+  &__input,
+  &__select {
+    display: block;
+    width: 100%;
+    padding: 8px $space-3;
+    border: 1px solid $color-neutral-300;
+    border-radius: $border-radius-sm;
+    background-color: $color-white;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-800;
+    transition: border-color $transition-fast, box-shadow $transition-fast;
+    box-sizing: border-box;
+
+    &::placeholder { color: $color-neutral-400; }
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.12);
+    }
+  }
+
+  &__select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2388ad95' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right $space-3 center;
+    background-size: 16px;
+    padding-right: $space-8;
+    cursor: pointer;
+  }
+
+  // ─── Add traveler ─────────────────────────────────────────────────────────────
+
+  &__add-traveler {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-2;
+    width: 100%;
+    padding: $space-4;
+    border: 2px dashed $color-neutral-300;
+    border-radius: $border-radius-md;
+    background-color: transparent;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-500;
+    cursor: pointer;
+    transition: border-color $transition-fast, color $transition-fast;
+
+    svg { width: 18px; height: 18px; }
+
+    &:hover { border-color: $color-primary; color: $color-primary; }
+
+    &:focus-visible { @include focus-visible; }
+  }
+
+  // ─── Error & Submit ───────────────────────────────────────────────────────────
+
+  &__error {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: color.adjust($color-error, $lightness: -8%);
+    padding: $space-3 $space-4;
+    background-color: rgba($color-error, 0.07);
+    border-left: 3px solid $color-error;
+    border-radius: $border-radius-sm;
+    margin: 0;
+  }
+
+  &__submit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-3;
+    padding-top: $space-2;
+  }
+
+  &__submit-btn {
+    width: 100%;
+    padding: $space-4 $space-8;
+    border: none;
+    border-radius: $border-radius-sm;
+    background-color: $color-primary;
+    font-family: $font-family-body;
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    color: $color-white;
+    cursor: pointer;
+    transition: background-color $transition-fast;
+
+    @include respond-to('md') {
+      width: auto;
+      min-width: 220px;
+    }
+
+    &:hover:not(:disabled) { background-color: $color-primary-dark; }
+
+    &:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    &:focus-visible { @include focus-visible; }
+  }
+
+  &__submit-hint {
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    color: $color-neutral-400;
+    margin: 0;
+    text-align: center;
+  }
+}
+
+@keyframes checkin-spin {
+  to { transform: rotate(360deg); }
+}

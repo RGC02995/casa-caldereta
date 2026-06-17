@@ -1,0 +1,81 @@
+<div class="admin-checkin-settings">
+
+  <header class="admin-checkin-settings__header">
+    <h1 class="admin-checkin-settings__title">Configuración</h1>
+    <p class="admin-checkin-settings__subtitle">Horarios de entrada y salida que se muestran en los emails de pre-llegada.</p>
+  </header>
+
+  @if (loading()) {
+    <p class="admin-checkin-settings__loading">Cargando configuración...</p>
+  } @else if (loadError()) {
+    <p class="admin-checkin-settings__load-error" role="alert">{{ loadError() }}</p>
+  } @else {
+    <form
+      class="admin-checkin-settings__form"
+      (submit)="onSubmit($event)"
+      aria-label="Configuración de horarios de check-in y check-out"
+      novalidate
+    >
+      <div class="admin-checkin-settings__card">
+
+        <div class="admin-checkin-settings__field">
+          <label class="admin-checkin-settings__label" for="checkInTime">
+            Hora de check-in
+          </label>
+          <p class="admin-checkin-settings__description">
+            Hora a partir de la cual los huéspedes pueden acceder a la vivienda.
+          </p>
+          <input
+            class="admin-checkin-settings__input"
+            id="checkInTime"
+            type="time"
+            [value]="checkInTime()"
+            (change)="onCheckInTimeChange($event)"
+            required
+            step="60"
+          />
+        </div>
+
+        <div class="admin-checkin-settings__divider" aria-hidden="true"></div>
+
+        <div class="admin-checkin-settings__field">
+          <label class="admin-checkin-settings__label" for="checkOutTime">
+            Hora de check-out
+          </label>
+          <p class="admin-checkin-settings__description">
+            Hora límite para que los huéspedes abandonen la vivienda.
+          </p>
+          <input
+            class="admin-checkin-settings__input"
+            id="checkOutTime"
+            type="time"
+            [value]="checkOutTime()"
+            (change)="onCheckOutTimeChange($event)"
+            required
+            step="60"
+          />
+        </div>
+
+      </div>
+
+      @if (saveError()) {
+        <p class="admin-checkin-settings__save-error" role="alert">{{ saveError() }}</p>
+      }
+      @if (saveSuccess()) {
+        <p class="admin-checkin-settings__save-success" role="status">Configuración guardada correctamente.</p>
+      }
+
+      <div class="admin-checkin-settings__actions">
+        <button
+          class="admin-checkin-settings__save-btn"
+          type="submit"
+          [disabled]="saving()"
+        >
+          {{ saving() ? 'Guardando...' : 'Guardar cambios' }}
+        </button>
+      </div>
+
+    </form>
+  }
+
+</div>

@@ -37,6 +37,10 @@ export const adminRoutes: Routes = [
         path: 'resenas',
         loadComponent: () => import('./pages/admin-reviews/admin-reviews.component').then(m => m.AdminReviewsComponent),
       },
+      {
+        path: 'configuracion',
+        loadComponent: () => import('./pages/admin-checkin-settings/admin-checkin-settings.component').then(m => m.AdminCheckinSettingsComponent),
+      },
     ],
   },
 ];

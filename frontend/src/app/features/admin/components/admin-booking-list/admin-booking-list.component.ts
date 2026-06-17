@@ -20,6 +20,11 @@ export interface IBookingRefundEvent {
   readonly guestName: string;
 }
 
+export interface IBookingCheckInEvent {
+  readonly bookingId: string;
+  readonly guestName: string;
+}
+
 interface IStatusTransition {
   readonly label:  string;
   readonly status: BookingStatus;
@@ -54,10 +59,14 @@ export class AdminBookingListComponent {
   readonly actionError  = input('');
   readonly activeFilter = input<StatusFilter>('all');
 
-  readonly filterChanged   = output<StatusFilter>();
-  readonly statusChanged   = output<IBookingStatusChangeEvent>();
-  readonly deleteRequested = output<IBookingDeleteEvent>();
-  readonly refundRequested = output<IBookingRefundEvent>();
+  readonly filterChanged        = output<StatusFilter>();
+  readonly statusChanged        = output<IBookingStatusChangeEvent>();
+  readonly deleteRequested      = output<IBookingDeleteEvent>();
+  readonly refundRequested      = output<IBookingRefundEvent>();
+  readonly sendFormRequested    = output<IBookingCheckInEvent>();
+  readonly checkInRequested     = output<IBookingCheckInEvent>();
+  readonly checkOutRequested    = output<IBookingCheckInEvent>();
+  readonly viewTravelersRequested = output<string>();
 
   readonly filters: { label: string; value: StatusFilter }[] = [
     { label: 'Todas',          value: 'all'             },
@@ -85,5 +94,17 @@ export class AdminBookingListComponent {
 
   onRefundRequested(bookingId: string, guestName: string): void {
     this.refundRequested.emit({ bookingId, guestName });
+  }
+
+  onSendFormRequested(bookingId: string, guestName: string): void {
+    this.sendFormRequested.emit({ bookingId, guestName });
+  }
+
+  onCheckInRequested(bookingId: string, guestName: string): void {
+    this.checkInRequested.emit({ bookingId, guestName });
+  }
+
+  onCheckOutRequested(bookingId: string, guestName: string): void {
+    this.checkOutRequested.emit({ bookingId, guestName });
   }
 }

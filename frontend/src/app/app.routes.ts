@@ -26,6 +26,12 @@ export const routes: Routes = [
     loadChildren: () => import('./features/legal/legal.routes').then(m => m.legalRoutes),
   },
   {
+    path: 'checkin/:token',
+    loadComponent: () =>
+      import('./features/checkin/checkin-form/checkin-form.component')
+        .then(m => m.CheckinFormComponent),
+  },
+  {
     path: '**',
     loadComponent: () =>
       import('./core/pages/not-found-page/not-found-page.component')

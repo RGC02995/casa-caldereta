@@ -99,6 +99,165 @@
     margin-bottom: $space-5;
   }
 
+  // ── PANEL DE VIAJEROS ─────────────────────────────────
+
+  &__travelers {
+    margin-top: $space-6;
+    background-color: $color-white;
+    border: 1px solid $color-neutral-200;
+    border-radius: $border-radius-md;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+  }
+
+  &__travelers-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: $space-4;
+    padding: $space-4 $space-6;
+    border-bottom: 1px solid $color-neutral-200;
+    background-color: $color-neutral-100;
+  }
+
+  &__travelers-title {
+    font-family: $font-family-body;
+    font-size: 11px;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-500;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    margin: 0 0 2px;
+  }
+
+  &__travelers-subtitle {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-neutral-700;
+    margin: 0;
+  }
+
+  &__travelers-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid $color-neutral-200;
+    border-radius: $border-radius-sm;
+    background-color: $color-white;
+    color: $color-neutral-500;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color 120ms ease, color 120ms ease;
+
+    &:hover { background-color: $color-neutral-100; color: $color-neutral-800; }
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+  }
+
+  &__travelers-empty {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-400;
+    padding: $space-6 $space-6;
+    text-align: center;
+    margin: 0;
+  }
+
+  &__travelers-error {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: color.adjust($color-error, $lightness: -8%);
+    padding: $space-3 $space-6;
+    background-color: rgba($color-error, 0.07);
+    border-left: 3px solid $color-error;
+    margin: $space-4 $space-6;
+    border-radius: $border-radius-sm;
+  }
+
+  &__travelers-table-wrapper {
+    overflow-x: auto;
+  }
+
+  &__travelers-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    min-width: 780px;
+  }
+
+  &__travelers-th {
+    padding: $space-2 $space-3;
+    text-align: left;
+    font-size: 10px;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-500;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    border-bottom: 1px solid $color-neutral-200;
+    background-color: $color-neutral-100;
+    white-space: nowrap;
+  }
+
+  &__travelers-row {
+    border-bottom: 1px solid $color-neutral-200;
+
+    &:last-child { border-bottom: none; }
+    &:hover { background-color: rgba($color-primary, 0.02); }
+  }
+
+  &__travelers-td {
+    padding: $space-2 $space-3;
+    color: $color-neutral-700;
+    white-space: nowrap;
+
+    &--num    { color: $color-neutral-400; text-align: center; width: 32px; }
+    &--mono   { font-family: monospace; font-size: 12px; letter-spacing: 0.04em; }
+    &--center { text-align: center; }
+  }
+
+  &__travelers-footer {
+    padding: $space-4 $space-6;
+    border-top: 1px solid $color-neutral-200;
+    background-color: $color-neutral-100;
+    display: flex;
+    align-items: center;
+    gap: $space-4;
+    flex-wrap: wrap;
+  }
+
+  &__travelers-copy {
+    padding: 8px $space-5;
+    border: 1px solid $color-neutral-300;
+    border-radius: $border-radius-sm;
+    background-color: $color-white;
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+
+    &:hover {
+      background-color: $color-neutral-800;
+      border-color: $color-neutral-800;
+      color: $color-white;
+    }
+
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+  }
+
+  &__travelers-hint {
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    color: $color-neutral-400;
+    margin: 0;
+    line-height: 1.5;
+  }
+
   // Badges duplicados intencionalmente: la leyenda está en el template de la página
   // y Angular View Encapsulation impide heredar los estilos del componente hijo.
   &__badge {

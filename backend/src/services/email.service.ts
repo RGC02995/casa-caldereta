@@ -19,6 +19,12 @@ interface IStatusTemplateData extends ITemplateData {
   readonly newStatus: 'confirmed' | 'cancelled';
 }
 
+interface IPreArrivalTemplateData extends ITemplateData {
+  readonly formUrl:      string;
+  readonly checkInTime:  string;
+  readonly checkOutTime: string;
+}
+
 // ─── Utilidades de formato ────────────────────────────────────────────────────
 
 function formatDate(date: Date | string): string {
@@ -192,6 +198,48 @@ function guestBookingReceivedHtml(data: ITemplateData): string {
   );
 }
 
+function guestPreArrivalHtml(data: IPreArrivalTemplateData): string {
+  const { booking, checkIn, checkOut, formUrl, checkInTime, checkOutTime } = data;
+  return emailWrapper(
+    'Preparativos para tu estancia',
+    `<h2 style="margin:0 0 16px;font-size:20px;font-weight:400;color:#2C2C2C;">Hola, ${booking.guestName}</h2>
+    <p style="margin:0 0 20px;font-size:14px;color:#555;font-family:Arial,sans-serif;line-height:1.7;">
+      Tu estancia en <strong>Casa Caldereta</strong> comienza en pocos d&#237;as.
+      Aqu&#237; tienes toda la informaci&#243;n que necesitas para una llegada sin contratiempos.
+    </p>
+    <div style="margin:0 0 24px;padding:20px;background:#F9F7F4;border-left:3px solid #C9A96E;">
+      <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;">Horarios</p>
+      <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:14px;color:#2C2C2C;">
+        <strong>Entrada:</strong> ${checkIn} &mdash; a partir de las <strong>${checkInTime} h</strong>
+      </p>
+      <p style="margin:0;font-family:Arial,sans-serif;font-size:14px;color:#2C2C2C;">
+        <strong>Salida:</strong> ${checkOut} &mdash; antes de las <strong>${checkOutTime} h</strong>
+      </p>
+    </div>
+    <div style="margin:0 0 24px;padding:20px;background:#FFF8EC;border:1px solid #F0D89A;">
+      <p style="margin:0 0 10px;font-family:Arial,sans-serif;font-size:13px;color:#8B6914;font-weight:bold;">
+        &#9888;&#65039; Registro obligatorio de viajeros
+      </p>
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:13px;color:#555;line-height:1.6;">
+        En cumplimiento del Real Decreto 933/2021, todos los viajeros mayores de 14 a&#241;os deben registrar
+        sus datos antes del alojamiento. Por favor, completa el formulario antes de tu llegada.
+      </p>
+      <table role="presentation" width="100%"><tr><td align="center">
+        <a href="${formUrl}" style="display:inline-block;padding:14px 32px;background:#2C2C2C;color:#FFF;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;text-decoration:none;border-radius:2px;letter-spacing:1px;">
+          Completar registro
+        </a>
+      </td></tr></table>
+      <p style="margin:12px 0 0;font-family:Arial,sans-serif;font-size:11px;color:#999;text-align:center;">
+        Este enlace es personal, intransferible y caduca el d&#237;a de tu llegada.
+      </p>
+    </div>
+    ${detailsTable(data)}
+    <p style="margin:24px 0 0;font-size:13px;color:#888;font-family:Arial,sans-serif;line-height:1.6;">
+      &#161;Nos vemos pronto en Casa Caldereta!
+    </p>`,
+  );
+}
+
 function guestStatusUpdateHtml(data: IStatusTemplateData): string {
   const { booking, newStatus } = data;
 
@@ -310,6 +358,25 @@ class EmailService {
       subject: 'Reserva confirmada — Casa Caldereta',
       html:    guestStatusUpdateHtml({ booking, checkIn, checkOut, newStatus: 'confirmed' }),
       text:    `Hola ${booking.guestName}, tu reserva en Casa Caldereta del ${checkIn} al ${checkOut} (${guests}) está confirmada. El importe de ${booking.totalPrice} € ha sido procesado. ¡Te esperamos!`,
+    });
+  }
+
+  async sendPreArrivalEmail(
+    booking: IBookingDocument,
+    formUrl: string,
+    checkInTime: string,
+    checkOutTime: string,
+  ): Promise<void> {
+    if (!this.client) return;
+
+    const checkIn  = formatDate(booking.checkIn);
+    const checkOut = formatDate(booking.checkOut);
+
+    await this.send({
+      to:      booking.guestEmail,
+      subject: `Preparativos para tu estancia — Casa Caldereta · ${checkIn}`,
+      html:    guestPreArrivalHtml({ booking, checkIn, checkOut, formUrl, checkInTime, checkOutTime }),
+      text:    `Hola ${booking.guestName}, tu estancia en Casa Caldereta comienza el ${checkIn}. Hora de entrada: ${checkInTime} h. Completa el registro obligatorio de viajeros antes de tu llegada: ${formUrl} — El enlace caduca el día de tu llegada.`,
     });
   }
 

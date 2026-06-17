@@ -39,6 +39,62 @@
 
   </div>
 
+  <!-- SECCIÓN HOY -->
+  @if (hasTodayActivity() || todayError()) {
+    <section class="admin-dashboard__today" aria-label="Actividad de hoy">
+      <h2 class="admin-dashboard__today-heading">Hoy</h2>
+      @if (todayError()) {
+        <p class="admin-dashboard__error" role="alert">{{ todayError() }}</p>
+      } @else {
+        <div class="admin-dashboard__today-grid">
+
+          <div class="admin-dashboard__today-col">
+            <p class="admin-dashboard__today-label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              Entradas ({{ todayActivity().checkIns.length }})
+            </p>
+            @if (todayActivity().checkIns.length === 0) {
+              <p class="admin-dashboard__today-empty">Sin entradas hoy</p>
+            } @else {
+              @for (item of todayActivity().checkIns; track item.id) {
+                <div class="admin-dashboard__today-item"
+                     [class.admin-dashboard__today-item--done]="!!item.checkedInAt">
+                  <span class="admin-dashboard__today-name">{{ item.guestName }}</span>
+                  <span class="admin-dashboard__today-meta">{{ item.guests }} pers.</span>
+                  @if (item.checkedInAt) {
+                    <span class="admin-dashboard__today-chip admin-dashboard__today-chip--in">Registrado</span>
+                  }
+                </div>
+              }
+            }
+          </div>
+
+          <div class="admin-dashboard__today-col">
+            <p class="admin-dashboard__today-label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+              Salidas ({{ todayActivity().checkOuts.length }})
+            </p>
+            @if (todayActivity().checkOuts.length === 0) {
+              <p class="admin-dashboard__today-empty">Sin salidas hoy</p>
+            } @else {
+              @for (item of todayActivity().checkOuts; track item.id) {
+                <div class="admin-dashboard__today-item"
+                     [class.admin-dashboard__today-item--done]="!!item.checkedOutAt">
+                  <span class="admin-dashboard__today-name">{{ item.guestName }}</span>
+                  <span class="admin-dashboard__today-meta">{{ item.guests }} pers.</span>
+                  @if (item.checkedOutAt) {
+                    <span class="admin-dashboard__today-chip admin-dashboard__today-chip--out">Completada</span>
+                  }
+                </div>
+              }
+            }
+          </div>
+
+        </div>
+      }
+    </section>
+  }
+
   <!-- GRID PRINCIPAL -->
   <div class="admin-dashboard__grid">
 

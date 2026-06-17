@@ -1,0 +1,155 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+@use 'sass:color';
+
+.admin-checkin-settings {
+  max-width: 560px;
+
+  &__header {
+    margin-bottom: $space-6;
+  }
+
+  &__title {
+    font-family: $font-family-heading;
+    font-size: $font-size-2xl;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-800;
+    letter-spacing: -0.02em;
+    margin: 0 0 $space-2;
+  }
+
+  &__subtitle {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-500;
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  &__loading {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-400;
+    margin: 0;
+  }
+
+  &__load-error {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: color.adjust($color-error, $lightness: -8%);
+    padding: $space-3 $space-4;
+    background-color: rgba($color-error, 0.07);
+    border-left: 3px solid $color-error;
+    border-radius: $border-radius-sm;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: $space-5;
+  }
+
+  &__card {
+    background-color: $color-white;
+    border: 1px solid $color-neutral-200;
+    border-radius: $border-radius-md;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+  }
+
+  &__field {
+    padding: $space-5 $space-6;
+  }
+
+  &__divider {
+    height: 1px;
+    background-color: $color-neutral-200;
+  }
+
+  &__label {
+    display: block;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-800;
+    margin-bottom: $space-1;
+  }
+
+  &__description {
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    color: $color-neutral-500;
+    margin: 0 0 $space-3;
+    line-height: 1.5;
+  }
+
+  &__input {
+    display: block;
+    padding: 8px $space-4;
+    border: 1px solid $color-neutral-300;
+    border-radius: $border-radius-sm;
+    background-color: $color-white;
+    font-family: $font-family-body;
+    font-size: $font-size-base;
+    color: $color-neutral-800;
+    transition: border-color 140ms ease, box-shadow 140ms ease;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.12);
+    }
+  }
+
+  &__save-error {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: color.adjust($color-error, $lightness: -8%);
+    padding: $space-3 $space-4;
+    background-color: rgba($color-error, 0.07);
+    border-left: 3px solid $color-error;
+    border-radius: $border-radius-sm;
+    margin: 0;
+  }
+
+  &__save-success {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: color.adjust($color-success, $lightness: -8%);
+    padding: $space-3 $space-4;
+    background-color: rgba($color-success, 0.08);
+    border-left: 3px solid $color-success;
+    border-radius: $border-radius-sm;
+    margin: 0;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  &__save-btn {
+    padding: 10px $space-6;
+    border: none;
+    border-radius: $border-radius-sm;
+    background-color: $color-neutral-800;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-white;
+    cursor: pointer;
+    transition: background-color 140ms ease;
+
+    &:hover:not(:disabled) { background-color: $color-neutral-900; }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $color-primary;
+      outline-offset: 2px;
+    }
+  }
+}

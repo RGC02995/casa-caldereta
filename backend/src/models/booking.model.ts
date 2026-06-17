@@ -15,6 +15,13 @@ export interface IBookingDocument extends Document {
   stripeSessionId?:       string;
   stripePaymentIntentId?: string;
   stripeSessionExpiresAt?: Date;
+  // Check-in / check-out
+  guestFormToken?:         string;   // SHA-256 hash of the raw token (select:false)
+  guestFormTokenExpiresAt?: Date;
+  guestFormSubmittedAt?:   Date;
+  checkedInAt?:            Date;
+  checkedOutAt?:           Date;
+  preArrivalEmailSentAt?:  Date;
   createdAt:              Date;
   updatedAt:              Date;
 }
@@ -81,6 +88,18 @@ const bookingSchema = new Schema<IBookingDocument>(
     stripeSessionExpiresAt: {
       type: Date,
     },
+    // Check-in / check-out — guestFormToken stored as SHA-256 hash, never the raw value
+    guestFormToken: {
+      type:   String,
+      select: false,  // never included in API responses by default
+      sparse: true,
+      index:  true,
+    },
+    guestFormTokenExpiresAt: { type: Date },
+    guestFormSubmittedAt:    { type: Date },
+    checkedInAt:             { type: Date },
+    checkedOutAt:            { type: Date },
+    preArrivalEmailSentAt:   { type: Date },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } },
 );
