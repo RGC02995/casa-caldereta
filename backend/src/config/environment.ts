@@ -6,8 +6,10 @@ function requireEnv(name: string): string {
   return value;
 }
 
+const nodeEnv = process.env['NODE_ENV'] ?? 'development';
+
 export const env = {
-  nodeEnv:             process.env['NODE_ENV'] ?? 'development',
+  nodeEnv,
   port:                parseInt(process.env['PORT'] ?? '3000', 10),
   apiVersion:          process.env['API_VERSION'] ?? 'v1',
   mongodbUri:          requireEnv('MONGODB_URI'),
@@ -21,7 +23,7 @@ export const env = {
   cloudinaryApiKey:    requireEnv('CLOUDINARY_API_KEY'),
   cloudinaryApiSecret: requireEnv('CLOUDINARY_API_SECRET'),
   corsOriginDev:       process.env['CORS_ORIGIN_DEV'] ?? 'http://localhost:4200',
-  corsOriginProd:      process.env['CORS_ORIGIN_PROD'] ?? '',
+  corsOriginProd:      nodeEnv === 'production' ? requireEnv('CORS_ORIGIN_PROD') : (process.env['CORS_ORIGIN_PROD'] ?? ''),
   rateLimitWindowMs:   parseInt(process.env['RATE_LIMIT_WINDOW_MS'] ?? '900000', 10),
   rateLimitMax:        parseInt(process.env['RATE_LIMIT_MAX_REQUESTS'] ?? '100', 10),
   // Email (Resend) — opcionales: si no están configuradas, los emails se omiten sin error

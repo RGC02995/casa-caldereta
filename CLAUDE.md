@@ -16,7 +16,7 @@ Diseño de lujo estilo boutique (inspiración: ritualdeterra.com). Monorepo Angu
 | Backend | Node.js + Express + TypeScript | Node 26.3.0 |
 | Base de datos | MongoDB + Mongoose | latest |
 | Imágenes | Cloudinary | latest |
-| Pagos | Stripe | FUTURO — no implementar aún |
+| Pagos | Stripe | latest ✅ implementado |
 
 ## Entorno de desarrollo
 - Node.js: 26.3.0
@@ -267,6 +267,17 @@ Patrón: página orquestadora (datos + servicios) → componentes hijos vía `in
 
 **Total barrido:** 16 componentes nuevos en `features/*/components/` — todas las páginas grandes convertidas en orquestadoras delgadas.
 
+### Stripe — Pagos completos ✅ COMPLETADO (2026-06-17)
+- [x] Backend: `stripe-webhook.controller.ts` — verifica firma con `constructEvent`, procesa `checkout.session.completed`, llama `bookingService.confirmFromStripe()`
+- [x] Webhook montado ANTES de `express.json()` con `express.raw()` — imprescindible para verificación de firma
+- [x] `STRIPE_WEBHOOK_SECRET` en Railway apunta al signing secret del Dashboard (no al CLI local)
+- [x] Endpoint registrado en Stripe Dashboard: `https://backend-production-d85c.up.railway.app/webhooks/stripe`
+- [x] Flujo: `pending_payment` → webhook → `confirmed` automático → admin puede "Completar" o "Reembolsar y cancelar"
+- [x] `stripePaymentIntentId` en modelo `IBooking` — diferencia reservas Stripe de manuales
+- [x] Botón "Reembolsar y cancelar" en admin solo para `confirmed` + `stripePaymentIntentId` — `BookingService.refundBooking()`
+- [x] Filtro `pending` eliminado del admin (flujo manual obsoleto con Stripe); `pending_payment` en su lugar
+- [x] Leyenda de estados actualizada: explica confirmación automática vía webhook y bloqueo 30 min
+
 ### Barrido señales — Auditoría reactiva ✅ COMPLETADO (2026-06-16)
 Objetivo: eliminar suscripciones manuales sin protección ante destroy en todos los componentes.
 Skill usada: `/barrido-señales` (`.claude/commands/barrido-señales.md`)
@@ -317,3 +328,5 @@ Skill usada: `/barrido-señales` (`.claude/commands/barrido-señales.md`)
 | refactor: reorganización frontend | site-header/footer → core/layout, not-found → core/pages, _legal-page → features/legal, 23 dirs vacíos eliminados |
 | refactor: barrido frontend — extracción componentes | 16 componentes nuevos: home×6, booking×3, admin-routes×2, admin-calendar×3, admin-bookings×1, admin-gallery×2 |
 | refactor: barrido señales — auditoría reactiva | booking-page Tipo A + 9 componentes Tipo B: DestroyRef + takeUntilDestroyed en 16 handlers |
+| feat: integración Stripe — pago completo al reservar | Stripe Checkout + webhook Railway + confirmación automática + reembolso desde admin |
+| feat: admin reservas — botón reembolso Stripe y estados actualizados | Botón "Reembolsar y cancelar" para confirmed+Stripe, filtro pending eliminado, leyenda actualizada |
