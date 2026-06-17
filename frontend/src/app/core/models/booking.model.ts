@@ -9,9 +9,10 @@ export interface IBooking {
   readonly guestPhone?: string;
   readonly guests:     number;
   readonly totalPrice: number;
-  readonly status:     BookingStatus;
-  readonly notes?:     string;
-  readonly createdAt:  string;
+  readonly status:                 BookingStatus;
+  readonly notes?:                 string;
+  readonly stripePaymentIntentId?: string;
+  readonly createdAt:              string;
 }
 
 export interface IBookingRequest {

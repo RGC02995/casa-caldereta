@@ -19,8 +19,8 @@
   @if (legendOpen()) {
     <div id="bookings-legend" class="admin-bookings__legend" role="region" aria-label="Explicación de estados de reserva">
       <div class="admin-bookings__legend-item">
-        <span class="admin-bookings__badge admin-bookings__badge--pending">Pendiente</span>
-        <p class="admin-bookings__legend-text">La reserva acaba de llegar y aún no la has validado. Las fechas <strong>no quedan bloqueadas</strong> hasta que confirmes — te protege de spam o solicitudes con fechas incorrectas.</p>
+        <span class="admin-bookings__badge admin-bookings__badge--pending_payment">Pago pendiente</span>
+        <p class="admin-bookings__legend-text">El huésped ha iniciado el proceso de pago en Stripe. La reserva se <strong>confirma automáticamente</strong> cuando Stripe recibe el cobro. Las fechas quedan bloqueadas durante 30 minutos.</p>
       </div>
       <div class="admin-bookings__legend-item">
         <span class="admin-bookings__badge admin-bookings__badge--confirmed">Confirmada</span>
@@ -48,6 +48,7 @@
       (filterChanged)="activeFilter.set($event)"
       (statusChanged)="onStatusChange($event)"
       (deleteRequested)="onDeleteRequested($event)"
+      (refundRequested)="onRefundRequested($event)"
     />
   }
 

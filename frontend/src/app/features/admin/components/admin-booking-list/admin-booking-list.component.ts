@@ -15,6 +15,11 @@ export interface IBookingDeleteEvent {
   readonly guestName: string;
 }
 
+export interface IBookingRefundEvent {
+  readonly bookingId: string;
+  readonly guestName: string;
+}
+
 interface IStatusTransition {
   readonly label:  string;
   readonly status: BookingStatus;
@@ -22,8 +27,8 @@ interface IStatusTransition {
 
 const STATUS_TRANSITIONS: Record<BookingStatus, IStatusTransition[]> = {
   pending_payment: [],
-  pending:         [{ label: 'Confirmar', status: 'confirmed' }, { label: 'Cancelar', status: 'cancelled' }],
-  confirmed:       [{ label: 'Completar', status: 'completed' }, { label: 'Cancelar', status: 'cancelled' }],
+  pending:         [],
+  confirmed:       [{ label: 'Completar', status: 'completed' }],
   cancelled:       [],
   completed:       [],
 };
@@ -52,13 +57,14 @@ export class AdminBookingListComponent {
   readonly filterChanged   = output<StatusFilter>();
   readonly statusChanged   = output<IBookingStatusChangeEvent>();
   readonly deleteRequested = output<IBookingDeleteEvent>();
+  readonly refundRequested = output<IBookingRefundEvent>();
 
   readonly filters: { label: string; value: StatusFilter }[] = [
-    { label: 'Todas',       value: 'all'       },
-    { label: 'Pendientes',  value: 'pending'   },
-    { label: 'Confirmadas', value: 'confirmed' },
-    { label: 'Canceladas',  value: 'cancelled' },
-    { label: 'Completadas', value: 'completed' },
+    { label: 'Todas',          value: 'all'             },
+    { label: 'Pago pendiente', value: 'pending_payment' },
+    { label: 'Confirmadas',    value: 'confirmed'       },
+    { label: 'Canceladas',     value: 'cancelled'       },
+    { label: 'Completadas',    value: 'completed'       },
   ];
 
   statusLabel(status: string): string {
@@ -75,5 +81,9 @@ export class AdminBookingListComponent {
 
   onDeleteRequested(bookingId: string, guestName: string): void {
     this.deleteRequested.emit({ bookingId, guestName });
+  }
+
+  onRefundRequested(bookingId: string, guestName: string): void {
+    this.refundRequested.emit({ bookingId, guestName });
   }
 }

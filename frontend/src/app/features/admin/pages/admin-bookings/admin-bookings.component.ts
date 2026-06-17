@@ -8,6 +8,7 @@ import {
   AdminBookingListComponent,
   IBookingStatusChangeEvent,
   IBookingDeleteEvent,
+  IBookingRefundEvent,
 } from '../../components/admin-booking-list/admin-booking-list.component';
 
 type StatusFilter = 'all' | BookingStatus;
@@ -77,6 +78,27 @@ export class AdminBookingsComponent {
         this.processingId.set(null);
       },
     });
+  }
+
+  onRefundRequested(event: IBookingRefundEvent): void {
+    if (this.processingId()) return;
+    if (!confirm(`${event.guestName}\n\n¿Reembolsar el pago y cancelar la reserva? Esta acción no se puede deshacer.`)) return;
+
+    this.processingId.set(event.bookingId);
+    this.actionError.set('');
+
+    this.bookingService.refundBooking(event.bookingId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.processingId.set(null);
+          this.refresh$.next();
+        },
+        error: () => {
+          this.actionError.set('No se pudo procesar el reembolso. Inténtalo de nuevo.');
+          this.processingId.set(null);
+        },
+      });
   }
 
   onDeleteRequested(event: IBookingDeleteEvent): void {
