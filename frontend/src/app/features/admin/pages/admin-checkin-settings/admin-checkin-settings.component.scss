@@ -140,7 +140,7 @@
     cursor: pointer;
     transition: background-color 140ms ease;
 
-    &:hover:not(:disabled) { background-color: $color-neutral-900; }
+    &:hover:not(:disabled) { background-color: $color-neutral-800; }
 
     &:disabled {
       opacity: 0.5;
