@@ -1,8 +1,8 @@
 <section class="home-amenities">
   <div class="home-amenities__inner">
     <div class="home-amenities__heading" scrollReveal>
-      <p class="home-amenities__label">Equipamiento</p>
-      <h2 class="home-amenities__title">Todo lo que<br>necesitas</h2>
+      <p class="home-amenities__label">{{ 'home.amenities.label' | translate }}</p>
+      <h2 class="home-amenities__title">{{ 'home.amenities.title' | translate }}</h2>
     </div>
     <div class="home-amenities__accordion" role="list">
       @for (group of amenityGroups; track group.category; let i = $index) {

@@ -1,4 +1,5 @@
 import { Component, computed, input, output, signal } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import {
   addDays, addMonths, differenceInCalendarDays,
   endOfMonth, format, getDate, getDay,
@@ -24,8 +25,7 @@ interface CalendarDay {
 
 @Component({
   selector: 'booking-calendar',
-  standalone: true,
-  imports: [],
+  imports: [TranslatePipe],
   templateUrl: './booking-calendar.component.html',
   styleUrl: './booking-calendar.component.scss',
 })
@@ -39,7 +39,11 @@ export class BookingCalendarComponent {
   readonly checkInChange  = output<Date | null>();
   readonly checkOutChange = output<Date | null>();
 
-  readonly weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'] as const;
+  readonly weekDays = [
+    'booking.cal.days.mon', 'booking.cal.days.tue', 'booking.cal.days.wed',
+    'booking.cal.days.thu', 'booking.cal.days.fri', 'booking.cal.days.sat',
+    'booking.cal.days.sun',
+  ] as const;
 
   readonly currentMonth = signal(new Date());
 
@@ -92,26 +96,20 @@ export class BookingCalendarComponent {
   }
 
   private hasUnavailableBetween(start: Date, end: Date): boolean {
-    const booked  = this.bookedRanges();
-    const blocked = this.blockedPeriods();
-    const days    = differenceInCalendarDays(end, start);
+    const parsedBooked  = this.bookedRanges().map(b => ({
+      start: startOfDay(new Date(b.checkIn)),
+      end:   startOfDay(new Date(b.checkOut)),
+    }));
+    const parsedBlocked = this.blockedPeriods().map(b => ({
+      start: startOfDay(new Date(b.startDate)),
+      end:   startOfDay(addDays(new Date(b.endDate), 1)),
+    }));
+    const days = differenceInCalendarDays(end, start);
 
     for (let i = 1; i < days; i++) {
       const day = addDays(startOfDay(start), i);
-
-      const isBooked = booked.some(b => {
-        const checkIn  = startOfDay(new Date(b.checkIn));
-        const checkOut = startOfDay(new Date(b.checkOut));
-        return !isBefore(day, checkIn) && isBefore(day, checkOut);
-      });
-
-      const isBlocked = blocked.some(b => {
-        const blockStart = startOfDay(new Date(b.startDate));
-        const blockEnd   = startOfDay(addDays(new Date(b.endDate), 1));
-        return !isBefore(day, blockStart) && isBefore(day, blockEnd);
-      });
-
-      if (isBooked || isBlocked) return true;
+      if (parsedBooked.some(r  => !isBefore(day, r.start) && isBefore(day, r.end))) return true;
+      if (parsedBlocked.some(r => !isBefore(day, r.start) && isBefore(day, r.end))) return true;
     }
     return false;
   }
@@ -139,21 +137,20 @@ export class BookingCalendarComponent {
       });
     }
 
+    const parsedBooked  = bookedRanges.map(b => ({
+      start: startOfDay(new Date(b.checkIn)),
+      end:   startOfDay(new Date(b.checkOut)),
+    }));
+    const parsedBlocked = blockedPeriods.map(b => ({
+      start: startOfDay(new Date(b.startDate)),
+      end:   startOfDay(addDays(new Date(b.endDate), 1)),
+    }));
+
     let current = monthStart;
     while (!isAfter(current, monthEnd)) {
-      const isPast = isBefore(startOfDay(current), today);
-
-      const isBooked = bookedRanges.some(b => {
-        const checkIn  = startOfDay(new Date(b.checkIn));
-        const checkOut = startOfDay(new Date(b.checkOut));
-        return !isBefore(current, checkIn) && isBefore(current, checkOut);
-      });
-
-      const isBlocked = blockedPeriods.some(b => {
-        const blockStart = startOfDay(new Date(b.startDate));
-        const blockEnd   = startOfDay(addDays(new Date(b.endDate), 1));
-        return !isBefore(current, blockStart) && isBefore(current, blockEnd);
-      });
+      const isPast    = isBefore(startOfDay(current), today);
+      const isBooked  = parsedBooked.some(r  => !isBefore(current, r.start) && isBefore(current, r.end));
+      const isBlocked = parsedBlocked.some(r => !isBefore(current, r.start) && isBefore(current, r.end));
 
       days.push({
         date:       current,

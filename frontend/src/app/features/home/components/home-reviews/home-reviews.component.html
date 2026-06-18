@@ -3,8 +3,8 @@
 
     <div class="home-reviews__heading" scrollReveal>
       <div class="home-reviews__heading-text">
-        <p class="home-reviews__label">Opiniones</p>
-        <h2 class="home-reviews__title">Lo que dicen nuestros huéspedes</h2>
+        <p class="home-reviews__label">{{ 'home.reviews.label' | translate }}</p>
+        <h2 class="home-reviews__title">{{ 'home.reviews.title' | translate }}</h2>
       </div>
       <button
         class="home-reviews__add-btn"
@@ -12,7 +12,11 @@
         (click)="toggleReviewForm()"
         [attr.aria-expanded]="reviewFormVisible()"
       >
-        @if (reviewFormVisible()) { Cancelar } @else { Dejar una reseña }
+        @if (reviewFormVisible()) {
+          {{ 'home.reviews.cancel' | translate }}
+        } @else {
+          {{ 'home.reviews.writeReview' | translate }}
+        }
       </button>
     </div>
 
@@ -24,32 +28,32 @@
               <path d="M9 12l2 2 4-4"/>
               <circle cx="12" cy="12" r="10"/>
             </svg>
-            <p>¡Gracias por tu reseña! Será publicada tras su revisión.</p>
+            <p>{{ 'home.reviews.success' | translate }}</p>
           </div>
         } @else {
           <form class="home-reviews__form" (submit)="submitReview($event)" novalidate>
             <div class="home-reviews__form-row">
               <div class="home-reviews__form-field">
-                <label class="home-reviews__form-label" for="review-author">Tu nombre</label>
+                <label class="home-reviews__form-label" for="review-author">{{ 'home.reviews.authorLabel' | translate }}</label>
                 <input
                   class="home-reviews__form-input"
                   id="review-author"
                   type="text"
                   autocomplete="name"
-                  placeholder="Laura M."
+                  [placeholder]="'home.reviews.authorPlaceholder' | translate"
                   maxlength="80"
                   [value]="reviewAuthor()"
                   (input)="reviewAuthor.set($any($event.target).value)"
                 />
               </div>
               <div class="home-reviews__form-field">
-                <label class="home-reviews__form-label" for="review-location">Ciudad de origen</label>
+                <label class="home-reviews__form-label" for="review-location">{{ 'home.reviews.locationLabel' | translate }}</label>
                 <input
                   class="home-reviews__form-input"
                   id="review-location"
                   type="text"
                   autocomplete="address-level2"
-                  placeholder="Valencia"
+                  [placeholder]="'home.reviews.locationPlaceholder' | translate"
                   maxlength="80"
                   [value]="reviewLocation()"
                   (input)="reviewLocation.set($any($event.target).value)"
@@ -58,14 +62,14 @@
             </div>
 
             <fieldset class="home-reviews__form-rating">
-              <legend class="home-reviews__form-label">Puntuación</legend>
-              <div class="home-reviews__rating-stars" role="radiogroup" aria-label="Puntuación de 1 a 5 estrellas">
+              <legend class="home-reviews__form-label">{{ 'home.reviews.ratingLabel' | translate }}</legend>
+              <div class="home-reviews__rating-stars" [attr.aria-label]="'home.reviews.ratingLabel' | translate" role="radiogroup">
                 @for (star of ratingStars; track star) {
                   <button
                     class="home-reviews__rating-star"
                     [class.home-reviews__rating-star--active]="star <= reviewRating()"
                     type="button"
-                    [attr.aria-label]="star + ' estrella' + (star > 1 ? 's' : '')"
+                    [attr.aria-label]="'home.reviews.starAriaLabel' | translate:{ count: star, plural: star > 1 ? 's' : '' }"
                     [attr.aria-pressed]="star === reviewRating()"
                     (click)="setRating(star)"
                   >
@@ -78,12 +82,12 @@
             </fieldset>
 
             <div class="home-reviews__form-field">
-              <label class="home-reviews__form-label" for="review-text">Tu reseña</label>
+              <label class="home-reviews__form-label" for="review-text">{{ 'home.reviews.textLabel' | translate }}</label>
               <textarea
                 class="home-reviews__form-textarea"
                 id="review-text"
                 rows="4"
-                placeholder="Cuéntanos tu experiencia en Casa Caldereta…"
+                [placeholder]="'home.reviews.textPlaceholder' | translate"
                 maxlength="800"
                 [value]="reviewText()"
                 (input)="reviewText.set($any($event.target).value)"
@@ -100,7 +104,11 @@
               type="submit"
               [disabled]="reviewFormSending()"
             >
-              @if (reviewFormSending()) { Enviando… } @else { Enviar reseña }
+              @if (reviewFormSending()) {
+                {{ 'home.reviews.submitting' | translate }}
+              } @else {
+                {{ 'home.reviews.submit' | translate }}
+              }
             </button>
           </form>
         }
@@ -137,7 +145,7 @@
         }
       </ul>
     } @else {
-      <p class="home-reviews__empty">Sé el primero en dejar una reseña.</p>
+      <p class="home-reviews__empty">{{ 'home.reviews.empty' | translate }}</p>
     }
 
   </div>

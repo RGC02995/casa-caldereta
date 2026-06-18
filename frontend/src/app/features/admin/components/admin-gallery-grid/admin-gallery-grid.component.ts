@@ -20,7 +20,6 @@ export interface IPhotoDeleteEvent {
 
 @Component({
   selector:    'admin-gallery-grid',
-  standalone:  true,
   imports:     [],
   templateUrl: './admin-gallery-grid.component.html',
   styleUrl:    './admin-gallery-grid.component.scss',

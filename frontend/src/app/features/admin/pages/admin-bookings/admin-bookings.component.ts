@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed, DestroyRef } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { BehaviorSubject, switchMap, of } from 'rxjs';
+import { BehaviorSubject, switchMap, of, timer } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { BookingService } from '../../../../core/services/booking.service';
 import { CheckinService } from '../../../../core/services/checkin.service';
@@ -25,7 +25,6 @@ const STATUS_CONFIRMATIONS: Partial<Record<BookingStatus, string>> = {
 
 @Component({
   selector:    'admin-bookings',
-  standalone:  true,
   imports:     [AdminBookingListComponent, DatePipe],
   templateUrl: './admin-bookings.component.html',
   styleUrl:    './admin-bookings.component.scss',
@@ -248,6 +247,8 @@ export class AdminBookingsComponent {
 
     navigator.clipboard.writeText(lines.join('\n')).catch(() => undefined);
     this.copySuccess.set(true);
-    setTimeout(() => this.copySuccess.set(false), 2000);
+    timer(2000)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.copySuccess.set(false));
   }
 }

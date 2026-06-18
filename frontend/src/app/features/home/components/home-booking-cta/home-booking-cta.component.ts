@@ -5,7 +5,6 @@ import { ScrollRevealDirective } from '../../../../shared/directives/scroll-reve
 
 @Component({
   selector: 'home-booking-cta',
-  standalone: true,
   imports: [RouterLink, TranslatePipe, ScrollRevealDirective],
   templateUrl: './home-booking-cta.component.html',
   styleUrl: './home-booking-cta.component.scss',

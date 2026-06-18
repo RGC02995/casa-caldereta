@@ -84,6 +84,7 @@ const bookingSchema = new Schema<IBookingDocument>(
     stripePaymentIntentId: {
       type:   String,
       sparse: true,
+      index:  true,
     },
     stripeSessionExpiresAt: {
       type: Date,

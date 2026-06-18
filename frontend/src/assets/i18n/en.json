@@ -10,7 +10,93 @@
     "hero": {
       "title": "Casa Caldereta",
       "subtitle": "Your retreat in the heart of Valencia",
-      "cta": "Book now"
+      "cta": "Book now",
+      "ctaGallery": "See the house",
+      "pills": {
+        "guests": "Up to 6 guests",
+        "jacuzzi": "Private jacuzzi",
+        "pets": "Pets welcome"
+      }
+    },
+    "highlights": {
+      "label": "The house",
+      "title": "A place designed for you"
+    },
+    "amenities": {
+      "label": "Amenities",
+      "title": "Everything you need"
+    },
+    "galleryPreview": {
+      "label": "Photos",
+      "title": "The house in pictures",
+      "cta": "View full gallery"
+    },
+    "routesPreview": {
+      "label": "Surroundings",
+      "title": "What to do nearby",
+      "cta": "View all routes"
+    },
+    "reviews": {
+      "label": "Reviews",
+      "title": "What our guests say",
+      "writeReview": "Leave a review",
+      "cancel": "Cancel",
+      "success": "Thank you for your review! It will be published after moderation.",
+      "authorLabel": "Your name",
+      "authorPlaceholder": "Laura M.",
+      "locationLabel": "City of origin",
+      "locationPlaceholder": "Valencia",
+      "ratingLabel": "Rating",
+      "starAriaLabel": "{{count}} star{{plural}}",
+      "textLabel": "Your review",
+      "textPlaceholder": "Tell us about your experience at Casa Caldereta…",
+      "submitting": "Sending…",
+      "submit": "Submit review",
+      "empty": "Be the first to leave a review.",
+      "errors": {
+        "required": "Please fill in all fields.",
+        "tooShort": "The review must be at least 10 characters.",
+        "tooLong": "The review cannot exceed 800 characters (currently {{count}}).",
+        "submit": "Could not submit the review. Please try again later."
+      }
+    }
+  },
+  "gallery": {
+    "heroLabel": "Casa Caldereta",
+    "title": "Gallery",
+    "subtitle": "Discover every corner of the house",
+    "loadingAria": "Loading images…",
+    "empty": "Images will be available soon.",
+    "openPhoto": "Open photo: ",
+    "loadError": "Images could not be loaded.",
+    "categories": {
+      "exterior":   "Exterior",
+      "interior":   "Interior",
+      "cocina":     "Kitchen",
+      "dormitorio": "Bedrooms",
+      "bano":       "Bathrooms",
+      "jardin":     "Garden",
+      "otros":      "Other"
+    }
+  },
+  "routes": {
+    "heroLabel": "Aielo de Rugat · Vall d'Albaida",
+    "title": "Routes & activities",
+    "subtitle": "Discover the surroundings of Casa Caldereta",
+    "loading": "Loading routes…",
+    "empty": "Routes will be available soon.",
+    "loadError": "Routes could not be loaded.",
+    "viewRoute": "View route: ",
+    "difficulty": {
+      "easy":     "Easy",
+      "moderate": "Moderate",
+      "hard":     "Hard"
+    },
+    "types": {
+      "hiking":  "Hiking",
+      "cycling": "Cycling",
+      "driving": "By car",
+      "walking": "On foot"
     }
   },
   "booking": {
@@ -20,7 +106,65 @@
     "guests": "Guests",
     "total": "Total",
     "perNight": "per night",
-    "book": "Confirm booking"
+    "book": "Confirm booking",
+    "heroLabel": "Casa Caldereta",
+    "heroTitle": "Book",
+    "heroSubtitle": "Select your dates and send us your request",
+    "cal": {
+      "prevMonth": "Previous month",
+      "nextMonth": "Next month",
+      "legend": {
+        "selected":    "Check-in / Check-out",
+        "range":       "Stay",
+        "booked":      "Booked",
+        "unavailable": "Unavailable"
+      },
+      "days": {
+        "mon": "M",
+        "tue": "T",
+        "wed": "W",
+        "thu": "T",
+        "fri": "F",
+        "sat": "S",
+        "sun": "S"
+      }
+    },
+    "form": {
+      "summary":            "Your booking",
+      "checkIn":            "Check-in",
+      "checkOut":           "Check-out",
+      "nightSingular":      "night",
+      "nightPlural":        "nights",
+      "nameLabel":          "Name *",
+      "namePlaceholder":    "Your full name",
+      "emailLabel":         "Email *",
+      "phoneLabel":         "Phone *",
+      "phonePlaceholder":   "+34 600 000 000",
+      "guestsLabel":        "Guests *",
+      "messageLabel":       "Message",
+      "messagePlaceholder": "Pets, special requests...",
+      "privacyText":        "I have read and accept the",
+      "privacyLink":        "Privacy Policy",
+      "ariaSummary":        "Booking request form",
+      "submitting":         "Preparing payment...",
+      "selectDates":        "Select dates first",
+      "proceed":            "Proceed to payment",
+      "errors": {
+        "nameRequired":    "Name is required (minimum 2 characters)",
+        "emailRequired":   "Email is required",
+        "emailInvalid":    "Enter a valid email address",
+        "phoneRequired":   "Phone is required",
+        "phoneInvalid":    "Enter a valid phone number (+34 600 000 000)",
+        "privacyRequired": "You must accept the privacy policy",
+        "conflict":        "Those dates were just booked by another user. The calendar has been updated — please select new dates.",
+        "default":         "Payment could not be prepared. Please try again."
+      }
+    }
+  },
+  "notFound": {
+    "title":   "Page not found",
+    "message": "This page doesn't exist or has been moved.",
+    "cta":     "Back to home"
   },
   "legal": {
     "legalNotice": "Legal Notice",

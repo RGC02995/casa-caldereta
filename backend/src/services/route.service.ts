@@ -42,6 +42,20 @@ function generateSlug(title: string): string {
 }
 
 class RouteService {
+  private async findUniqueSlug(base: string, excludeId?: string): Promise<string> {
+    const filter: Record<string, unknown> = { slug: { $regex: `^${base}(-\\d+)?$` } };
+    if (excludeId) filter['_id'] = { $ne: excludeId };
+
+    const docs = await RouteModel.find(filter, { slug: 1, _id: 0 }).lean<{ slug: string }[]>();
+    const existingSlugs = new Set(docs.map(doc => doc.slug));
+
+    if (!existingSlugs.has(base)) return base;
+    let counter = 1;
+    while (existingSlugs.has(`${base}-${counter}`)) counter++;
+    return `${base}-${counter}`;
+  }
+
+
   async getAll(): Promise<IRouteDocument[]> {
     const docs = await RouteModel.find().sort({ order: 1, createdAt: -1 }).lean<IRouteDocument[]>();
     return docs.map(withId);
@@ -63,11 +77,7 @@ class RouteService {
   }
 
   async create(data: ICreateRouteData): Promise<IRouteDocument> {
-    let slug    = generateSlug(data.title);
-    let counter = 1;
-    while (await RouteModel.findOne({ slug }).lean()) {
-      slug = `${generateSlug(data.title)}-${counter++}`;
-    }
+    const slug = await this.findUniqueSlug(generateSlug(data.title));
 
     const routeDocument = new RouteModel({
       title:         data.title,
@@ -93,12 +103,7 @@ class RouteService {
     const updatePayload: Partial<IRouteDocument> = { ...data } as Partial<IRouteDocument>;
 
     if (data.title) {
-      let newSlug    = generateSlug(data.title);
-      let counter    = 1;
-      while (await RouteModel.findOne({ slug: newSlug, _id: { $ne: id } }).lean()) {
-        newSlug = `${generateSlug(data.title)}-${counter++}`;
-      }
-      (updatePayload as Record<string, unknown>)['slug'] = newSlug;
+      (updatePayload as Record<string, unknown>)['slug'] = await this.findUniqueSlug(generateSlug(data.title), id);
     }
 
     const doc = await RouteModel.findByIdAndUpdate(
@@ -124,6 +129,9 @@ class RouteService {
   }
 
   async uploadCoverImage(id: string, buffer: Buffer): Promise<IRouteDocument | null> {
+    const existing = await RouteModel.findById(id).lean<IRouteDocument>();
+    if (!existing) return null;
+
     const uploadResult = await new Promise<UploadApiResponse>((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
@@ -143,9 +151,13 @@ class RouteService {
 
     const doc = await RouteModel.findByIdAndUpdate(
       id,
-      { $set: { coverImageUrl: uploadResult.secure_url } },
+      { $set: { coverImageUrl: uploadResult.secure_url, coverImagePublicId: uploadResult.public_id } },
       { returnDocument: 'after', runValidators: true },
     ).lean<IRouteDocument>();
+
+    if (existing.coverImagePublicId) {
+      void cloudinary.uploader.destroy(existing.coverImagePublicId);
+    }
 
     return doc ? withId(doc) : null;
   }

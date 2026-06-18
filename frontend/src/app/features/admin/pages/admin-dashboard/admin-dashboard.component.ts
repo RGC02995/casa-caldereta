@@ -6,10 +6,8 @@ import { BehaviorSubject, switchMap, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { BookingService } from '../../../../core/services/booking.service';
 import { CheckinService } from '../../../../core/services/checkin.service';
-import { IBooking } from '../../../../core/models/booking.model';
+import { IBooking, BookingStatus } from '../../../../core/models/booking.model';
 import { ITodayActivity } from '../../../../core/models/checkin.model';
-
-type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
 
 interface IQuickLink {
   readonly label: string;
@@ -17,10 +15,11 @@ interface IQuickLink {
 }
 
 const STATUS_LABELS: Record<BookingStatus, string> = {
-  pending:   'Pendiente',
-  confirmed: 'Confirmada',
-  cancelled: 'Cancelada',
-  completed: 'Completada',
+  pending_payment: 'Pendiente de pago',
+  pending:         'Pendiente',
+  confirmed:       'Confirmada',
+  cancelled:       'Cancelada',
+  completed:       'Completada',
 };
 
 @Component({
@@ -68,20 +67,24 @@ export class AdminDashboardComponent {
   });
 
   readonly pendingCount = computed(() =>
-    this.upcomingBookings().filter(b => b.status === 'pending').length,
+    this.upcomingBookings().filter(booking =>
+      booking.status === 'pending' || booking.status === 'pending_payment',
+    ).length,
   );
 
   readonly nextCheckIn = computed(() => {
     const now = new Date();
     return this.upcomingBookings()
-      .filter(b => b.status === 'confirmed' && new Date(b.checkIn) > now)
-      .sort((a, b) => new Date(a.checkIn).getTime() - new Date(b.checkIn).getTime())[0] ?? null;
+      .filter(upcomingBooking => upcomingBooking.status === 'confirmed' && new Date(upcomingBooking.checkIn) > now)
+      .sort((bookingA, bookingB) =>
+        new Date(bookingA.checkIn).getTime() - new Date(bookingB.checkIn).getTime(),
+      )[0] ?? null;
   });
 
   readonly todayActivity = toSignal(
     this.todayRefresh$.pipe(
       switchMap(() => this.checkinService.getTodayActivity().pipe(
-        map(r => r.data),
+        map(response => response.data),
         catchError(() => {
           this.todayError.set('No se pudo cargar la actividad de hoy.');
           return of({ checkIns: [], checkOuts: [] } as ITodayActivity);

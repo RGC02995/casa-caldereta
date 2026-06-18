@@ -1,14 +1,9 @@
+import Stripe from 'stripe';
 import { Request, Response } from 'express';
 import { stripe } from '../config/stripe';
 import { env } from '../config/environment';
 import { bookingService } from '../services/booking.service';
 import { emailService } from '../services/email.service';
-
-type CheckoutSession = {
-  id:              string;
-  payment_status:  string;
-  payment_intent:  string | { id: string } | null;
-};
 
 export async function stripeWebhookHandler(req: Request, res: Response): Promise<void> {
   const signature = req.headers['stripe-signature'];
@@ -37,7 +32,7 @@ export async function stripeWebhookHandler(req: Request, res: Response): Promise
     return;
   }
 
-  const session = event.data.object as CheckoutSession;
+  const session = event.data.object as Stripe.Checkout.Session;
 
   // Solo confirmamos si el pago fue cobrado efectivamente (no si quedó pendiente)
   if (session.payment_status !== 'paid') {
@@ -47,7 +42,7 @@ export async function stripeWebhookHandler(req: Request, res: Response): Promise
 
   const paymentIntentId = typeof session.payment_intent === 'string'
     ? session.payment_intent
-    : (session.payment_intent?.id ?? '');
+    : (session.payment_intent as Stripe.PaymentIntent)?.id ?? '';
 
   try {
     const booking = await bookingService.confirmFromStripe(session.id, paymentIntentId);

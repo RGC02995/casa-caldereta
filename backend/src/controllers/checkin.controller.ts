@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { isValidObjectId } from 'mongoose';
 import { checkinService, ITravelerInput } from '../services/checkin.service';
 
 // ─── Público ───────────────────────────────────────────────────────────────────
@@ -76,8 +77,12 @@ export async function getTodayActivityHandler(_req: Request, res: Response): Pro
 
 // POST /checkin/send-form/:bookingId — generar token y enviar email pre-llegada
 export async function sendPreArrivalEmailHandler(req: Request, res: Response): Promise<void> {
+  const { bookingId } = req.params as { bookingId: string };
+  if (!isValidObjectId(bookingId)) {
+    res.status(400).json({ success: false, message: 'ID no válido.' });
+    return;
+  }
   try {
-    const { bookingId } = req.params as { bookingId: string };
     await checkinService.generateAndSendFormToken(bookingId);
     res.status(200).json({ success: true, message: 'Email de pre-llegada enviado.' });
   } catch (err) {
@@ -96,8 +101,12 @@ export async function sendPreArrivalEmailHandler(req: Request, res: Response): P
 
 // PATCH /checkin/:bookingId/check-in — registrar entrada
 export async function recordCheckInHandler(req: Request, res: Response): Promise<void> {
+  const { bookingId } = req.params as { bookingId: string };
+  if (!isValidObjectId(bookingId)) {
+    res.status(400).json({ success: false, message: 'ID no válido.' });
+    return;
+  }
   try {
-    const { bookingId } = req.params as { bookingId: string };
     const updated = await checkinService.recordCheckIn(bookingId);
     res.status(200).json({ success: true, data: updated });
   } catch (err) {
@@ -112,8 +121,12 @@ export async function recordCheckInHandler(req: Request, res: Response): Promise
 
 // PATCH /checkin/:bookingId/check-out — registrar salida y marcar completada
 export async function recordCheckOutHandler(req: Request, res: Response): Promise<void> {
+  const { bookingId } = req.params as { bookingId: string };
+  if (!isValidObjectId(bookingId)) {
+    res.status(400).json({ success: false, message: 'ID no válido.' });
+    return;
+  }
   try {
-    const { bookingId } = req.params as { bookingId: string };
     const updated = await checkinService.recordCheckOut(bookingId);
     res.status(200).json({ success: true, data: updated });
   } catch (err) {
@@ -128,8 +141,12 @@ export async function recordCheckOutHandler(req: Request, res: Response): Promis
 
 // GET /checkin/:bookingId/travelers — ver viajeros registrados
 export async function getTravelersHandler(req: Request, res: Response): Promise<void> {
+  const { bookingId } = req.params as { bookingId: string };
+  if (!isValidObjectId(bookingId)) {
+    res.status(400).json({ success: false, message: 'ID no válido.' });
+    return;
+  }
   try {
-    const { bookingId } = req.params as { bookingId: string };
     const travelers = await checkinService.getTravelers(bookingId);
     res.status(200).json({ success: true, data: travelers });
   } catch (err) {

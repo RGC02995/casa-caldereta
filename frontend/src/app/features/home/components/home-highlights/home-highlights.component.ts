@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ScrollRevealDirective } from '../../../../shared/directives/scroll-reveal.directive';
 
 interface Highlight {
@@ -9,8 +10,7 @@ interface Highlight {
 
 @Component({
   selector: 'home-highlights',
-  standalone: true,
-  imports: [ScrollRevealDirective],
+  imports: [TranslatePipe, ScrollRevealDirective],
   templateUrl: './home-highlights.component.html',
   styleUrl: './home-highlights.component.scss',
 })

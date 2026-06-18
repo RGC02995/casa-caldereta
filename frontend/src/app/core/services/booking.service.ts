@@ -41,6 +41,10 @@ export class BookingService {
     return this.api.post<IBooking>(`bookings/${id}/refund`, {});
   }
 
+  getPriceEstimate(checkIn: string, checkOut: string): Observable<ApiResponse<{ totalPrice: number }>> {
+    return this.api.get<{ totalPrice: number }>(`bookings/price-estimate?checkIn=${checkIn}&checkOut=${checkOut}`);
+  }
+
   delete(id: string): Observable<ApiResponse<void>> {
     return this.api.delete<void>(`bookings/${id}`);
   }

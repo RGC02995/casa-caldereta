@@ -2,7 +2,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { format, isValid, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-@Pipe({ name: 'dateFormat', standalone: true, pure: true })
+@Pipe({ name: 'dateFormat', pure: true })
 export class DateFormatPipe implements PipeTransform {
   transform(
     value: Date | string | number | null | undefined,

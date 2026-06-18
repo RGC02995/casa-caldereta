@@ -1,6 +1,9 @@
-import { Component, HostListener, OnDestroy, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { fromEvent } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 interface NavLink {
   readonly labelKey: string;
@@ -10,13 +13,14 @@ interface NavLink {
 
 @Component({
   selector: 'site-header',
-  standalone: true,
   imports: [RouterLink, RouterLinkActive, TranslatePipe],
   templateUrl: './site-header.component.html',
   styleUrl: './site-header.component.scss',
 })
-export class SiteHeaderComponent implements OnDestroy {
+export class SiteHeaderComponent {
   private readonly translateService = inject(TranslateService);
+  private readonly destroyRef       = inject(DestroyRef);
+  private readonly document         = inject(DOCUMENT);
 
   readonly isScrolled       = signal(false);
   readonly isMobileMenuOpen = signal(false);
@@ -34,14 +38,16 @@ export class SiteHeaderComponent implements OnDestroy {
     this.isMobileMenuOpen() ? 'site-header--menu-open' : '',
   ].filter(Boolean).join(' '));
 
-  @HostListener('window:scroll', [])
-  onWindowScroll(): void {
-    this.isScrolled.set(window.scrollY > 50);
-  }
+  constructor() {
+    fromEvent(this.document.defaultView!, 'scroll')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.isScrolled.set(this.document.defaultView!.scrollY > 50));
 
-  @HostListener('document:keydown.escape')
-  onEscape(): void {
-    this.closeMobileMenu();
+    fromEvent<KeyboardEvent>(this.document, 'keydown')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(event => { if (event.key === 'Escape') this.closeMobileMenu(); });
+
+    this.destroyRef.onDestroy(() => { this.document.body.style.overflow = ''; });
   }
 
   toggleMobileMenu(): void {
@@ -58,9 +64,5 @@ export class SiteHeaderComponent implements OnDestroy {
   setLanguage(lang: 'es' | 'en'): void {
     this.currentLang.set(lang);
     this.translateService.use(lang);
-  }
-
-  ngOnDestroy(): void {
-    document.body.style.overflow = '';
   }
 }

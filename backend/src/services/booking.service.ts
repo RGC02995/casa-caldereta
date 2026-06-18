@@ -72,17 +72,27 @@ class BookingService {
     return doc ? withId(doc) : null;
   }
 
-  async create(data: ICreateBookingData): Promise<IBookingDocument> {
-    const checkIn  = new Date(data.checkIn);
-    const checkOut = new Date(data.checkOut);
+  async getEstimate(rawCheckIn: string, rawCheckOut: string): Promise<{ totalPrice: number }> {
+    const { checkIn, checkOut } = this.parseDates(rawCheckIn, rawCheckOut);
+    const rules      = await pricingRuleService.getOverlapping(checkIn, checkOut);
+    const totalPrice = this.calculateTotalPrice(checkIn, checkOut, rules);
+    return { totalPrice };
+  }
 
+  private parseDates(rawCheckIn: string, rawCheckOut: string): { checkIn: Date; checkOut: Date } {
+    const checkIn  = new Date(rawCheckIn);
+    const checkOut = new Date(rawCheckOut);
     if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) {
-      throw new Error('Fechas no válidas');
+      throw Object.assign(new Error('Fechas no válidas'), { code: 'INVALID_DATES' });
     }
-
     if (checkOut <= checkIn) {
-      throw new Error('La fecha de salida debe ser posterior a la de entrada');
+      throw Object.assign(new Error('La fecha de salida debe ser posterior a la de entrada'), { code: 'INVALID_DATES' });
     }
+    return { checkIn, checkOut };
+  }
+
+  async create(data: ICreateBookingData): Promise<IBookingDocument> {
+    const { checkIn, checkOut } = this.parseDates(data.checkIn, data.checkOut);
 
     const conflict = await BookingModel.findOne({
       status:  { $in: ['pending', 'confirmed'] },
@@ -133,15 +143,7 @@ class BookingService {
   // ─── Stripe ────────────────────────────────────────────────────────────────
 
   async createCheckoutSession(data: ICreateBookingData): Promise<ICheckoutSessionResult> {
-    const checkIn  = new Date(data.checkIn);
-    const checkOut = new Date(data.checkOut);
-
-    if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) {
-      throw new Error('Fechas no válidas');
-    }
-    if (checkOut <= checkIn) {
-      throw new Error('La fecha de salida debe ser posterior a la de entrada');
-    }
+    const { checkIn, checkOut } = this.parseDates(data.checkIn, data.checkOut);
 
     const now = new Date();
     const conflict = await BookingModel.findOne({
@@ -266,9 +268,9 @@ class BookingService {
     cursor.setHours(12, 0, 0, 0);
 
     while (cursor < checkOut) {
-      const rule = rules.find(r => {
-        const start = new Date(r.startDate);
-        const end   = new Date(r.endDate);
+      const rule = rules.find(pricingRule => {
+        const start = new Date(pricingRule.startDate);
+        const end   = new Date(pricingRule.endDate);
         start.setHours(0, 0, 0, 0);
         end.setHours(23, 59, 59, 999);
         return cursor >= start && cursor <= end;

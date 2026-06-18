@@ -1,4 +1,4 @@
-import { Component, OnInit, output, signal } from '@angular/core';
+import { Component, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 const CONSENT_STORAGE_KEY = 'casa-caldereta-cookie-consent';
@@ -12,12 +12,11 @@ export interface CookieConsent {
 
 @Component({
   selector: 'cookie-banner',
-  standalone: true,
   imports: [RouterLink],
   templateUrl: './cookie-banner.component.html',
   styleUrl: './cookie-banner.component.scss',
 })
-export class CookieBannerComponent implements OnInit {
+export class CookieBannerComponent {
   // ── Output ───────────────────────────────────────────────────────────────────
   readonly consentSaved = output<CookieConsent>();
 
@@ -27,7 +26,7 @@ export class CookieBannerComponent implements OnInit {
   readonly analyticsConsent = signal(false);
   readonly marketingConsent = signal(false);
 
-  ngOnInit(): void {
+  constructor() {
     const storedValue = localStorage.getItem(CONSENT_STORAGE_KEY);
     if (storedValue === null) {
       this.isVisible.set(true);

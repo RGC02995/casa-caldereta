@@ -20,7 +20,6 @@ const TYPE_LABELS: Record<RouteType, string> = {
 
 @Component({
   selector:    'route-detail-page',
-  standalone:  true,
   imports:     [RouterLink],
   templateUrl: './route-detail-page.component.html',
   styleUrl:    './route-detail-page.component.scss',

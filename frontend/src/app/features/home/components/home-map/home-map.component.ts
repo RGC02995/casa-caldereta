@@ -3,7 +3,6 @@ import { ScrollRevealDirective } from '../../../../shared/directives/scroll-reve
 
 @Component({
   selector: 'home-map',
-  standalone: true,
   imports: [ScrollRevealDirective],
   templateUrl: './home-map.component.html',
   styleUrl: './home-map.component.scss',

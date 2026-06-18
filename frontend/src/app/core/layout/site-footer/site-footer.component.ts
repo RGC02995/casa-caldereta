@@ -4,7 +4,6 @@ import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'site-footer',
-  standalone: true,
   imports: [RouterLink, TranslatePipe],
   templateUrl: './site-footer.component.html',
   styleUrl: './site-footer.component.scss',

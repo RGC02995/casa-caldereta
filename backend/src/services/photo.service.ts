@@ -29,9 +29,12 @@ class PhotoService {
           resource_type:  'image',
           transformation: [{ quality: 'auto', fetch_format: 'auto' }],
         },
-        (error, result) => {
-          if (error || !result) {
-            reject(error ?? new Error('Error desconocido al subir la imagen'));
+        (cloudinaryError, result) => {
+          if (cloudinaryError || !result) {
+            reject(Object.assign(
+              new Error(cloudinaryError?.message ?? 'Error desconocido al subir la imagen'),
+              { code: 'CLOUDINARY_UPLOAD_FAILED' },
+            ));
           } else {
             resolve(result);
           }
@@ -63,11 +66,10 @@ class PhotoService {
   }
 
   async delete(id: string): Promise<boolean> {
-    const photo = await PhotoModel.findById(id).lean<IPhotoDocument>();
+    const photo = await PhotoModel.findByIdAndDelete(id).lean<IPhotoDocument>();
     if (!photo) return false;
 
     await cloudinary.uploader.destroy(photo.publicId);
-    await PhotoModel.findByIdAndDelete(id);
     return true;
   }
 }

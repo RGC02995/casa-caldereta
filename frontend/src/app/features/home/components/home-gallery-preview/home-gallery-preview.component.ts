@@ -1,12 +1,12 @@
 import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ScrollRevealDirective } from '../../../../shared/directives/scroll-reveal.directive';
 import { IPhoto } from '../../../../core/models/photo.model';
 
 @Component({
   selector: 'home-gallery-preview',
-  standalone: true,
-  imports: [RouterLink, ScrollRevealDirective],
+  imports: [RouterLink, TranslatePipe, ScrollRevealDirective],
   templateUrl: './home-gallery-preview.component.html',
   styleUrl: './home-gallery-preview.component.scss',
 })

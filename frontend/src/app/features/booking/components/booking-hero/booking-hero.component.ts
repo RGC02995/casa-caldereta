@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'booking-hero',
-  standalone: true,
-  imports: [],
+  imports: [TranslatePipe],
   templateUrl: './booking-hero.component.html',
   styleUrl: './booking-hero.component.scss',
 })

@@ -1,14 +1,14 @@
 import { Component, inject, input, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
+import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 import { ScrollRevealDirective } from '../../../../shared/directives/scroll-reveal.directive';
 import { ReviewService } from '../../../../core/services/review.service';
 import { IReview, ICreateReview } from '../../../../core/models/review.model';
 
 @Component({
   selector: 'home-reviews',
-  standalone: true,
-  imports: [DatePipe, ScrollRevealDirective],
+  imports: [DatePipe, TranslatePipe, ScrollRevealDirective],
   templateUrl: './home-reviews.component.html',
   styleUrl: './home-reviews.component.scss',
 })
@@ -17,6 +17,7 @@ export class HomeReviewsComponent {
 
   private readonly reviewService = inject(ReviewService);
   private readonly destroyRef    = inject(DestroyRef);
+  private readonly translate     = inject(TranslateService);
 
   readonly reviewFormVisible = signal(false);
   readonly reviewFormSending = signal(false);
@@ -48,8 +49,16 @@ export class HomeReviewsComponent {
     const rating   = this.reviewRating();
     const text     = this.reviewText().trim();
 
-    if (!author || !location || !text || text.length < 10) {
-      this.reviewFormError.set('Por favor completa todos los campos (mínimo 10 caracteres en la reseña).');
+    if (!author || !location || !text) {
+      this.reviewFormError.set(this.translate.instant('home.reviews.errors.required'));
+      return;
+    }
+    if (text.length < 10) {
+      this.reviewFormError.set(this.translate.instant('home.reviews.errors.tooShort'));
+      return;
+    }
+    if (text.length > 800) {
+      this.reviewFormError.set(this.translate.instant('home.reviews.errors.tooLong', { count: text.length }));
       return;
     }
 
@@ -71,7 +80,7 @@ export class HomeReviewsComponent {
       },
       error: () => {
         this.reviewFormSending.set(false);
-        this.reviewFormError.set('No se pudo enviar la reseña. Inténtalo de nuevo más tarde.');
+        this.reviewFormError.set(this.translate.instant('home.reviews.errors.submit'));
       },
     });
   }

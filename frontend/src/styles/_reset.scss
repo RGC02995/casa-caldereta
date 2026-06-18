@@ -53,6 +53,8 @@ button  { cursor: pointer; }
 ul, ol  { list-style: none; }
 table   { border-collapse: collapse; }
 
+// !important obligatorio: debe anular animaciones a cualquier nivel de especificidad
+// para respetar la preferencia del sistema operativo del usuario (WCAG 2.1).
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

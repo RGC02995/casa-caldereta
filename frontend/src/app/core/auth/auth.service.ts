@@ -42,7 +42,7 @@ export class AuthService {
   logout(): void {
     this.http
       .post(`${this.apiUrl}/auth/logout`, {}, { withCredentials: true })
-      .subscribe();
+      .subscribe({ error: () => this.logger.info('Logout en backend omitido — sesión local ya limpia') });
     this.clearSession();
     void this.router.navigate(['/admin/login']);
   }

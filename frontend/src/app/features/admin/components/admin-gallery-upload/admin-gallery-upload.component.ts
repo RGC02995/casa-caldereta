@@ -5,7 +5,6 @@ import { PhotoCategory } from '../../../../core/models/photo.model';
 
 @Component({
   selector:    'admin-gallery-upload',
-  standalone:  true,
   imports:     [],
   templateUrl: './admin-gallery-upload.component.html',
   styleUrl:    './admin-gallery-upload.component.scss',

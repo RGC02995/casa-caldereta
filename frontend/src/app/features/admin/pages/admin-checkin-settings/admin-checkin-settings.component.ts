@@ -4,7 +4,6 @@ import { CheckinService } from '../../../../core/services/checkin.service';
 
 @Component({
   selector:    'admin-checkin-settings',
-  standalone:  true,
   imports:     [],
   templateUrl: './admin-checkin-settings.component.html',
   styleUrl:    './admin-checkin-settings.component.scss',

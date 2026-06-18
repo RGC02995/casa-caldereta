@@ -1,3 +1,5 @@
+import { BookingStatus } from './booking.model';
+
 export type TipoDocumento = 'DNI' | 'NIE' | 'Pasaporte' | 'Permiso de residencia' | 'Otro';
 export type Sexo = 'H' | 'M';
 
@@ -8,11 +10,13 @@ export interface ICheckinSettings {
 }
 
 export interface ITodayBookingItem {
-  readonly id:           string;
-  readonly guestName:    string;
-  readonly checkIn:      string;
-  readonly checkOut:     string;
-  readonly guests:       number;
+  readonly id:            string;
+  readonly guestName:     string;
+  readonly checkIn:       string;
+  readonly checkOut:      string;
+  readonly guests:        number;
+  readonly status:        BookingStatus;
+  readonly totalPrice:    number;
   readonly checkedInAt?:  string;
   readonly checkedOutAt?: string;
 }

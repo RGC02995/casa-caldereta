@@ -1,6 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map, catchError, of, switchMap, timer } from 'rxjs';
+import { map, catchError, of } from 'rxjs';
 import { PhotoService } from '../../../../core/services/photo.service';
 import { RouteService } from '../../../../core/services/route.service';
 import { ReviewService } from '../../../../core/services/review.service';
@@ -17,11 +17,8 @@ import { HomeMapComponent } from '../../components/home-map/home-map.component';
 import { HomeRoutesPreviewComponent } from '../../components/home-routes-preview/home-routes-preview.component';
 import { HomeBookingCtaComponent } from '../../components/home-booking-cta/home-booking-cta.component';
 
-const POLL_INTERVAL_MS = 60_000;
-
 @Component({
   selector: 'home-page',
-  standalone: true,
   imports: [
     HomeHeroComponent,
     HomeHighlightsComponent,
@@ -50,11 +47,9 @@ export class HomePageComponent {
   }
 
   private readonly _photos = toSignal(
-    timer(0, POLL_INTERVAL_MS).pipe(
-      switchMap(() => this.photoService.getAll().pipe(
-        map(response => response.data),
-        catchError(() => of([] as IPhoto[])),
-      )),
+    this.photoService.getAll().pipe(
+      map(response => response.data),
+      catchError(() => of([] as IPhoto[])),
     ),
     { initialValue: [] as IPhoto[] },
   );
@@ -68,11 +63,9 @@ export class HomePageComponent {
   );
 
   private readonly _reviews = toSignal(
-    timer(0, POLL_INTERVAL_MS).pipe(
-      switchMap(() => this.reviewService.getApproved().pipe(
-        map(response => response.data),
-        catchError(() => of([] as IReview[])),
-      )),
+    this.reviewService.getApproved().pipe(
+      map(response => response.data),
+      catchError(() => of([] as IReview[])),
     ),
     { initialValue: [] as IReview[] },
   );

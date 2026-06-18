@@ -13,7 +13,6 @@ import { AdminCalendarPanelComponent } from '../../components/admin-calendar-pan
 
 @Component({
   selector:    'admin-calendar',
-  standalone:  true,
   imports:     [AdminCalendarViewComponent, AdminCalendarPanelComponent],
   templateUrl: './admin-calendar.component.html',
   styleUrl:    './admin-calendar.component.scss',
@@ -27,12 +26,10 @@ export class AdminCalendarComponent {
   readonly viewYear   = signal(new Date().getFullYear());
   readonly viewMonth  = signal(new Date().getMonth());
 
-  private readonly pricingRefresh$  = new BehaviorSubject<void>(undefined);
-  private readonly blockedRefresh$  = new BehaviorSubject<void>(undefined);
-  private readonly bookingsRefresh$ = new BehaviorSubject<void>(undefined);
+  private readonly refresh$ = new BehaviorSubject<void>(undefined);
 
   readonly pricingRules = toSignal(
-    this.pricingRefresh$.pipe(
+    this.refresh$.pipe(
       switchMap(() => this.pricingService.getAll().pipe(
         map(response => response.data),
         catchError(() => {
@@ -45,7 +42,7 @@ export class AdminCalendarComponent {
   );
 
   readonly blockedPeriods = toSignal(
-    this.blockedRefresh$.pipe(
+    this.refresh$.pipe(
       switchMap(() => this.blockedService.getAll().pipe(
         map(response => response.data),
         catchError(() => of([] as IBlockedPeriod[])),
@@ -55,11 +52,9 @@ export class AdminCalendarComponent {
   );
 
   readonly allBookings = toSignal(
-    this.bookingsRefresh$.pipe(
-      switchMap(() => this.bookingService.getAll().pipe(
-        map(response => response.data),
-        catchError(() => of([] as IBooking[])),
-      )),
+    this.bookingService.getAll().pipe(
+      map(response => response.data),
+      catchError(() => of([] as IBooking[])),
     ),
     { initialValue: [] as IBooking[] },
   );
@@ -146,6 +141,6 @@ export class AdminCalendarComponent {
     }
   }
 
-  onPricingChanged(): void { this.pricingRefresh$.next(); }
-  onBlockedChanged(): void { this.blockedRefresh$.next(); }
+  onPricingChanged(): void { this.refresh$.next(); }
+  onBlockedChanged(): void { this.refresh$.next(); }
 }

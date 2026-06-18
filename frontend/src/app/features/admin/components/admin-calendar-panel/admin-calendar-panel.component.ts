@@ -9,7 +9,6 @@ import { IBlockedPeriod } from '../../../../core/models/blocked-period.model';
 
 @Component({
   selector:    'admin-calendar-panel',
-  standalone:  true,
   imports:     [DatePipe, CurrencyPipe],
   templateUrl: './admin-calendar-panel.component.html',
   styleUrl:    './admin-calendar-panel.component.scss',

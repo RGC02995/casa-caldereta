@@ -1,9 +1,10 @@
 import {
   Component,
+  DestroyRef,
   ElementRef,
-  OnDestroy,
   computed,
   effect,
+  inject,
   input,
   output,
   viewChild,
@@ -13,12 +14,11 @@ export type ModalSize = 'sm' | 'md' | 'lg';
 
 @Component({
   selector: 'modal',
-  standalone: true,
   imports: [],
   templateUrl: './modal.component.html',
   styleUrl: './modal.component.scss',
 })
-export class ModalComponent implements OnDestroy {
+export class ModalComponent {
   // ── Inputs ─────────────────────────────────────────────────────────────────
   readonly isOpen = input.required<boolean>();
   readonly title  = input('');
@@ -37,17 +37,22 @@ export class ModalComponent implements OnDestroy {
   );
 
   constructor() {
-    // Sincroniza el estado Angular (isOpen signal) con la API nativa del <dialog>
+    const destroyRef = inject(DestroyRef);
+
     effect(() => {
       const dialogNativeElem = this.dialogElem()?.nativeElement;
       if (!dialogNativeElem) return;
 
       if (this.isOpen()) {
-        // showModal() abre como modal: activa top layer, focus trap y backdrop nativo
         if (!dialogNativeElem.open) dialogNativeElem.showModal();
       } else {
         if (dialogNativeElem.open) dialogNativeElem.close();
       }
+    });
+
+    destroyRef.onDestroy(() => {
+      const dialogNativeElem = this.dialogElem()?.nativeElement;
+      if (dialogNativeElem?.open) dialogNativeElem.close();
     });
   }
 
@@ -70,8 +75,5 @@ export class ModalComponent implements OnDestroy {
     this.close();
   }
 
-  ngOnDestroy(): void {
-    const dialogNativeElem = this.dialogElem()?.nativeElement;
-    if (dialogNativeElem?.open) dialogNativeElem.close();
-  }
+
 }

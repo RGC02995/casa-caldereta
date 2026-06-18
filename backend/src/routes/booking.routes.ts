@@ -3,6 +3,7 @@ import {
   getAllBookingsHandler,
   getUpcomingBookingsHandler,
   getAvailabilityHandler,
+  getPriceEstimateHandler,
   getBookingByIdHandler,
   createBookingHandler,
   updateBookingStatusHandler,
@@ -18,7 +19,8 @@ const bookingRouter = Router();
 bookingRouter.get('/',             requireAuth, getAllBookingsHandler);
 bookingRouter.get('/upcoming',     requireAuth, getUpcomingBookingsHandler);
 // /availability y /checkout declarados antes de /:id para que Express no los interprete como params
-bookingRouter.get('/availability', publicRateLimiter,   getAvailabilityHandler);
+bookingRouter.get('/availability',    publicRateLimiter,   getAvailabilityHandler);
+bookingRouter.get('/price-estimate', publicRateLimiter,   getPriceEstimateHandler);
 bookingRouter.post('/checkout',    checkoutRateLimiter, createCheckoutSessionHandler);
 bookingRouter.get('/:id',          requireAuth, getBookingByIdHandler);
 // POST / ahora solo admin — para reservas manuales sin Stripe

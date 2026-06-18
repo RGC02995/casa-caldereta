@@ -46,6 +46,15 @@ function formatDateTime(): string {
   });
 }
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 // ─── Bloques de HTML reutilizables ───────────────────────────────────────────
 
 function emailWrapper(title: string, bodyHtml: string): string {
@@ -117,10 +126,13 @@ function detailsTable({ booking, checkIn, checkOut }: ITemplateData): string {
 
 function ownerNewBookingHtml(data: ITemplateData): string {
   const { booking } = data;
+  const guestName  = escapeHtml(booking.guestName);
+  const guestEmail = escapeHtml(booking.guestEmail);
+  const guestPhone = escapeHtml(booking.guestPhone);
   const notesBlock  = booking.notes
     ? `<div style="margin-top:20px;padding:16px;background:#F9F7F4;border-left:3px solid #C9A96E;">
         <p style="margin:0;font-family:Arial,sans-serif;font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;">Notas del hu&#233;sped</p>
-        <p style="margin:8px 0 0;font-family:Arial,sans-serif;font-size:13px;color:#555;">${booking.notes}</p>
+        <p style="margin:8px 0 0;font-family:Arial,sans-serif;font-size:13px;color:#555;">${escapeHtml(booking.notes)}</p>
        </div>`
     : '';
 
@@ -128,11 +140,11 @@ function ownerNewBookingHtml(data: ITemplateData): string {
     'Nueva solicitud de reserva',
     `<h2 style="margin:0 0 4px;font-size:20px;font-weight:400;color:#2C2C2C;">Nueva solicitud de reserva</h2>
     <p style="margin:0 0 24px;font-size:12px;color:#999;font-family:Arial,sans-serif;">Recibida el ${formatDateTime()}</p>
-    <p style="margin:0 0 4px;font-size:16px;color:#2C2C2C;"><strong>${booking.guestName}</strong></p>
+    <p style="margin:0 0 4px;font-size:16px;color:#2C2C2C;"><strong>${guestName}</strong></p>
     <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:13px;color:#666;">
-      <a href="mailto:${booking.guestEmail}" style="color:#C9A96E;text-decoration:none;">${booking.guestEmail}</a>
+      <a href="mailto:${guestEmail}" style="color:#C9A96E;text-decoration:none;">${guestEmail}</a>
     </p>
-    <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:13px;color:#666;">${booking.guestPhone}</p>
+    <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:13px;color:#666;">${guestPhone}</p>
     ${detailsTable(data)}
     ${notesBlock}`,
   );
@@ -140,10 +152,13 @@ function ownerNewBookingHtml(data: ITemplateData): string {
 
 function ownerPaymentReceivedHtml(data: ITemplateData): string {
   const { booking } = data;
+  const guestName  = escapeHtml(booking.guestName);
+  const guestEmail = escapeHtml(booking.guestEmail);
+  const guestPhone = escapeHtml(booking.guestPhone);
   const notesBlock  = booking.notes
     ? `<div style="margin-top:20px;padding:16px;background:#F9F7F4;border-left:3px solid #C9A96E;">
         <p style="margin:0;font-family:Arial,sans-serif;font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;">Notas del hu&#233;sped</p>
-        <p style="margin:8px 0 0;font-family:Arial,sans-serif;font-size:13px;color:#555;">${booking.notes}</p>
+        <p style="margin:8px 0 0;font-family:Arial,sans-serif;font-size:13px;color:#555;">${escapeHtml(booking.notes)}</p>
        </div>`
     : '';
 
@@ -151,11 +166,11 @@ function ownerPaymentReceivedHtml(data: ITemplateData): string {
     'Pago recibido — reserva confirmada',
     `<h2 style="margin:0 0 4px;font-size:20px;font-weight:400;color:#2C2C2C;">&#10003; Pago recibido — Reserva confirmada</h2>
     <p style="margin:0 0 24px;font-size:12px;color:#999;font-family:Arial,sans-serif;">Confirmada el ${formatDateTime()}</p>
-    <p style="margin:0 0 4px;font-size:16px;color:#2C2C2C;"><strong>${booking.guestName}</strong></p>
+    <p style="margin:0 0 4px;font-size:16px;color:#2C2C2C;"><strong>${guestName}</strong></p>
     <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:13px;color:#666;">
-      <a href="mailto:${booking.guestEmail}" style="color:#C9A96E;text-decoration:none;">${booking.guestEmail}</a>
+      <a href="mailto:${guestEmail}" style="color:#C9A96E;text-decoration:none;">${guestEmail}</a>
     </p>
-    <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:13px;color:#666;">${booking.guestPhone}</p>
+    <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:13px;color:#666;">${guestPhone}</p>
     <div style="margin-top:12px;padding:10px 14px;background:#F0FDF4;border-left:3px solid #22C55E;font-family:Arial,sans-serif;font-size:12px;color:#166534;">
       El pago ha sido procesado autom&#225;ticamente por Stripe. No es necesaria ninguna acci&#243;n adicional.
     </div>
@@ -170,7 +185,7 @@ function guestRefundCancellationHtml(data: ITemplateData): string {
     'Reserva cancelada y reembolso procesado',
     `<h2 style="margin:0 0 16px;font-size:20px;font-weight:400;color:#2C2C2C;">Reserva cancelada</h2>
     <p style="margin:0 0 20px;font-size:14px;color:#555;font-family:Arial,sans-serif;line-height:1.7;">
-      Hola, <strong>${booking.guestName}</strong>. Tu reserva en <strong>Casa Caldereta</strong> ha sido cancelada
+      Hola, <strong>${escapeHtml(booking.guestName)}</strong>. Tu reserva en <strong>Casa Caldereta</strong> ha sido cancelada
       y el importe abonado ha sido reembolsado &#237;ntegramente. El reembolso puede tardar entre 5 y 10 d&#237;as h&#225;biles
       en aparecer en tu estado de cuenta.
     </p>
@@ -185,7 +200,7 @@ function guestBookingReceivedHtml(data: ITemplateData): string {
   const { booking } = data;
   return emailWrapper(
     'Hemos recibido tu solicitud',
-    `<h2 style="margin:0 0 16px;font-size:20px;font-weight:400;color:#2C2C2C;">Hola, ${booking.guestName}</h2>
+    `<h2 style="margin:0 0 16px;font-size:20px;font-weight:400;color:#2C2C2C;">Hola, ${escapeHtml(booking.guestName)}</h2>
     <p style="margin:0 0 20px;font-size:14px;color:#555;font-family:Arial,sans-serif;line-height:1.7;">
       Hemos recibido correctamente tu solicitud de reserva en <strong>Casa Caldereta</strong>.
       Revisaremos la disponibilidad y nos pondremos en contacto contigo en las pr&#243;ximas horas para confirmar.
@@ -202,7 +217,7 @@ function guestPreArrivalHtml(data: IPreArrivalTemplateData): string {
   const { booking, checkIn, checkOut, formUrl, checkInTime, checkOutTime } = data;
   return emailWrapper(
     'Preparativos para tu estancia',
-    `<h2 style="margin:0 0 16px;font-size:20px;font-weight:400;color:#2C2C2C;">Hola, ${booking.guestName}</h2>
+    `<h2 style="margin:0 0 16px;font-size:20px;font-weight:400;color:#2C2C2C;">Hola, ${escapeHtml(booking.guestName)}</h2>
     <p style="margin:0 0 20px;font-size:14px;color:#555;font-family:Arial,sans-serif;line-height:1.7;">
       Tu estancia en <strong>Casa Caldereta</strong> comienza en pocos d&#237;as.
       Aqu&#237; tienes toda la informaci&#243;n que necesitas para una llegada sin contratiempos.
@@ -248,7 +263,7 @@ function guestStatusUpdateHtml(data: IStatusTemplateData): string {
       'Reserva confirmada',
       `<h2 style="margin:0 0 16px;font-size:20px;font-weight:400;color:#2C2C2C;">&#10003; Reserva confirmada</h2>
       <p style="margin:0 0 20px;font-size:14px;color:#555;font-family:Arial,sans-serif;line-height:1.7;">
-        Hola, <strong>${booking.guestName}</strong>. Nos complace confirmarte que tu reserva en
+        Hola, <strong>${escapeHtml(booking.guestName)}</strong>. Nos complace confirmarte que tu reserva en
         <strong>Casa Caldereta</strong> est&#225; confirmada. &#161;Te esperamos con los brazos abiertos!
       </p>
       ${detailsTable(data)}
@@ -265,7 +280,7 @@ function guestStatusUpdateHtml(data: IStatusTemplateData): string {
     'Reserva cancelada',
     `<h2 style="margin:0 0 16px;font-size:20px;font-weight:400;color:#2C2C2C;">Reserva cancelada</h2>
     <p style="margin:0 0 20px;font-size:14px;color:#555;font-family:Arial,sans-serif;line-height:1.7;">
-      Hola, <strong>${booking.guestName}</strong>. Lamentamos informarte de que tu reserva en
+      Hola, <strong>${escapeHtml(booking.guestName)}</strong>. Lamentamos informarte de que tu reserva en
       <strong>Casa Caldereta</strong> ha sido cancelada. Si tienes alguna pregunta al respecto,
       por favor con&#769;tactanos.
     </p>

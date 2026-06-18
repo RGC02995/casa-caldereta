@@ -2,8 +2,6 @@ import { Request, Response } from 'express';
 import { isValidObjectId } from 'mongoose';
 import { reviewService, ICreateReviewData } from '../services/review.service';
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 export async function getApprovedReviewsHandler(_req: Request, res: Response): Promise<void> {
   try {
     const reviews = await reviewService.getApproved();

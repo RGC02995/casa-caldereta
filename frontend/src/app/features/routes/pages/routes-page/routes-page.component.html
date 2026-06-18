@@ -1,9 +1,9 @@
 <!-- ── CABECERA ─────────────────────────────────────────────────────────────── -->
 <section class="routes-hero">
   <div class="routes-hero__inner">
-    <p class="routes-hero__label">Aielo de Rugat · Vall d'Albaida</p>
-    <h1 class="routes-hero__title">Rutas &amp;<br>actividades</h1>
-    <p class="routes-hero__subtitle">Descubre los alrededores de Casa Caldereta</p>
+    <p class="routes-hero__label">{{ 'routes.heroLabel' | translate }}</p>
+    <h1 class="routes-hero__title">{{ 'routes.title' | translate }}</h1>
+    <p class="routes-hero__subtitle">{{ 'routes.subtitle' | translate }}</p>
   </div>
 </section>
 
@@ -12,21 +12,21 @@
   <div class="routes-section__inner">
 
     @if (isLoading()) {
-      <p class="routes-state" aria-busy="true" role="status">Cargando rutas…</p>
+      <p class="routes-state" aria-busy="true" role="status">{{ 'routes.loading' | translate }}</p>
 
     } @else if (loadError()) {
-      <p class="routes-state routes-state--error" role="alert">{{ loadError() }}</p>
+      <p class="routes-state routes-state--error" role="alert">{{ loadError() | translate }}</p>
 
     } @else if (routes().length === 0) {
-      <p class="routes-state routes-state--empty">Las rutas estarán disponibles próximamente.</p>
+      <p class="routes-state routes-state--empty">{{ 'routes.empty' | translate }}</p>
 
     } @else {
 
-      <ul class="routes-grid" aria-label="Rutas y actividades disponibles">
+      <ul class="routes-grid" [attr.aria-label]="'routes.title' | translate">
         @for (route of routes(); track route.id; let i = $index) {
           <li class="routes-card" scrollReveal [delay]="i * 100">
 
-            <a class="routes-card__link" [routerLink]="['/rutas', route.slug]" [attr.aria-label]="'Ver ruta: ' + route.title">
+            <a class="routes-card__link" [routerLink]="['/rutas', route.slug]" [attr.aria-label]="('routes.viewRoute' | translate) + route.title">
 
               <div class="routes-card__img-wrap">
                 @if (route.coverImageUrl) {
@@ -48,7 +48,7 @@
               </div>
 
               <div class="routes-card__body">
-                <p class="routes-card__type">{{ typeLabel(route.type) }}</p>
+                <p class="routes-card__type">{{ typeLabel(route.type) | translate }}</p>
                 <h2 class="routes-card__title">{{ route.title }}</h2>
                 <p class="routes-card__desc">{{ route.description }}</p>
                 <p class="routes-card__meta">
@@ -57,7 +57,7 @@
                     [class.routes-card__difficulty--easy]="route.difficulty === 'easy'"
                     [class.routes-card__difficulty--moderate]="route.difficulty === 'moderate'"
                     [class.routes-card__difficulty--hard]="route.difficulty === 'hard'"
-                  ><span class="routes-card__difficulty-dot" aria-hidden="true"></span>{{ difficultyLabel(route.difficulty) }}</span>
+                  ><span class="routes-card__difficulty-dot" aria-hidden="true"></span>{{ difficultyLabel(route.difficulty) | translate }}</span>
                   <span class="routes-card__sep" aria-hidden="true">·</span>
                   <span>{{ route.distance }} km</span>
                   <span class="routes-card__sep" aria-hidden="true">·</span>

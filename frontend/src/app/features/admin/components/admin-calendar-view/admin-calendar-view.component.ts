@@ -16,7 +16,6 @@ export interface IAdminCalendarDay {
 
 @Component({
   selector:    'admin-calendar-view',
-  standalone:  true,
   imports:     [CurrencyPipe],
   templateUrl: './admin-calendar-view.component.html',
   styleUrl:    './admin-calendar-view.component.scss',

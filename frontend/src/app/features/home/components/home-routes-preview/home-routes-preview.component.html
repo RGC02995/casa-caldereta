@@ -1,8 +1,8 @@
 <section class="home-routes">
   <div class="home-routes__inner">
     <header class="home-routes__header" scrollReveal>
-      <p class="home-routes__label">Alrededores</p>
-      <h2 class="home-routes__title">Qué hacer cerca</h2>
+      <p class="home-routes__label">{{ 'home.routesPreview.label' | translate }}</p>
+      <h2 class="home-routes__title">{{ 'home.routesPreview.title' | translate }}</h2>
     </header>
     <ul class="home-routes__grid">
       @for (route of routes(); track route.id; let i = $index) {
@@ -24,7 +24,7 @@
                 </svg>
               </div>
             }
-            <span class="home-routes__card-badge">{{ typeLabel(route.type) }}</span>
+            <span class="home-routes__card-badge">{{ typeLabel(route.type) | translate }}</span>
           </div>
           <div class="home-routes__card-body">
             <h3 class="home-routes__card-title">{{ route.title }}</h3>
@@ -42,7 +42,7 @@
                   <path d="M10 14l2-4 2 4"/>
                 </svg>
               </div>
-              <span class="home-routes__card-badge">{{ fallback.tag }}</span>
+              <span class="home-routes__card-badge">{{ fallback.tag | translate }}</span>
             </div>
             <div class="home-routes__card-body">
               <h3 class="home-routes__card-title">{{ fallback.title }}</h3>
@@ -54,7 +54,7 @@
     </ul>
     <div class="home-routes__footer">
       <a routerLink="/rutas" class="home-section-link">
-        Ver todas las rutas
+        {{ 'home.routesPreview.cta' | translate }}
         <span class="home-section-link__arrow" aria-hidden="true">→</span>
       </a>
     </div>

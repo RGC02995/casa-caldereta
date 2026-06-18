@@ -6,7 +6,7 @@ export interface IBooking {
   readonly checkOut:   string;
   readonly guestName:  string;
   readonly guestEmail: string;
-  readonly guestPhone?: string;
+  readonly guestPhone: string;
   readonly guests:     number;
   readonly totalPrice: number;
   readonly status:                 BookingStatus;

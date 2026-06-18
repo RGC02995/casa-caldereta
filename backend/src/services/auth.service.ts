@@ -5,7 +5,21 @@ import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/
 import { ILoginRequest, IAuthTokenPair } from '../types/auth.types';
 import { RefreshTokenModel } from '../models/refresh-token.model';
 
-const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+function parseDurationMs(duration: string): number {
+  const match = /^(\d+)(ms|s|m|h|d)$/.exec(duration);
+  if (!match) return 7 * 24 * 60 * 60 * 1000;
+  const value = parseInt(match[1], 10);
+  switch (match[2]) {
+    case 'ms': return value;
+    case 's':  return value * 1000;
+    case 'm':  return value * 60 * 1000;
+    case 'h':  return value * 60 * 60 * 1000;
+    case 'd':  return value * 24 * 60 * 60 * 1000;
+    default:   return 7 * 24 * 60 * 60 * 1000;
+  }
+}
+
+const REFRESH_TTL_MS = parseDurationMs(env.jwtRefreshExpiresIn);
 
 function tokenExpiry(): Date {
   return new Date(Date.now() + REFRESH_TTL_MS);

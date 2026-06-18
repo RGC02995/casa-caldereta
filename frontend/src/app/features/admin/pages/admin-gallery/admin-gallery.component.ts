@@ -14,7 +14,6 @@ type CategoryFilter = 'all' | PhotoCategory;
 
 @Component({
   selector:    'admin-gallery',
-  standalone:  true,
   imports:     [AdminGalleryUploadComponent, AdminGalleryGridComponent],
   templateUrl: './admin-gallery.component.html',
   styleUrl:    './admin-gallery.component.scss',

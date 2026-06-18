@@ -1,9 +1,9 @@
 <!-- ── CABECERA ─────────────────────────────────────────────────────────────── -->
 <section class="gallery-hero">
   <div class="gallery-hero__inner">
-    <p class="gallery-hero__label">Casa Caldereta</p>
-    <h1 class="gallery-hero__title">Galería</h1>
-    <p class="gallery-hero__subtitle">Descubre cada rincón de la casa</p>
+    <p class="gallery-hero__label">{{ 'gallery.heroLabel' | translate }}</p>
+    <h1 class="gallery-hero__title">{{ 'gallery.title' | translate }}</h1>
+    <p class="gallery-hero__subtitle">{{ 'gallery.subtitle' | translate }}</p>
   </div>
 </section>
 
@@ -12,7 +12,7 @@
 
   @if (isLoading()) {
     <div class="gallery-body__center">
-      <div class="gallery-skeleton" aria-label="Cargando imágenes…" aria-busy="true" role="status">
+      <div class="gallery-skeleton" [attr.aria-label]="'gallery.loadingAria' | translate" aria-busy="true" role="status">
         @for (item of [1,2,3,4,5,6,7,8]; track item) {
           <div class="gallery-skeleton__item"></div>
         }
@@ -21,21 +21,21 @@
 
   } @else if (loadError()) {
     <div class="gallery-body__center">
-      <p class="gallery-state gallery-state--error" role="alert">{{ loadError() }}</p>
+      <p class="gallery-state gallery-state--error" role="alert">{{ loadError() | translate }}</p>
     </div>
 
   } @else if (photoSections().length === 0) {
     <div class="gallery-body__center">
-      <p class="gallery-state">Las imágenes estarán disponibles próximamente.</p>
+      <p class="gallery-state">{{ 'gallery.empty' | translate }}</p>
     </div>
 
   } @else {
 
     @for (section of photoSections(); track section.category) {
-      <article class="gallery-section" [attr.aria-label]="section.label">
+      <article class="gallery-section" [attr.aria-label]="section.label | translate">
         <div class="gallery-section__inner">
 
-          <h2 class="gallery-section__title">{{ section.label }}</h2>
+          <h2 class="gallery-section__title">{{ section.label | translate }}</h2>
 
           <ul class="gallery-section__grid">
             @for (photo of section.photos; track photo.id; let i = $index) {
@@ -47,7 +47,7 @@
                   type="button"
                   class="gallery-section__btn"
                   (click)="openLightbox(section.offset + i)"
-                  [attr.aria-label]="'Abrir foto: ' + photo.alt"
+                  [attr.aria-label]="('gallery.openPhoto' | translate) + photo.alt"
                 >
                   <img
                     class="gallery-section__img"

@@ -5,7 +5,6 @@ import { IPhoto } from '../../../../core/models/photo.model';
 
 @Component({
   selector: 'home-hero',
-  standalone: true,
   imports: [RouterLink, TranslatePipe],
   templateUrl: './home-hero.component.html',
   styleUrl: './home-hero.component.scss',

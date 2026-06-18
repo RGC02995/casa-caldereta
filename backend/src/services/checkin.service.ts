@@ -61,16 +61,11 @@ class CheckinService {
     const expiresAt = new Date(booking.checkIn);
     expiresAt.setHours(23, 59, 59, 999);
 
-    await BookingModel.findByIdAndUpdate(bookingId, {
-      guestFormToken:          hashedToken,
-      guestFormTokenExpiresAt: expiresAt,
-      guestFormSubmittedAt:    null,  // reset si se reenvía
-    });
-
     const settings = await this.getSettings();
     const formUrl  = `${env.frontendUrl}/checkin/${rawToken}`;
 
-    // Email con enlace al formulario — el rawToken nunca se almacena, solo se envía por email
+    // Email primero — si falla, no se escribe nada en BD y el cron reintenta al día siguiente
+    // El rawToken nunca se almacena, solo se envía por email
     await emailService.sendPreArrivalEmail(
       withId(booking),
       formUrl,
@@ -78,7 +73,13 @@ class CheckinService {
       settings.checkOutTime,
     );
 
-    await BookingModel.findByIdAndUpdate(bookingId, { preArrivalEmailSentAt: new Date() });
+    // Una sola escritura tras el email exitoso: token + preArrivalEmailSentAt juntos
+    await BookingModel.findByIdAndUpdate(bookingId, {
+      guestFormToken:          hashedToken,
+      guestFormTokenExpiresAt: expiresAt,
+      guestFormSubmittedAt:    null,  // reset si se reenvía
+      preArrivalEmailSentAt:   new Date(),
+    });
   }
 
   // Público: valida el token del huésped; devuelve info de la reserva sin datos sensibles
@@ -132,18 +133,18 @@ class CheckinService {
       throw Object.assign(new Error('El número de viajeros supera los declarados en la reserva'), { code: 'VALIDATION' });
     }
 
-    const travelerDocs = travelers.map(t => ({
+    const travelerDocs = travelers.map(travelerInput => ({
       bookingId:       booking._id,
-      tipoDocumento:   t.tipoDocumento,
-      numDocumento:    t.numDocumento,
-      numSoporte:      t.numSoporte,
-      apellido1:       t.apellido1,
-      apellido2:       t.apellido2,
-      nombre:          t.nombre,
-      sexo:            t.sexo,
-      fechaNacimiento: new Date(t.fechaNacimiento),
-      pais:            t.pais,
-      paisResidencia:  t.paisResidencia,
+      tipoDocumento:   travelerInput.tipoDocumento,
+      numDocumento:    travelerInput.numDocumento,
+      numSoporte:      travelerInput.numSoporte,
+      apellido1:       travelerInput.apellido1,
+      apellido2:       travelerInput.apellido2,
+      nombre:          travelerInput.nombre,
+      sexo:            travelerInput.sexo,
+      fechaNacimiento: new Date(travelerInput.fechaNacimiento),
+      pais:            travelerInput.pais,
+      paisResidencia:  travelerInput.paisResidencia,
       fechaEntrada:    booking.checkIn,
     }));
 

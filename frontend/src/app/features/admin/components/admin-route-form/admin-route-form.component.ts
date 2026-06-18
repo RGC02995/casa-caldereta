@@ -46,7 +46,6 @@ const EMPTY_FORM: IRouteForm = {
 
 @Component({
   selector:    'admin-route-form',
-  standalone:  true,
   imports:     [],
   templateUrl: './admin-route-form.component.html',
   styleUrl:    './admin-route-form.component.scss',

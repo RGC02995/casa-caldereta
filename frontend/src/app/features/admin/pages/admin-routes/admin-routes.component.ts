@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal, DestroyRef } from '@angular/core';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { BehaviorSubject, switchMap, of } from 'rxjs';
+import { BehaviorSubject, switchMap, concatMap, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { RouteService } from '../../../../core/services/route.service';
 import { IRoute } from '../../../../core/models/route.model';
@@ -11,7 +11,6 @@ type FormMode = 'hidden' | 'create' | 'edit';
 
 @Component({
   selector:    'admin-routes',
-  standalone:  true,
   imports:     [AdminRouteFormComponent, AdminRouteListComponent],
   templateUrl: './admin-routes.component.html',
   styleUrl:    './admin-routes.component.scss',
@@ -65,6 +64,7 @@ export class AdminRoutesComponent {
   }
 
   onFormSubmit(event: IRouteFormSubmitEvent): void {
+    if (this.isSubmitting()) return;
     this.isSubmitting.set(true);
     this.actionError.set('');
 
@@ -76,10 +76,15 @@ export class AdminRoutesComponent {
       : this.routeService.update(currentRoute!.id, event.payload);
 
     saveRequest.pipe(
-      switchMap(response => {
+      concatMap(response => {
         const routeId = currentFormMode === 'create' ? response.data.id : currentRoute!.id;
         return event.coverImageFile
-          ? this.routeService.uploadCoverImage(routeId, event.coverImageFile)
+          ? this.routeService.uploadCoverImage(routeId, event.coverImageFile).pipe(
+              catchError(() => {
+                this.actionError.set('Ruta guardada, pero la imagen de portada no se pudo subir.');
+                return of(null);
+              }),
+            )
           : of(null);
       }),
       takeUntilDestroyed(this.destroyRef),

@@ -4,7 +4,6 @@ import { UserRole } from '../../core/models/user.model';
 
 @Directive({
   selector: '[hasPermission]',
-  standalone: true,
 })
 export class HasPermissionDirective {
   private readonly templateRef      = inject(TemplateRef<unknown>);

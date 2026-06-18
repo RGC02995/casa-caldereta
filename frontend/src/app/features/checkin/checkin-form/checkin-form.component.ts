@@ -37,7 +37,6 @@ function emptyTraveler(): TravelerFormData {
 
 @Component({
   selector:    'checkin-form',
-  standalone:  true,
   imports:     [],
   templateUrl: './checkin-form.component.html',
   styleUrl:    './checkin-form.component.scss',
@@ -117,19 +116,19 @@ export class CheckinFormComponent {
       return;
     }
 
-    const payload: ITravelerInput[] = this.travelers().map(t => {
+    const payload: ITravelerInput[] = this.travelers().map(travelerData => {
       const input: ITravelerInput = {
-        tipoDocumento:   t.tipoDocumento,
-        numDocumento:    t.numDocumento.trim(),
-        apellido1:       t.apellido1.trim(),
-        nombre:          t.nombre.trim(),
-        sexo:            t.sexo as Sexo,
-        fechaNacimiento: t.fechaNacimiento,
-        pais:            t.pais.trim(),
+        tipoDocumento:   travelerData.tipoDocumento,
+        numDocumento:    travelerData.numDocumento.trim(),
+        apellido1:       travelerData.apellido1.trim(),
+        nombre:          travelerData.nombre.trim(),
+        sexo:            travelerData.sexo as Sexo,
+        fechaNacimiento: travelerData.fechaNacimiento,
+        pais:            travelerData.pais.trim(),
       };
-      if (t.numSoporte.trim())     input.numSoporte    = t.numSoporte.trim();
-      if (t.apellido2.trim())      input.apellido2     = t.apellido2.trim();
-      if (t.paisResidencia.trim()) input.paisResidencia = t.paisResidencia.trim();
+      if (travelerData.numSoporte.trim())     input.numSoporte     = travelerData.numSoporte.trim();
+      if (travelerData.apellido2.trim())      input.apellido2      = travelerData.apellido2.trim();
+      if (travelerData.paisResidencia.trim()) input.paisResidencia = travelerData.paisResidencia.trim();
       return input;
     });
 
@@ -156,13 +155,16 @@ export class CheckinFormComponent {
   }
 
   private validateTravelers(): string | null {
-    const list = this.travelers();
-    for (let i = 0; i < list.length; i++) {
-      const t = list[i]!;
-      if (!t.numDocumento.trim() || !t.apellido1.trim() || !t.nombre.trim()
-          || !t.sexo || !t.fechaNacimiento || !t.pais.trim()) {
-        return `Viajero ${i + 1}: completa todos los campos obligatorios.`;
-      }
+    const travelerList = this.travelers();
+    for (let i = 0; i < travelerList.length; i++) {
+      const traveler = travelerList[i]!;
+      const prefix   = `Viajero ${i + 1}`;
+      if (!traveler.numDocumento.trim())    return `${prefix}: el campo "Nº documento" es obligatorio.`;
+      if (!traveler.apellido1.trim())       return `${prefix}: el campo "Primer apellido" es obligatorio.`;
+      if (!traveler.nombre.trim())          return `${prefix}: el campo "Nombre" es obligatorio.`;
+      if (!traveler.sexo)                   return `${prefix}: el campo "Sexo" es obligatorio.`;
+      if (!traveler.fechaNacimiento)        return `${prefix}: el campo "Fecha de nacimiento" es obligatorio.`;
+      if (!traveler.pais.trim())            return `${prefix}: el campo "País" es obligatorio.`;
     }
     return null;
   }

@@ -10,7 +10,93 @@
     "hero": {
       "title": "Casa Caldereta",
       "subtitle": "Tu refugio en el corazón de Valencia",
-      "cta": "Reservar ahora"
+      "cta": "Reservar ahora",
+      "ctaGallery": "Ver la casa",
+      "pills": {
+        "guests": "Hasta 6 personas",
+        "jacuzzi": "Jacuzzi privado",
+        "pets": "Mascotas bienvenidas"
+      }
+    },
+    "highlights": {
+      "label": "La casa",
+      "title": "Un lugar pensado para ti"
+    },
+    "amenities": {
+      "label": "Equipamiento",
+      "title": "Todo lo que necesitas"
+    },
+    "galleryPreview": {
+      "label": "Imágenes",
+      "title": "La casa en imágenes",
+      "cta": "Ver galería completa"
+    },
+    "routesPreview": {
+      "label": "Alrededores",
+      "title": "Qué hacer cerca",
+      "cta": "Ver todas las rutas"
+    },
+    "reviews": {
+      "label": "Opiniones",
+      "title": "Lo que dicen nuestros huéspedes",
+      "writeReview": "Dejar una reseña",
+      "cancel": "Cancelar",
+      "success": "¡Gracias por tu reseña! Será publicada tras su revisión.",
+      "authorLabel": "Tu nombre",
+      "authorPlaceholder": "Laura M.",
+      "locationLabel": "Ciudad de origen",
+      "locationPlaceholder": "Valencia",
+      "ratingLabel": "Puntuación",
+      "starAriaLabel": "{{count}} estrella{{plural}}",
+      "textLabel": "Tu reseña",
+      "textPlaceholder": "Cuéntanos tu experiencia en Casa Caldereta…",
+      "submitting": "Enviando…",
+      "submit": "Enviar reseña",
+      "empty": "Sé el primero en dejar una reseña.",
+      "errors": {
+        "required": "Por favor completa todos los campos.",
+        "tooShort": "La reseña debe tener al menos 10 caracteres.",
+        "tooLong": "La reseña no puede superar los 800 caracteres (actualmente {{count}}).",
+        "submit": "No se pudo enviar la reseña. Inténtalo de nuevo más tarde."
+      }
+    }
+  },
+  "gallery": {
+    "heroLabel": "Casa Caldereta",
+    "title": "Galería",
+    "subtitle": "Descubre cada rincón de la casa",
+    "loadingAria": "Cargando imágenes…",
+    "empty": "Las imágenes estarán disponibles próximamente.",
+    "openPhoto": "Abrir foto: ",
+    "loadError": "No se pudieron cargar las imágenes.",
+    "categories": {
+      "exterior":   "Exterior",
+      "interior":   "Interior",
+      "cocina":     "Cocina",
+      "dormitorio": "Dormitorios",
+      "bano":       "Baños",
+      "jardin":     "Jardín",
+      "otros":      "Otros"
+    }
+  },
+  "routes": {
+    "heroLabel": "Aielo de Rugat · Vall d'Albaida",
+    "title": "Rutas y actividades",
+    "subtitle": "Descubre los alrededores de Casa Caldereta",
+    "loading": "Cargando rutas…",
+    "empty": "Las rutas estarán disponibles próximamente.",
+    "loadError": "No se pudieron cargar las rutas.",
+    "viewRoute": "Ver ruta: ",
+    "difficulty": {
+      "easy":     "Fácil",
+      "moderate": "Moderada",
+      "hard":     "Difícil"
+    },
+    "types": {
+      "hiking":  "Senderismo",
+      "cycling": "Ciclismo",
+      "driving": "En coche",
+      "walking": "A pie"
     }
   },
   "booking": {
@@ -20,7 +106,65 @@
     "guests": "Huéspedes",
     "total": "Total",
     "perNight": "por noche",
-    "book": "Confirmar reserva"
+    "book": "Confirmar reserva",
+    "heroLabel": "Casa Caldereta",
+    "heroTitle": "Reservar",
+    "heroSubtitle": "Selecciona tus fechas y envíanos tu solicitud",
+    "cal": {
+      "prevMonth": "Mes anterior",
+      "nextMonth": "Mes siguiente",
+      "legend": {
+        "selected":    "Entrada / Salida",
+        "range":       "Estancia",
+        "booked":      "Reservado",
+        "unavailable": "No disponible"
+      },
+      "days": {
+        "mon": "L",
+        "tue": "M",
+        "wed": "X",
+        "thu": "J",
+        "fri": "V",
+        "sat": "S",
+        "sun": "D"
+      }
+    },
+    "form": {
+      "summary":            "Tu reserva",
+      "checkIn":            "Entrada",
+      "checkOut":           "Salida",
+      "nightSingular":      "noche",
+      "nightPlural":        "noches",
+      "nameLabel":          "Nombre *",
+      "namePlaceholder":    "Tu nombre completo",
+      "emailLabel":         "Email *",
+      "phoneLabel":         "Teléfono *",
+      "phonePlaceholder":   "+34 600 000 000",
+      "guestsLabel":        "Huéspedes *",
+      "messageLabel":       "Mensaje",
+      "messagePlaceholder": "Mascotas, peticiones especiales...",
+      "privacyText":        "He leído y acepto la",
+      "privacyLink":        "Política de Privacidad",
+      "ariaSummary":        "Formulario de solicitud de reserva",
+      "submitting":         "Preparando pago...",
+      "selectDates":        "Selecciona las fechas primero",
+      "proceed":            "Proceder al pago",
+      "errors": {
+        "nameRequired":  "El nombre es obligatorio (mínimo 2 caracteres)",
+        "emailRequired": "El email es obligatorio",
+        "emailInvalid":  "Introduce un email válido",
+        "phoneRequired": "El teléfono es obligatorio",
+        "phoneInvalid":  "Introduce un teléfono válido (+34 600 000 000)",
+        "privacyRequired": "Debes aceptar la política de privacidad",
+        "conflict":      "Esas fechas acaban de ser reservadas por otro usuario. El calendario se ha actualizado — selecciona nuevas fechas.",
+        "default":       "No se pudo preparar el pago. Inténtalo de nuevo."
+      }
+    }
+  },
+  "notFound": {
+    "title":   "Página no encontrada",
+    "message": "Parece que esta página no existe o ha sido movida.",
+    "cta":     "Volver al inicio"
   },
   "legal": {
     "legalNotice": "Aviso Legal",

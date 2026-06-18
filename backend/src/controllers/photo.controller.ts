@@ -44,9 +44,16 @@ export async function uploadPhotoHandler(req: Request, res: Response): Promise<v
     });
     res.status(201).json({ success: true, data: photo, message: 'Foto subida correctamente' });
   } catch (error) {
-    if (error instanceof Error && error.name === 'ValidationError') {
-      res.status(400).json({ success: false, message: error.message });
-      return;
+    if (error instanceof Error) {
+      const code = (error as { code?: string }).code;
+      if (code === 'CLOUDINARY_UPLOAD_FAILED') {
+        res.status(502).json({ success: false, message: 'Error al subir la imagen al servicio externo' });
+        return;
+      }
+      if (error.name === 'ValidationError') {
+        res.status(400).json({ success: false, message: error.message });
+        return;
+      }
     }
     res.status(500).json({ success: false, message: 'Error al subir la foto' });
   }

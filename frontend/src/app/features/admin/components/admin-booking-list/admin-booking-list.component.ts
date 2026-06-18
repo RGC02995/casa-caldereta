@@ -48,7 +48,6 @@ const STATUS_LABELS: Record<BookingStatus, string> = {
 
 @Component({
   selector:    'admin-booking-list',
-  standalone:  true,
   imports:     [DatePipe, CurrencyPipe],
   templateUrl: './admin-booking-list.component.html',
   styleUrl:    './admin-booking-list.component.scss',

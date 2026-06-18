@@ -1,4 +1,5 @@
 import { Component, signal } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ScrollRevealDirective } from '../../../../shared/directives/scroll-reveal.directive';
 
 interface AmenityGroup {
@@ -8,8 +9,7 @@ interface AmenityGroup {
 
 @Component({
   selector: 'home-amenities',
-  standalone: true,
-  imports: [ScrollRevealDirective],
+  imports: [TranslatePipe, ScrollRevealDirective],
   templateUrl: './home-amenities.component.html',
   styleUrl: './home-amenities.component.scss',
 })

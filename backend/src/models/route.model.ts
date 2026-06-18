@@ -12,20 +12,21 @@ export interface IRoutePoint {
 }
 
 export interface IRouteDocument extends Document {
-  title:         string;
-  slug:          string;
-  description:   string;
-  distance:      number;
-  duration:      number;
-  difficulty:    RouteDifficulty;
-  type:          RouteType;
-  coverImageUrl: string;
-  images:        string[];
-  points:        IRoutePoint[];
-  isPublished:   boolean;
-  order:         number;
-  createdAt:     Date;
-  updatedAt:     Date;
+  title:              string;
+  slug:               string;
+  description:        string;
+  distance:           number;
+  duration:           number;
+  difficulty:         RouteDifficulty;
+  type:               RouteType;
+  coverImageUrl:      string;
+  coverImagePublicId: string;
+  images:             string[];
+  points:             IRoutePoint[];
+  isPublished:        boolean;
+  order:              number;
+  createdAt:          Date;
+  updatedAt:          Date;
 }
 
 const routePointSchema = new Schema<IRoutePoint>(
@@ -79,6 +80,11 @@ const routeSchema = new Schema<IRouteDocument>(
       required: true,
     },
     coverImageUrl: {
+      type:    String,
+      default: '',
+      trim:    true,
+    },
+    coverImagePublicId: {
       type:    String,
       default: '',
       trim:    true,

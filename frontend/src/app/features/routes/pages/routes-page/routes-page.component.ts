@@ -2,28 +2,28 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, catchError, of } from 'rxjs';
+import { TranslatePipe } from '@ngx-translate/core';
 import { RouteService } from '../../../../core/services/route.service';
 import { IRoute, RouteDifficulty, RouteType } from '../../../../core/models/route.model';
 import { SeoService } from '../../../../core/services/seo.service';
 import { ScrollRevealDirective } from '../../../../shared/directives/scroll-reveal.directive';
 
 const DIFFICULTY_LABELS: Record<RouteDifficulty, string> = {
-  easy:     'Fácil',
-  moderate: 'Moderada',
-  hard:     'Difícil',
+  easy:     'routes.difficulty.easy',
+  moderate: 'routes.difficulty.moderate',
+  hard:     'routes.difficulty.hard',
 };
 
 const TYPE_LABELS: Record<RouteType, string> = {
-  hiking:  'Senderismo',
-  cycling: 'Ciclismo',
-  driving: 'En coche',
-  walking: 'A pie',
+  hiking:  'routes.types.hiking',
+  cycling: 'routes.types.cycling',
+  driving: 'routes.types.driving',
+  walking: 'routes.types.walking',
 };
 
 @Component({
   selector: 'routes-page',
-  standalone: true,
-  imports: [RouterLink, ScrollRevealDirective],
+  imports: [RouterLink, TranslatePipe, ScrollRevealDirective],
   templateUrl: './routes-page.component.html',
   styleUrl: './routes-page.component.scss',
 })
@@ -49,7 +49,7 @@ export class RoutesPageComponent {
         return response.data;
       }),
       catchError(() => {
-        this.loadError.set('No se pudieron cargar las rutas.');
+        this.loadError.set('routes.loadError');
         this.isLoading.set(false);
         return of([] as IRoute[]);
       }),

@@ -1,9 +1,17 @@
 import 'dotenv/config';
+import type { StringValue } from 'ms';
 
 function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) throw new Error(`Variable de entorno requerida no encontrada: ${name}`);
   return value;
+}
+
+function validateDuration(raw: string, name: string): StringValue {
+  if (!/^\d+(ms|s|m|h|d)$/.test(raw)) {
+    throw new Error(`${name} debe ser una duración válida (ej. '15m', '7d'). Valor: '${raw}'`);
+  }
+  return raw as StringValue;
 }
 
 const nodeEnv = process.env['NODE_ENV'] ?? 'development';
@@ -14,9 +22,9 @@ export const env = {
   apiVersion:          process.env['API_VERSION'] ?? 'v1',
   mongodbUri:          requireEnv('MONGODB_URI'),
   jwtSecret:           requireEnv('JWT_SECRET'),
-  jwtExpiresIn:        process.env['JWT_EXPIRES_IN'] ?? '15m',
+  jwtExpiresIn:        validateDuration(process.env['JWT_EXPIRES_IN'] ?? '15m', 'JWT_EXPIRES_IN'),
   jwtRefreshSecret:    requireEnv('JWT_REFRESH_SECRET'),
-  jwtRefreshExpiresIn: process.env['JWT_REFRESH_EXPIRES_IN'] ?? '7d',
+  jwtRefreshExpiresIn: validateDuration(process.env['JWT_REFRESH_EXPIRES_IN'] ?? '7d', 'JWT_REFRESH_EXPIRES_IN'),
   adminEmail:          requireEnv('ADMIN_EMAIL'),
   adminPasswordHash:   requireEnv('ADMIN_PASSWORD_HASH'),
   cloudinaryCloudName: requireEnv('CLOUDINARY_CLOUD_NAME'),

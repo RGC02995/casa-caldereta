@@ -2,11 +2,11 @@
 
   <!-- Resumen de fechas y precio -->
   <div class="booking-summary">
-    <h2 class="booking-summary__title">Tu reserva</h2>
+    <h2 class="booking-summary__title">{{ 'booking.form.summary' | translate }}</h2>
 
     <div class="booking-summary__dates">
       <div class="booking-summary__date">
-        <span class="booking-summary__date-label">Entrada</span>
+        <span class="booking-summary__date-label">{{ 'booking.form.checkIn' | translate }}</span>
         <span class="booking-summary__date-value">
           @if (checkIn()) { {{ checkIn() | dateFormat:'d MMM yyyy' }} }
           @else { — }
@@ -14,7 +14,7 @@
       </div>
       <span class="booking-summary__arrow" aria-hidden="true">&#8594;</span>
       <div class="booking-summary__date">
-        <span class="booking-summary__date-label">Salida</span>
+        <span class="booking-summary__date-label">{{ 'booking.form.checkOut' | translate }}</span>
         <span class="booking-summary__date-value">
           @if (checkOut()) { {{ checkOut() | dateFormat:'d MMM yyyy' }} }
           @else { — }
@@ -25,7 +25,7 @@
     @if (nights() > 0) {
       <div class="booking-summary__price">
         <span class="booking-summary__price-detail">
-          {{ nights() }} {{ nights() === 1 ? 'noche' : 'noches' }}
+          {{ nights() }} {{ (nights() === 1 ? 'booking.form.nightSingular' : 'booking.form.nightPlural') | translate }}
         </span>
         <strong class="booking-summary__price-total">€{{ totalPrice() }}</strong>
       </div>
@@ -37,29 +37,29 @@
     class="booking-form"
     (submit)="submitBooking($event)"
     novalidate
-    aria-label="Formulario de solicitud de reserva"
+    [attr.aria-label]="'booking.form.ariaSummary' | translate"
   >
 
     <div class="booking-form__field">
-      <label for="booking-name" class="booking-form__label">Nombre *</label>
+      <label for="booking-name" class="booking-form__label">{{ 'booking.form.nameLabel' | translate }}</label>
       <input
         id="booking-name"
         type="text"
         class="booking-form__input"
         [class.booking-form__input--error]="!!nameError()"
         autocomplete="name"
-        placeholder="Tu nombre completo"
+        [placeholder]="'booking.form.namePlaceholder' | translate"
         [value]="nameValue()"
         (input)="nameValue.set($any($event.target).value)"
         (blur)="nameTouched.set(true)"
       />
       @if (nameError()) {
-        <span class="booking-form__error" role="alert">{{ nameError() }}</span>
+        <span class="booking-form__error" role="alert">{{ nameError() | translate }}</span>
       }
     </div>
 
     <div class="booking-form__field">
-      <label for="booking-email" class="booking-form__label">Email *</label>
+      <label for="booking-email" class="booking-form__label">{{ 'booking.form.emailLabel' | translate }}</label>
       <input
         id="booking-email"
         type="email"
@@ -72,30 +72,30 @@
         (blur)="emailTouched.set(true)"
       />
       @if (emailError()) {
-        <span class="booking-form__error" role="alert">{{ emailError() }}</span>
+        <span class="booking-form__error" role="alert">{{ emailError() | translate }}</span>
       }
     </div>
 
     <div class="booking-form__field">
-      <label for="booking-phone" class="booking-form__label">Teléfono *</label>
+      <label for="booking-phone" class="booking-form__label">{{ 'booking.form.phoneLabel' | translate }}</label>
       <input
         id="booking-phone"
         type="tel"
         class="booking-form__input"
         [class.booking-form__input--error]="!!phoneError()"
         autocomplete="tel"
-        placeholder="+34 600 000 000"
+        [placeholder]="'booking.form.phonePlaceholder' | translate"
         [value]="phoneValue()"
         (input)="phoneValue.set($any($event.target).value)"
         (blur)="phoneTouched.set(true)"
       />
       @if (phoneError()) {
-        <span class="booking-form__error" role="alert">{{ phoneError() }}</span>
+        <span class="booking-form__error" role="alert">{{ phoneError() | translate }}</span>
       }
     </div>
 
     <div class="booking-form__field">
-      <label for="booking-guests" class="booking-form__label">Huéspedes *</label>
+      <label for="booking-guests" class="booking-form__label">{{ 'booking.form.guestsLabel' | translate }}</label>
       <input
         id="booking-guests"
         type="number"
@@ -108,12 +108,12 @@
     </div>
 
     <div class="booking-form__field">
-      <label for="booking-message" class="booking-form__label">Mensaje</label>
+      <label for="booking-message" class="booking-form__label">{{ 'booking.form.messageLabel' | translate }}</label>
       <textarea
         id="booking-message"
         class="booking-form__textarea"
         rows="3"
-        placeholder="Mascotas, peticiones especiales..."
+        [placeholder]="'booking.form.messagePlaceholder' | translate"
         [value]="messageValue()"
         (input)="messageValue.set($any($event.target).value)"
       ></textarea>
@@ -128,14 +128,14 @@
           (change)="privacyChecked.set($any($event.target).checked); privacyTouched.set(true)"
         />
         <span>
-          He leído y acepto la
+          {{ 'booking.form.privacyText' | translate }}
           <a routerLink="/legal/privacidad" class="booking-form__link">
-            Política de Privacidad
+            {{ 'booking.form.privacyLink' | translate }}
           </a>
         </span>
       </label>
       @if (privacyError()) {
-        <span class="booking-form__error" role="alert">{{ privacyError() }}</span>
+        <span class="booking-form__error" role="alert">{{ privacyError() | translate }}</span>
       }
     </div>
 
@@ -150,11 +150,11 @@
       [disabled]="isSubmitting()"
     >
       @if (isSubmitting()) {
-        Preparando pago...
+        {{ 'booking.form.submitting' | translate }}
       } @else if (!checkIn() || !checkOut()) {
-        Selecciona las fechas primero
+        {{ 'booking.form.selectDates' | translate }}
       } @else {
-        Proceder al pago
+        {{ 'booking.form.proceed' | translate }}
       }
     </button>
 

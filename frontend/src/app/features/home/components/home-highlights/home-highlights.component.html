@@ -1,8 +1,8 @@
 <section class="home-highlights">
   <div class="home-highlights__inner">
     <div class="home-highlights__heading" scrollReveal>
-      <p class="home-highlights__label">La casa</p>
-      <h2 class="home-highlights__title">Un lugar pensado<br>para ti</h2>
+      <p class="home-highlights__label">{{ 'home.highlights.label' | translate }}</p>
+      <h2 class="home-highlights__title">{{ 'home.highlights.title' | translate }}</h2>
     </div>
     <ul class="home-highlights__list">
       @for (highlight of highlights; track highlight.title; let i = $index) {

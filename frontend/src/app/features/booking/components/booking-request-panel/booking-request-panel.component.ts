@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { format } from 'date-fns';
+import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 import { DateFormatPipe } from '../../../../shared/pipes/date-format.pipe';
 import { BookingService } from '../../../../core/services/booking.service';
 
@@ -11,14 +12,14 @@ const PHONE_REGEX = /^\+?[\d\s\-]{6,20}$/;
 
 @Component({
   selector: 'booking-request-panel',
-  standalone: true,
-  imports: [RouterLink, DateFormatPipe],
+  imports: [RouterLink, TranslatePipe, DateFormatPipe],
   templateUrl: './booking-request-panel.component.html',
   styleUrl: './booking-request-panel.component.scss',
 })
 export class BookingRequestPanelComponent {
   private readonly bookingService = inject(BookingService);
   private readonly destroyRef     = inject(DestroyRef);
+  private readonly translate      = inject(TranslateService);
 
   readonly checkIn    = input<Date | null>(null);
   readonly checkOut   = input<Date | null>(null);
@@ -44,29 +45,29 @@ export class BookingRequestPanelComponent {
 
   readonly nameError = computed(() => {
     if (!this.nameTouched()) return '';
-    if (this.nameValue().trim().length < 2) return 'El nombre es obligatorio (mínimo 2 caracteres)';
+    if (this.nameValue().trim().length < 2) return 'booking.form.errors.nameRequired';
     return '';
   });
 
   readonly emailError = computed(() => {
     if (!this.emailTouched()) return '';
     const trimmedEmail = this.emailValue().trim();
-    if (!trimmedEmail) return 'El email es obligatorio';
-    if (!EMAIL_REGEX.test(trimmedEmail)) return 'Introduce un email válido';
+    if (!trimmedEmail) return 'booking.form.errors.emailRequired';
+    if (!EMAIL_REGEX.test(trimmedEmail)) return 'booking.form.errors.emailInvalid';
     return '';
   });
 
   readonly phoneError = computed(() => {
     if (!this.phoneTouched()) return '';
     const trimmed = this.phoneValue().trim();
-    if (trimmed.length === 0) return 'El teléfono es obligatorio';
-    if (!PHONE_REGEX.test(trimmed)) return 'Introduce un teléfono válido (+34 600 000 000)';
+    if (trimmed.length === 0) return 'booking.form.errors.phoneRequired';
+    if (!PHONE_REGEX.test(trimmed)) return 'booking.form.errors.phoneInvalid';
     return '';
   });
 
   readonly privacyError = computed(() => {
     if (!this.privacyTouched()) return '';
-    if (!this.privacyChecked()) return 'Debes aceptar la política de privacidad';
+    if (!this.privacyChecked()) return 'booking.form.errors.privacyRequired';
     return '';
   });
 
@@ -118,11 +119,11 @@ export class BookingRequestPanelComponent {
       error: (err: HttpErrorResponse) => {
         this.isSubmitting.set(false);
         if (err.status === 409) {
-          this.submitError.set('Esas fechas acaban de ser reservadas por otro usuario. El calendario se ha actualizado — selecciona nuevas fechas.');
+          this.submitError.set(this.translate.instant('booking.form.errors.conflict'));
           this.conflictDetected.emit();
         } else {
-          const message = err.error?.message as string | undefined;
-          this.submitError.set(message ?? 'No se pudo preparar el pago. Inténtalo de nuevo.');
+          const serverMessage = err.error?.message as string | undefined;
+          this.submitError.set(serverMessage ?? this.translate.instant('booking.form.errors.default'));
         }
       },
     });

@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, catchError, of } from 'rxjs';
+import { TranslatePipe } from '@ngx-translate/core';
 import { PhotoService } from '../../../../core/services/photo.service';
 import { IPhoto, PhotoCategory } from '../../../../core/models/photo.model';
 import { GalleryLightboxComponent } from '../../components/gallery-lightbox/gallery-lightbox.component';
@@ -8,13 +9,13 @@ import { GalleryPhoto } from '../../gallery.types';
 import { SeoService } from '../../../../core/services/seo.service';
 
 const CATEGORY_LABELS: Record<PhotoCategory, string> = {
-  exterior:   'Exterior',
-  interior:   'Interior',
-  cocina:     'Cocina',
-  dormitorio: 'Dormitorios',
-  bano:       'Baños',
-  jardin:     'Jardín',
-  otros:      'Otros',
+  exterior:   'gallery.categories.exterior',
+  interior:   'gallery.categories.interior',
+  cocina:     'gallery.categories.cocina',
+  dormitorio: 'gallery.categories.dormitorio',
+  bano:       'gallery.categories.bano',
+  jardin:     'gallery.categories.jardin',
+  otros:      'gallery.categories.otros',
 };
 
 const SECTION_ORDER: PhotoCategory[] = [
@@ -30,8 +31,7 @@ interface PhotoSection {
 
 @Component({
   selector: 'gallery-page',
-  standalone: true,
-  imports: [GalleryLightboxComponent],
+  imports: [GalleryLightboxComponent, TranslatePipe],
   templateUrl: './gallery-page.component.html',
   styleUrl:    './gallery-page.component.scss',
 })
@@ -57,7 +57,7 @@ export class GalleryPageComponent {
         return response.data;
       }),
       catchError(() => {
-        this.loadError.set('No se pudieron cargar las imágenes.');
+        this.loadError.set('gallery.loadError');
         this.isLoading.set(false);
         return of([] as IPhoto[]);
       }),

@@ -14,7 +14,6 @@ import { GalleryPhoto } from '../../gallery.types';
 
 @Component({
   selector: 'gallery-lightbox',
-  standalone: true,
   imports: [],
   templateUrl: './gallery-lightbox.component.html',
   styleUrl: './gallery-lightbox.component.scss',

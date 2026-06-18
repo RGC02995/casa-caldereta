@@ -1,5 +1,6 @@
 import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ScrollRevealDirective } from '../../../../shared/directives/scroll-reveal.directive';
 import { IRoute, RouteType } from '../../../../core/models/route.model';
 
@@ -10,13 +11,13 @@ interface RoutePreviewFallback {
 }
 
 const TYPE_LABELS: Record<RouteType, string> = {
-  hiking: 'Senderismo', cycling: 'Ciclismo', driving: 'En coche', walking: 'A pie',
+  hiking: 'routes.types.hiking', cycling: 'routes.types.cycling',
+  driving: 'routes.types.driving', walking: 'routes.types.walking',
 };
 
 @Component({
   selector: 'home-routes-preview',
-  standalone: true,
-  imports: [RouterLink, ScrollRevealDirective],
+  imports: [RouterLink, TranslatePipe, ScrollRevealDirective],
   templateUrl: './home-routes-preview.component.html',
   styleUrl: './home-routes-preview.component.scss',
 })

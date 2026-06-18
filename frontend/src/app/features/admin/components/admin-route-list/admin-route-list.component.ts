@@ -16,7 +16,6 @@ const TYPE_LABELS: Record<RouteType, string> = {
 
 @Component({
   selector:    'admin-route-list',
-  standalone:  true,
   imports:     [],
   templateUrl: './admin-route-list.component.html',
   styleUrl:    './admin-route-list.component.scss',
