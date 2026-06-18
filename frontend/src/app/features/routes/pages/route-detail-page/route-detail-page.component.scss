@@ -1,0 +1,387 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+@use 'sass:color';
+
+// ── LOADING ───────────────────────────────────────────────────────────────────
+
+.route-detail__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+}
+
+.route-detail__spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid $color-neutral-200;
+  border-top-color: $color-primary;
+  border-radius: 50%;
+  animation: detail-spin 0.8s linear infinite;
+}
+
+@keyframes detail-spin {
+  to { transform: rotate(360deg); }
+}
+
+// ── NOT FOUND ─────────────────────────────────────────────────────────────────
+
+.route-detail__not-found {
+  @include container;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-block: $space-24;
+  gap: $space-4;
+}
+
+.route-detail__not-found-icon {
+  width: 56px;
+  height: 56px;
+  color: $color-neutral-300;
+}
+
+.route-detail__not-found-title {
+  font-family: $font-family-heading;
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-light;
+  color: $color-neutral-800;
+  margin: 0;
+}
+
+.route-detail__not-found-text {
+  font-size: $font-size-sm;
+  color: $color-neutral-500;
+  margin: 0;
+}
+
+.route-detail__not-found-link {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  text-decoration: none;
+  font-weight: $font-weight-medium;
+
+  &:hover { text-decoration: underline; }
+  &:focus-visible { @include focus-visible; }
+}
+
+// ── HERO ──────────────────────────────────────────────────────────────────────
+
+.route-detail__hero {
+  position: relative;
+  min-height: 65vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  background-color: $color-primary-dark;
+}
+
+.route-detail__hero-media {
+  position: absolute;
+  inset: 0;
+}
+
+.route-detail__hero-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.route-detail__hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.15) 0%,
+    rgba(0, 0, 0, 0.35) 40%,
+    rgba(0, 0, 0, 0.80) 100%
+  );
+}
+
+.route-detail__hero-inner {
+  @include container;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  padding-top: $space-6;
+  padding-bottom: $space-12;
+  gap: $space-8;
+}
+
+.route-detail__back {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  color: rgba($color-white, 0.75);
+  text-decoration: none;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  transition: color $transition-fast;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  &:hover { color: $color-white; }
+  &:focus-visible { @include focus-visible; }
+}
+
+.route-detail__hero-content {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+}
+
+.route-detail__hero-label {
+  @include label-text;
+  color: rgba($color-accent, 0.85);
+  margin: 0;
+}
+
+.route-detail__hero-title {
+  font-family: $font-family-heading;
+  font-size: clamp(#{$font-size-3xl}, 6vw, #{$font-size-5xl});
+  font-weight: $font-weight-light;
+  color: $color-white;
+  margin: 0;
+  line-height: 1.05;
+  letter-spacing: $letter-spacing-tight;
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────────────
+
+.route-detail__stats {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-3;
+}
+
+.route-detail__stat {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-2 $space-4;
+  background-color: rgba($color-white, 0.12);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba($color-white, 0.2);
+  border-radius: $border-radius-full;
+  color: $color-white;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  letter-spacing: $letter-spacing-wide;
+
+  &--easy     { background-color: rgba($color-success, 0.25); border-color: rgba($color-success, 0.4); }
+  &--moderate { background-color: rgba($color-warning, 0.25); border-color: rgba($color-warning, 0.4); }
+  &--hard     { background-color: rgba($color-error,   0.25); border-color: rgba($color-error,   0.4); }
+}
+
+.route-detail__stat-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.route-detail__stat-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: $border-radius-full;
+  background-color: currentColor;
+  flex-shrink: 0;
+}
+
+// ── BODY ──────────────────────────────────────────────────────────────────────
+
+.route-detail__body {
+  @include container;
+  max-width: 760px;
+  padding-block: $space-16;
+  display: flex;
+  flex-direction: column;
+  gap: $space-12;
+}
+
+.route-detail__section {
+  display: flex;
+  flex-direction: column;
+  gap: $space-6;
+}
+
+.route-detail__section-title {
+  font-family: $font-family-heading;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-regular;
+  color: $color-neutral-800;
+  margin: 0;
+  padding-bottom: $space-4;
+  border-bottom: 1px solid $color-neutral-200;
+  letter-spacing: $letter-spacing-tight;
+
+  @include respond-to('md') {
+    font-size: $font-size-2xl;
+  }
+}
+
+.route-detail__description {
+  font-size: $font-size-base;
+  color: $color-neutral-600;
+  line-height: $line-height-relaxed;
+  margin: 0;
+}
+
+// ── POINTS TIMELINE ───────────────────────────────────────────────────────────
+
+.route-detail__points {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.route-detail__point {
+  display: flex;
+  gap: $space-5;
+  min-height: 80px;
+}
+
+.route-detail__point-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.route-detail__point-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: $border-radius-full;
+  background-color: $color-primary;
+  color: $color-white;
+  font-family: $font-family-body;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  flex-shrink: 0;
+  z-index: 1;
+  position: relative;
+}
+
+.route-detail__point-line {
+  flex: 1;
+  width: 1px;
+  background-color: $color-neutral-200;
+  margin-block: $space-2;
+  min-height: $space-6;
+}
+
+.route-detail__point-card {
+  flex: 1;
+  padding-bottom: $space-8;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.route-detail__point-name {
+  font-family: $font-family-heading;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-regular;
+  color: $color-neutral-800;
+  margin: 0;
+  line-height: $line-height-tight;
+}
+
+.route-detail__point-desc {
+  font-size: $font-size-sm;
+  color: $color-neutral-600;
+  line-height: $line-height-relaxed;
+  margin: 0;
+}
+
+.route-detail__point-img {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: $border-radius-md;
+  margin-top: $space-3;
+}
+
+// ── CTA ───────────────────────────────────────────────────────────────────────
+
+.route-detail__cta {
+  background-color: $color-primary-dark;
+  padding-block: $space-20;
+}
+
+.route-detail__cta-inner {
+  @include container;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: $space-4;
+}
+
+.route-detail__cta-label {
+  @include label-text;
+  color: rgba($color-accent, 0.7);
+  margin: 0;
+}
+
+.route-detail__cta-title {
+  font-family: $font-family-heading;
+  font-size: clamp(#{$font-size-2xl}, 4vw, #{$font-size-4xl});
+  font-weight: $font-weight-light;
+  color: $color-white;
+  margin: 0;
+  letter-spacing: $letter-spacing-tight;
+}
+
+.route-detail__cta-text {
+  font-size: $font-size-sm;
+  color: rgba($color-white, 0.55);
+  margin: 0;
+  max-width: 400px;
+}
+
+.route-detail__cta-btn {
+  display: inline-block;
+  margin-top: $space-2;
+  padding: $space-4 $space-10;
+  background-color: $color-white;
+  color: $color-primary-dark;
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: $border-radius-sm;
+  transition: background-color $transition-fast, color $transition-fast;
+
+  &:hover {
+    background-color: rgba($color-white, 0.88);
+    color: $color-primary-dark;
+  }
+
+  &:focus-visible { @include focus-visible; }
+}

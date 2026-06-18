@@ -127,6 +127,26 @@
     gap: $space-5;
   }
 
+  // ── Redes sociales (desktop) ─────────────────────────────────────────────────
+  &__social {
+    display: none;
+    align-items: center;
+    gap: $space-3;
+
+    @include respond-to('lg') { display: flex; }
+  }
+
+  &__social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $color-neutral-400;
+    transition: color $transition-fast;
+
+    &:hover     { color: $color-primary; }
+    &:focus-visible { @include focus-visible; }
+  }
+
   // ── Toggle idioma ─────────────────────────────────────────────────────────────
   &__lang {
     display: none;
@@ -353,6 +373,34 @@
     }
 
     &:focus-visible { @include focus-visible; }
+  }
+
+  // ── Redes sociales móvil ─────────────────────────────────────────────────────
+  &__mobile-social {
+    display: flex;
+    align-items: center;
+    gap: $space-6;
+    padding-top: $space-4;
+  }
+
+  &__mobile-social-link {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    text-decoration: none;
+    color: rgba($color-white, 0.4);
+    transition: color $transition-fast;
+
+    &:hover     { color: rgba($color-white, 0.85); }
+    &:focus-visible { @include focus-visible; }
+  }
+
+  &__mobile-social-label {
+    font-family: $font-family-body;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    letter-spacing: $letter-spacing-wider;
+    text-transform: uppercase;
   }
 
   &__mobile-lang {

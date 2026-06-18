@@ -1,0 +1,143 @@
+@if (isLoading()) {
+
+  <div class="route-detail__loading">
+    <div class="route-detail__spinner" role="status" aria-label="Cargando ruta..."></div>
+  </div>
+
+} @else if (loadError()) {
+
+  <div class="route-detail__not-found">
+    <svg class="route-detail__not-found-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M3 20h18"/>
+      <path d="M6 20L12 5l6 15"/>
+      <path d="M10 14l2-4 2 4"/>
+    </svg>
+    <h1 class="route-detail__not-found-title">Ruta no encontrada</h1>
+    <p class="route-detail__not-found-text">{{ loadError() }}</p>
+    <a class="route-detail__not-found-link" routerLink="/rutas">← Volver a rutas y actividades</a>
+  </div>
+
+} @else if (routeData(); as route) {
+
+  <!-- ── HERO ──────────────────────────────────────────────────────────── -->
+  <section class="route-detail__hero">
+
+    <div class="route-detail__hero-media" aria-hidden="true">
+      @if (route.coverImageUrl) {
+        <img
+          class="route-detail__hero-img"
+          [src]="route.coverImageUrl"
+          [alt]="route.title"
+        />
+      }
+      <div class="route-detail__hero-overlay"></div>
+    </div>
+
+    <div class="route-detail__hero-inner">
+      <a class="route-detail__back" routerLink="/rutas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Rutas y actividades
+      </a>
+
+      <div class="route-detail__hero-content">
+        <p class="route-detail__hero-label">{{ typeLabel(route.type) }}</p>
+        <h1 class="route-detail__hero-title">{{ route.title }}</h1>
+
+        <ul class="route-detail__stats" aria-label="Datos de la ruta">
+          <li class="route-detail__stat">
+            <svg class="route-detail__stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 12h18M12 3l9 9-9 9"/>
+            </svg>
+            {{ route.distance }} km
+          </li>
+          <li class="route-detail__stat">
+            <svg class="route-detail__stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            {{ formatDuration(route.duration) }}
+          </li>
+          <li
+            class="route-detail__stat route-detail__stat--difficulty"
+            [class.route-detail__stat--easy]="route.difficulty === 'easy'"
+            [class.route-detail__stat--moderate]="route.difficulty === 'moderate'"
+            [class.route-detail__stat--hard]="route.difficulty === 'hard'"
+          >
+            <span class="route-detail__stat-dot" aria-hidden="true"></span>
+            {{ difficultyLabel(route.difficulty) }}
+          </li>
+          @if (route.points.length > 0) {
+            <li class="route-detail__stat">
+              <svg class="route-detail__stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              {{ route.points.length }} {{ route.points.length === 1 ? 'punto' : 'puntos' }}
+            </li>
+          }
+        </ul>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ── CONTENIDO ─────────────────────────────────────────────────────── -->
+  <div class="route-detail__body">
+
+    <section class="route-detail__section">
+      <h2 class="route-detail__section-title">Sobre esta ruta</h2>
+      <p class="route-detail__description">{{ route.description }}</p>
+    </section>
+
+    @if (route.points.length > 0) {
+      <section class="route-detail__section">
+        <h2 class="route-detail__section-title">Puntos de interés</h2>
+        <ol class="route-detail__points">
+          @for (point of route.points; track point.name; let i = $index) {
+            <li class="route-detail__point">
+
+              <div class="route-detail__point-marker">
+                <span class="route-detail__point-number" aria-hidden="true">{{ i + 1 }}</span>
+                @if (!$last) {
+                  <span class="route-detail__point-line" aria-hidden="true"></span>
+                }
+              </div>
+
+              <div class="route-detail__point-card">
+                <h3 class="route-detail__point-name">{{ point.name }}</h3>
+                @if (point.description) {
+                  <p class="route-detail__point-desc">{{ point.description }}</p>
+                }
+                @if (point.imageUrl) {
+                  <img
+                    class="route-detail__point-img"
+                    [src]="point.imageUrl"
+                    [alt]="point.name"
+                    loading="lazy"
+                  />
+                }
+              </div>
+
+            </li>
+          }
+        </ol>
+      </section>
+    }
+
+  </div>
+
+  <!-- ── CTA ──────────────────────────────────────────────────────────── -->
+  <section class="route-detail__cta">
+    <div class="route-detail__cta-inner">
+      <p class="route-detail__cta-label">¿Quieres descubrir esta ruta?</p>
+      <h2 class="route-detail__cta-title">Alójate en Casa Caldereta</h2>
+      <p class="route-detail__cta-text">
+        A pocos minutos de todos estos paisajes, en el corazón de la Vall d'Albaida.
+      </p>
+      <a class="route-detail__cta-btn" routerLink="/reservar">Ver disponibilidad</a>
+    </div>
+  </section>
+
+}

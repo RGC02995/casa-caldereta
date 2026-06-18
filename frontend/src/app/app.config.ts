@@ -27,7 +27,7 @@ export const appConfig: ApplicationConfig = {
       logOnly: environment.production,
       autoPause: true,
     }),
-    provideTranslateService({ defaultLanguage: environment.defaultLanguage }),
+    provideTranslateService({ fallbackLang: environment.defaultLanguage }),
     ...provideTranslateHttpLoader({ prefix: './assets/i18n/', suffix: '.json' }),
   ],
 };

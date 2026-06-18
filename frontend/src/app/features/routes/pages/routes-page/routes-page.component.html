@@ -26,44 +26,46 @@
         @for (route of routes(); track route.id; let i = $index) {
           <li class="routes-card" scrollReveal [delay]="i * 100">
 
-            <div class="routes-card__img-wrap">
-              @if (route.coverImageUrl) {
-                <img
-                  class="routes-card__img"
-                  [src]="route.coverImageUrl"
-                  [alt]="route.title"
-                  loading="lazy"
-                />
-              } @else {
-                <div class="routes-card__img-placeholder" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M3 20h18"/>
-                    <path d="M6 20L12 5l6 15"/>
-                    <path d="M10 14l2-4 2 4"/>
-                  </svg>
-                </div>
-              }
-              <span class="routes-card__type-badge">{{ typeLabel(route.type) }}</span>
-            </div>
+            <a class="routes-card__link" [routerLink]="['/rutas', route.slug]" [attr.aria-label]="'Ver ruta: ' + route.title">
 
-            <div class="routes-card__body">
-              <p class="routes-card__meta">
-                <span>{{ route.distance }} km</span>
-                <span class="routes-card__sep" aria-hidden="true">·</span>
-                <span>{{ formatDuration(route.duration) }}</span>
-              </p>
-              <h2 class="routes-card__title">{{ route.title }}</h2>
-              <p class="routes-card__desc">{{ route.description }}</p>
-              <span
-                class="routes-card__difficulty"
-                [class.routes-card__difficulty--easy]="route.difficulty === 'easy'"
-                [class.routes-card__difficulty--moderate]="route.difficulty === 'moderate'"
-                [class.routes-card__difficulty--hard]="route.difficulty === 'hard'"
-              >
-                <span class="routes-card__difficulty-dot" aria-hidden="true"></span>
-                {{ difficultyLabel(route.difficulty) }}
-              </span>
-            </div>
+              <div class="routes-card__img-wrap">
+                @if (route.coverImageUrl) {
+                  <img
+                    class="routes-card__img"
+                    [src]="route.coverImageUrl"
+                    [alt]="route.title"
+                    loading="lazy"
+                  />
+                } @else {
+                  <div class="routes-card__placeholder" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M3 20h18"/>
+                      <path d="M6 20L12 5l6 15"/>
+                      <path d="M10 14l2-4 2 4"/>
+                    </svg>
+                  </div>
+                }
+              </div>
+
+              <div class="routes-card__body">
+                <p class="routes-card__type">{{ typeLabel(route.type) }}</p>
+                <h2 class="routes-card__title">{{ route.title }}</h2>
+                <p class="routes-card__desc">{{ route.description }}</p>
+                <p class="routes-card__meta">
+                  <span
+                    class="routes-card__difficulty"
+                    [class.routes-card__difficulty--easy]="route.difficulty === 'easy'"
+                    [class.routes-card__difficulty--moderate]="route.difficulty === 'moderate'"
+                    [class.routes-card__difficulty--hard]="route.difficulty === 'hard'"
+                  ><span class="routes-card__difficulty-dot" aria-hidden="true"></span>{{ difficultyLabel(route.difficulty) }}</span>
+                  <span class="routes-card__sep" aria-hidden="true">·</span>
+                  <span>{{ route.distance }} km</span>
+                  <span class="routes-card__sep" aria-hidden="true">·</span>
+                  <span>{{ formatDuration(route.duration) }}</span>
+                </p>
+              </div>
+
+            </a>
 
           </li>
         }

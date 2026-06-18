@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, catchError, of } from 'rxjs';
 import { RouteService } from '../../../../core/services/route.service';
@@ -22,7 +23,7 @@ const TYPE_LABELS: Record<RouteType, string> = {
 @Component({
   selector: 'routes-page',
   standalone: true,
-  imports: [ScrollRevealDirective],
+  imports: [RouterLink, ScrollRevealDirective],
   templateUrl: './routes-page.component.html',
   styleUrl: './routes-page.component.scss',
 })

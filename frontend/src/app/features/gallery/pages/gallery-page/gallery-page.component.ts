@@ -7,8 +7,6 @@ import { GalleryLightboxComponent } from '../../components/gallery-lightbox/gall
 import { GalleryPhoto } from '../../gallery.types';
 import { SeoService } from '../../../../core/services/seo.service';
 
-type CategoryFilter = 'todas' | PhotoCategory;
-
 const CATEGORY_LABELS: Record<PhotoCategory, string> = {
   exterior:   'Exterior',
   interior:   'Interior',
@@ -19,12 +17,23 @@ const CATEGORY_LABELS: Record<PhotoCategory, string> = {
   otros:      'Otros',
 };
 
+const SECTION_ORDER: PhotoCategory[] = [
+  'exterior', 'interior', 'cocina', 'dormitorio', 'bano', 'jardin', 'otros',
+];
+
+interface PhotoSection {
+  category: PhotoCategory;
+  label:    string;
+  photos:   IPhoto[];
+  offset:   number;
+}
+
 @Component({
   selector: 'gallery-page',
   standalone: true,
   imports: [GalleryLightboxComponent],
   templateUrl: './gallery-page.component.html',
-  styleUrl: './gallery-page.component.scss',
+  styleUrl:    './gallery-page.component.scss',
 })
 export class GalleryPageComponent {
   private readonly photoService = inject(PhotoService);
@@ -38,9 +47,8 @@ export class GalleryPageComponent {
     });
   }
 
-  readonly isLoading      = signal(true);
-  readonly loadError      = signal('');
-  readonly activeCategory = signal<CategoryFilter>('todas');
+  readonly isLoading = signal(true);
+  readonly loadError = signal('');
 
   readonly allPhotos = toSignal(
     this.photoService.getAll().pipe(
@@ -57,34 +65,46 @@ export class GalleryPageComponent {
     { initialValue: [] as IPhoto[] },
   );
 
-  readonly availableCategories = computed((): CategoryFilter[] => {
-    const cats = new Set(this.allPhotos().map(photo => photo.category));
-    return cats.size > 0 ? ['todas', ...Array.from(cats)] as CategoryFilter[] : [];
-  });
-
-  readonly filteredPhotos = computed((): IPhoto[] => {
-    const cat = this.activeCategory();
+  readonly photoSections = computed((): PhotoSection[] => {
     const photos = this.allPhotos();
-    return cat === 'todas' ? photos : photos.filter(photo => photo.category === cat);
+    const byCategory = new Map<PhotoCategory, IPhoto[]>();
+
+    for (const photo of photos) {
+      if (!byCategory.has(photo.category)) byCategory.set(photo.category, []);
+      byCategory.get(photo.category)!.push(photo);
+    }
+
+    let offset = 0;
+    return SECTION_ORDER
+      .filter(cat => byCategory.has(cat))
+      .map(cat => {
+        const catPhotos = byCategory.get(cat)!;
+        const section: PhotoSection = {
+          category: cat,
+          label:    CATEGORY_LABELS[cat],
+          photos:   catPhotos,
+          offset,
+        };
+        offset += catPhotos.length;
+        return section;
+      });
   });
 
   readonly lightboxPhotos = computed((): GalleryPhoto[] =>
-    this.filteredPhotos().map((photo, photoIndex) => ({
-      id:  photoIndex,
-      src: photo.url,
-      alt: photo.alt,
-    })),
+    this.photoSections().flatMap(section =>
+      section.photos.map((photo, i) => ({
+        id:  section.offset + i,
+        src: photo.url,
+        alt: photo.alt,
+      }))
+    )
   );
 
   readonly selectedIndex  = signal(-1);
   readonly isLightboxOpen = computed(() => this.selectedIndex() >= 0);
 
-  categoryLabel(cat: CategoryFilter): string {
-    return cat === 'todas' ? 'Todas' : (CATEGORY_LABELS[cat as PhotoCategory] ?? cat);
-  }
-
-  openLightbox(photoIndex: number): void {
-    this.selectedIndex.set(photoIndex);
+  openLightbox(index: number): void {
+    this.selectedIndex.set(index);
   }
 
   closeLightbox(): void {

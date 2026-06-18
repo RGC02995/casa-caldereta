@@ -7,63 +7,66 @@
   </div>
 </section>
 
-<!-- ── GALERÍA ─────────────────────────────────────────────────────────────── -->
-<section class="gallery-grid-section">
-  <div class="gallery-grid-section__inner">
+<!-- ── GALERÍA POR SECCIONES ────────────────────────────────────────────────── -->
+<div class="gallery-body">
 
-    @if (isLoading()) {
+  @if (isLoading()) {
+    <div class="gallery-body__center">
       <div class="gallery-skeleton" aria-label="Cargando imágenes…" aria-busy="true" role="status">
-        @for (skeletonItem of [1,2,3,4,5,6,7,8]; track skeletonItem) {
+        @for (item of [1,2,3,4,5,6,7,8]; track item) {
           <div class="gallery-skeleton__item"></div>
         }
       </div>
+    </div>
 
-    } @else if (loadError()) {
+  } @else if (loadError()) {
+    <div class="gallery-body__center">
       <p class="gallery-state gallery-state--error" role="alert">{{ loadError() }}</p>
+    </div>
 
-    } @else if (allPhotos().length === 0) {
-      <p class="gallery-state gallery-state--empty">Las imágenes estarán disponibles próximamente.</p>
+  } @else if (photoSections().length === 0) {
+    <div class="gallery-body__center">
+      <p class="gallery-state">Las imágenes estarán disponibles próximamente.</p>
+    </div>
 
-    } @else {
+  } @else {
 
-      @if (availableCategories().length > 1) {
-        <nav class="gallery-categories" aria-label="Filtrar por categoría">
-          @for (cat of availableCategories(); track cat) {
-            <button
-              type="button"
-              class="gallery-categories__btn"
-              [class.gallery-categories__btn--active]="activeCategory() === cat"
-              [attr.aria-pressed]="activeCategory() === cat ? 'true' : 'false'"
-              (click)="activeCategory.set(cat)"
-            >{{ categoryLabel(cat) }}</button>
-          }
-        </nav>
-      }
+    @for (section of photoSections(); track section.category) {
+      <article class="gallery-section" [attr.aria-label]="section.label">
+        <div class="gallery-section__inner">
 
-      <ul class="gallery-grid">
-        @for (photo of filteredPhotos(); track photo.id; let photoIndex = $index) {
-          <li class="gallery-grid__item">
-            <button
-              type="button"
-              class="gallery-grid__btn"
-              (click)="openLightbox(photoIndex)"
-              [attr.aria-label]="'Ver ' + photo.alt"
-            >
-              <img
-                class="gallery-grid__img"
-                [src]="photo.url"
-                [alt]="photo.alt"
-                loading="lazy"
-              />
-            </button>
-          </li>
-        }
-      </ul>
+          <h2 class="gallery-section__title">{{ section.label }}</h2>
 
+          <ul class="gallery-section__grid">
+            @for (photo of section.photos; track photo.id; let i = $index) {
+              <li
+                class="gallery-section__item"
+                [class.gallery-section__item--featured]="i === 0 && section.photos.length > 2"
+              >
+                <button
+                  type="button"
+                  class="gallery-section__btn"
+                  (click)="openLightbox(section.offset + i)"
+                  [attr.aria-label]="'Abrir foto: ' + photo.alt"
+                >
+                  <img
+                    class="gallery-section__img"
+                    [src]="photo.url"
+                    [alt]="photo.alt"
+                    loading="lazy"
+                  />
+                </button>
+              </li>
+            }
+          </ul>
+
+        </div>
+      </article>
     }
 
-  </div>
-</section>
+  }
+
+</div>
 
 <!-- ── LIGHTBOX ───────────────────────────────────────────────────────────── -->
 <gallery-lightbox
