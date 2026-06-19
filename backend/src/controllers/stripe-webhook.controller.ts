@@ -1,4 +1,3 @@
-import Stripe from 'stripe';
 import { Request, Response } from 'express';
 import { stripe } from '../config/stripe';
 import { env } from '../config/environment';
@@ -32,17 +31,18 @@ export async function stripeWebhookHandler(req: Request, res: Response): Promise
     return;
   }
 
-  const session = event.data.object as Stripe.Checkout.Session;
+  const session = event.data.object;
 
   // Solo confirmamos si el pago fue cobrado efectivamente (no si quedó pendiente)
-  if (session.payment_status !== 'paid') {
+  if ((session as { payment_status?: string }).payment_status !== 'paid') {
     res.status(200).json({ received: true });
     return;
   }
 
-  const paymentIntentId = typeof session.payment_intent === 'string'
-    ? session.payment_intent
-    : (session.payment_intent as Stripe.PaymentIntent)?.id ?? '';
+  const rawPaymentIntent = (session as { payment_intent?: string | { id: string } | null }).payment_intent ?? null;
+  const paymentIntentId = typeof rawPaymentIntent === 'string'
+    ? rawPaymentIntent
+    : (rawPaymentIntent as { id: string } | null)?.id ?? '';
 
   try {
     const booking = await bookingService.confirmFromStripe(session.id, paymentIntentId);

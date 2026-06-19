@@ -8,7 +8,7 @@ import { RefreshTokenModel } from '../models/refresh-token.model';
 function parseDurationMs(duration: string): number {
   const match = /^(\d+)(ms|s|m|h|d)$/.exec(duration);
   if (!match) return 7 * 24 * 60 * 60 * 1000;
-  const value = parseInt(match[1], 10);
+  const value = parseInt(match[1] ?? '0', 10);
   switch (match[2]) {
     case 'ms': return value;
     case 's':  return value * 1000;
