@@ -56,7 +56,7 @@ export class GalleryLightboxComponent implements OnDestroy {
       if (this.isOpen()) {
         this.currentIndex.set(this.startIndex());
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   @HostListener('document:keydown', ['$event'])

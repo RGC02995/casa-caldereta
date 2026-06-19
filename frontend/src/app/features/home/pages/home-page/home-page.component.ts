@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, effect, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, catchError, of } from 'rxjs';
 import { PhotoService } from '../../../../core/services/photo.service';
@@ -36,15 +36,7 @@ export class HomePageComponent {
   private readonly photoService  = inject(PhotoService);
   private readonly routeService  = inject(RouteService);
   private readonly reviewService = inject(ReviewService);
-
-  constructor() {
-    inject(SeoService).setPage({
-      title:         'Alojamiento Rural de Lujo en Valencia',
-      description:   'Casa Caldereta en Aielo de Rugat, Valencia. 180m² de uso exclusivo con jacuzzi, terraza privada, barbacoa y vistas a la montaña. Hasta 6 personas. Mascotas bienvenidas.',
-      canonicalPath: '/',
-      keywords:      'casa rural Valencia, alojamiento exclusivo Aielo de Rugat, jacuzzi rural Valencia, casa vacaciones montaña Valencia',
-    });
-  }
+  private readonly seoService    = inject(SeoService);
 
   private readonly _photos = toSignal(
     this.photoService.getAll().pipe(
@@ -74,4 +66,20 @@ export class HomePageComponent {
   readonly previewPhotos = computed(() => this._photos().slice(0, 4));
   readonly previewRoutes = computed(() => this._routes().slice(0, 3));
   readonly reviews       = this._reviews;
+
+  constructor() {
+    this.seoService.setPage({
+      title:         'Alojamiento Rural de Lujo en Valencia',
+      description:   'Casa Caldereta en Aielo de Rugat, Valencia. 180m² de uso exclusivo con jacuzzi, terraza privada, barbacoa y vistas a la montaña. Hasta 6 personas. Mascotas bienvenidas.',
+      canonicalPath: '/',
+      keywords:      'casa rural Valencia, alojamiento exclusivo Aielo de Rugat, jacuzzi rural Valencia, casa vacaciones montaña Valencia',
+    });
+
+    effect(() => {
+      const reviewList = this._reviews();
+      if (reviewList.length === 0) return;
+      const avg = reviewList.reduce((sum, r) => sum + r.rating, 0) / reviewList.length;
+      this.seoService.setAggregateRating(avg, reviewList.length);
+    });
+  }
 }

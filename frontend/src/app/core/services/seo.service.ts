@@ -50,6 +50,52 @@ export class SeoService {
     this.setCanonical(canonicalUrl);
   }
 
+  setBreadcrumbs(items: { name: string; url: string }[]): void {
+    const head     = this.document.head;
+    const existing = head.querySelector<HTMLScriptElement>('script[data-seo="breadcrumbs"]');
+    if (existing) existing.remove();
+
+    const script = this.document.createElement('script');
+    script.type            = 'application/ld+json';
+    script.dataset['seo'] = 'breadcrumbs';
+    script.textContent = JSON.stringify({
+      '@context':        'https://schema.org',
+      '@type':           'BreadcrumbList',
+      'itemListElement': items.map((item, index) => ({
+        '@type':    'ListItem',
+        'position': index + 1,
+        'name':     item.name,
+        'item':     item.url,
+      })),
+    });
+    head.appendChild(script);
+  }
+
+  setAggregateRating(ratingValue: number, reviewCount: number): void {
+    if (reviewCount === 0) return;
+
+    const head     = this.document.head;
+    const existing = head.querySelector<HTMLScriptElement>('script[data-seo="aggregate-rating"]');
+    if (existing) existing.remove();
+
+    const script = this.document.createElement('script');
+    script.type              = 'application/ld+json';
+    script.dataset['seo']   = 'aggregate-rating';
+    script.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'LodgingBusiness',
+      'name': SITE_NAME,
+      'aggregateRating': {
+        '@type':       'AggregateRating',
+        'ratingValue': ratingValue.toFixed(1),
+        'reviewCount': reviewCount,
+        'bestRating':  '5',
+        'worstRating': '1',
+      },
+    });
+    head.appendChild(script);
+  }
+
   private setCanonical(url: string): void {
     const head = this.document.head;
     let linkEl = head.querySelector<HTMLLinkElement>('link[rel="canonical"]');

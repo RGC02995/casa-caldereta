@@ -9,6 +9,7 @@ import { connectDatabase } from './config/database';
 import { globalRateLimiter } from './middleware/rate-limit.middleware';
 import apiRouter from './routes/index';
 import { stripeWebhookHandler } from './controllers/stripe-webhook.controller';
+import { sitemapHandler } from './controllers/sitemap.controller';
 import { checkinService } from './services/checkin.service';
 
 const app = express();
@@ -34,6 +35,7 @@ app.use(express.json({ limit: '10kb' }));
 app.use(cookieParser());
 app.use(globalRateLimiter);
 
+app.get('/sitemap.xml', sitemapHandler);
 app.use(`/api/${env.apiVersion}`, apiRouter);
 
 async function bootstrap(): Promise<void> {

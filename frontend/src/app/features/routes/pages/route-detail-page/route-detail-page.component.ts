@@ -26,6 +26,7 @@ const TYPE_LABELS: Record<RouteType, string> = {
 })
 export class RouteDetailPageComponent {
   private readonly routeService = inject(RouteService);
+  private readonly seoService   = inject(SeoService);
   private readonly destroyRef   = inject(DestroyRef);
   private readonly slug: string = inject(ActivatedRoute).snapshot.paramMap.get('slug') ?? '';
 
@@ -46,12 +47,17 @@ export class RouteDetailPageComponent {
         next: (response) => {
           this.routeData.set(response.data);
           this.isLoading.set(false);
-          inject(SeoService).setPage({
+          this.seoService.setPage({
             title:         response.data.title,
             description:   response.data.description,
             canonicalPath: `/rutas/${response.data.slug}`,
             keywords:      `${response.data.title}, rutas Valencia, actividades Aielo de Rugat`,
           });
+          this.seoService.setBreadcrumbs([
+            { name: 'Inicio', url: 'https://casa-caldereta.com/' },
+            { name: 'Rutas', url: 'https://casa-caldereta.com/rutas' },
+            { name: response.data.title, url: `https://casa-caldereta.com/rutas/${response.data.slug}` },
+          ]);
         },
         error: () => {
           this.loadError.set('No se pudo cargar esta ruta.');

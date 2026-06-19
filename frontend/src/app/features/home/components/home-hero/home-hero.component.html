@@ -22,7 +22,15 @@
   </div>
   <div class="home-hero__media" aria-hidden="true">
     @if (heroPhoto()) {
-      <img class="home-hero__img" [src]="heroPhoto()!.url" alt="" loading="eager" />
+      <img
+        class="home-hero__img"
+        [src]="heroPhoto()!.url | cloudinarySrcset:'src'"
+        [srcset]="heroPhoto()!.url | cloudinarySrcset"
+        sizes="(max-width: 768px) 100vw, 50vw"
+        alt="Fachada de Casa Caldereta, alojamiento rural de lujo en Aielo de Rugat, Valencia"
+        loading="eager"
+        fetchpriority="high"
+      />
     } @else {
       <div class="home-hero__img-placeholder"></div>
     }

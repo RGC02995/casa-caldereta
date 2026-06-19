@@ -7,6 +7,7 @@ import { IPhoto, PhotoCategory } from '../../../../core/models/photo.model';
 import { GalleryLightboxComponent } from '../../components/gallery-lightbox/gallery-lightbox.component';
 import { GalleryPhoto } from '../../gallery.types';
 import { SeoService } from '../../../../core/services/seo.service';
+import { CloudinarySrcsetPipe } from '../../../../shared/pipes/cloudinary-srcset.pipe';
 
 const CATEGORY_LABELS: Record<PhotoCategory, string> = {
   exterior:   'gallery.categories.exterior',
@@ -31,7 +32,7 @@ interface PhotoSection {
 
 @Component({
   selector: 'gallery-page',
-  imports: [GalleryLightboxComponent, TranslatePipe],
+  imports: [GalleryLightboxComponent, TranslatePipe, CloudinarySrcsetPipe],
   templateUrl: './gallery-page.component.html',
   styleUrl:    './gallery-page.component.scss',
 })
