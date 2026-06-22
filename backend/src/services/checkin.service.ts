@@ -20,16 +20,21 @@ export interface ICheckinFormInfo {
 }
 
 export interface ITravelerInput {
-  tipoDocumento:    string;
-  numDocumento:     string;
-  numSoporte?:      string;
-  apellido1:        string;
-  apellido2?:       string;
-  nombre:           string;
-  sexo:             string;
-  fechaNacimiento:  string;
-  pais:             string;
-  paisResidencia?:  string;
+  tipoDocumento:       string;
+  numDocumento:        string;
+  numSoporte:          string;
+  apellido1:           string;
+  apellido2:           string;
+  nombre:              string;
+  sexo:                string;
+  fechaNacimiento:     string;
+  parentesco:          string;
+  pais:                string;
+  paisResidencia:      string;
+  ciudadResidencia:    string;
+  direccionResidencia: string;
+  codigoPostal:        string;
+  contacto:            string;
 }
 
 export interface ITodayActivity {
@@ -134,18 +139,23 @@ class CheckinService {
     }
 
     const travelerDocs = travelers.map(travelerInput => ({
-      bookingId:       booking._id,
-      tipoDocumento:   travelerInput.tipoDocumento,
-      numDocumento:    travelerInput.numDocumento,
-      numSoporte:      travelerInput.numSoporte,
-      apellido1:       travelerInput.apellido1,
-      apellido2:       travelerInput.apellido2,
-      nombre:          travelerInput.nombre,
-      sexo:            travelerInput.sexo,
-      fechaNacimiento: new Date(travelerInput.fechaNacimiento),
-      pais:            travelerInput.pais,
-      paisResidencia:  travelerInput.paisResidencia,
-      fechaEntrada:    booking.checkIn,
+      bookingId:           booking._id,
+      tipoDocumento:       travelerInput.tipoDocumento,
+      numDocumento:        travelerInput.numDocumento,
+      numSoporte:          travelerInput.numSoporte,
+      apellido1:           travelerInput.apellido1,
+      apellido2:           travelerInput.apellido2,
+      nombre:              travelerInput.nombre,
+      sexo:                travelerInput.sexo,
+      fechaNacimiento:     new Date(travelerInput.fechaNacimiento),
+      parentesco:          travelerInput.parentesco,
+      pais:                travelerInput.pais,
+      paisResidencia:      travelerInput.paisResidencia,
+      ciudadResidencia:    travelerInput.ciudadResidencia,
+      direccionResidencia: travelerInput.direccionResidencia,
+      codigoPostal:        travelerInput.codigoPostal,
+      contacto:            travelerInput.contacto,
+      fechaEntrada:        booking.checkIn,
     }));
 
     await TravelerDocumentModel.insertMany(travelerDocs);

@@ -27,19 +27,24 @@ export interface ITodayActivity {
 }
 
 export interface ITravelerDocument {
-  readonly id:              string;
-  readonly bookingId:       string;
-  readonly tipoDocumento:   TipoDocumento;
-  readonly numDocumento:    string;
-  readonly numSoporte?:     string;
-  readonly apellido1:       string;
-  readonly apellido2?:      string;
-  readonly nombre:          string;
-  readonly sexo:            Sexo;
-  readonly fechaNacimiento: string;
-  readonly pais:            string;
-  readonly paisResidencia?: string;
-  readonly fechaEntrada:    string;
+  readonly id:                  string;
+  readonly bookingId:           string;
+  readonly tipoDocumento:       TipoDocumento;
+  readonly numDocumento:        string;
+  readonly numSoporte:          string;
+  readonly apellido1:           string;
+  readonly apellido2:           string;
+  readonly nombre:              string;
+  readonly sexo:                Sexo;
+  readonly fechaNacimiento:     string;
+  readonly parentesco:          string;
+  readonly pais:                string;
+  readonly paisResidencia:      string;
+  readonly ciudadResidencia:    string;
+  readonly direccionResidencia: string;
+  readonly codigoPostal:        string;
+  readonly contacto:            string;
+  readonly fechaEntrada:        string;
 }
 
 export interface ICheckinFormInfo {
@@ -54,14 +59,19 @@ export interface ICheckinFormInfo {
 }
 
 export interface ITravelerInput {
-  tipoDocumento:   TipoDocumento;
-  numDocumento:    string;
-  numSoporte?:     string;
-  apellido1:       string;
-  apellido2?:      string;
-  nombre:          string;
-  sexo:            Sexo;
-  fechaNacimiento: string;
-  pais:            string;
-  paisResidencia?: string;
+  tipoDocumento:       TipoDocumento;
+  numDocumento:        string;
+  numSoporte:          string;
+  apellido1:           string;
+  apellido2:           string;
+  nombre:              string;
+  sexo:                Sexo;
+  fechaNacimiento:     string;
+  parentesco:          string;
+  pais:                string;
+  paisResidencia:      string;
+  ciudadResidencia:    string;
+  direccionResidencia: string;
+  codigoPostal:        string;
+  contacto:            string;
 }

@@ -233,16 +233,21 @@ export class AdminBookingsComponent {
     this.travelersData().forEach((traveler, index) => {
       if (index > 0) lines.push('');
       lines.push(`--- VIAJERO ${index + 1} ---`);
+      lines.push(`Apellido 1: ${traveler.apellido1}`);
+      lines.push(`Apellido 2: ${traveler.apellido2}`);
+      lines.push(`Nombre: ${traveler.nombre}`);
+      lines.push(`Fecha nacimiento: ${new Date(traveler.fechaNacimiento).toLocaleDateString('es-ES')}`);
+      lines.push(`Sexo: ${traveler.sexo}`);
+      lines.push(`Parentesco: ${traveler.parentesco}`);
       lines.push(`Tipo documento: ${traveler.tipoDocumento}`);
       lines.push(`Nº documento: ${traveler.numDocumento}`);
-      if (traveler.numSoporte) lines.push(`Nº soporte: ${traveler.numSoporte}`);
-      lines.push(`Apellido 1: ${traveler.apellido1}`);
-      if (traveler.apellido2) lines.push(`Apellido 2: ${traveler.apellido2}`);
-      lines.push(`Nombre: ${traveler.nombre}`);
-      lines.push(`Sexo: ${traveler.sexo}`);
-      lines.push(`Fecha nacimiento: ${new Date(traveler.fechaNacimiento).toLocaleDateString('es-ES')}`);
-      lines.push(`País: ${traveler.pais}`);
-      if (traveler.paisResidencia) lines.push(`País residencia: ${traveler.paisResidencia}`);
+      lines.push(`Nº soporte: ${traveler.numSoporte}`);
+      lines.push(`Nacionalidad: ${traveler.pais}`);
+      lines.push(`País residencia: ${traveler.paisResidencia}`);
+      lines.push(`Ciudad residencia: ${traveler.ciudadResidencia}`);
+      lines.push(`Dirección: ${traveler.direccionResidencia}`);
+      lines.push(`Código postal: ${traveler.codigoPostal}`);
+      lines.push(`Teléfono/Email: ${traveler.contacto}`);
     });
 
     navigator.clipboard.writeText(lines.join('\n')).catch(() => undefined);

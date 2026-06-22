@@ -26,16 +26,21 @@ interface IPreArrivalTemplateData extends ITemplateData {
 }
 
 interface ICheckinTraveler {
-  readonly tipoDocumento:   string;
-  readonly numDocumento:    string;
-  readonly numSoporte?:     string;
-  readonly apellido1:       string;
-  readonly apellido2?:      string;
-  readonly nombre:          string;
-  readonly sexo:            string;
-  readonly fechaNacimiento: string;
-  readonly pais:            string;
-  readonly paisResidencia?: string;
+  readonly tipoDocumento:       string;
+  readonly numDocumento:        string;
+  readonly numSoporte:          string;
+  readonly apellido1:           string;
+  readonly apellido2:           string;
+  readonly nombre:              string;
+  readonly sexo:                string;
+  readonly fechaNacimiento:     string;
+  readonly parentesco:          string;
+  readonly pais:                string;
+  readonly paisResidencia:      string;
+  readonly ciudadResidencia:    string;
+  readonly direccionResidencia: string;
+  readonly codigoPostal:        string;
+  readonly contacto:            string;
 }
 
 // ─── Utilidades de formato ────────────────────────────────────────────────────
@@ -309,21 +314,52 @@ function ownerCheckinFormSubmittedHtml(booking: IBookingDocument, travelers: ICh
   const checkIn   = formatDate(booking.checkIn);
   const checkOut  = formatDate(booking.checkOut);
 
-  const travelersRows = travelers.map((t, i) => {
+  const td  = (val: string) =>
+    `<td style="padding:8px 10px;font-family:Arial,sans-serif;font-size:12px;color:#555;border-bottom:1px solid #F0EDE8;vertical-align:top;">${val}</td>`;
+  const tdLabel = (val: string) =>
+    `<td style="padding:8px 10px;font-family:Arial,sans-serif;font-size:11px;color:#888;border-bottom:1px solid #F0EDE8;white-space:nowrap;vertical-align:top;">${val}</td>`;
+
+  const travelersBlocks = travelers.map((t, i) => {
     const fechaNac  = new Date(t.fechaNacimiento).toLocaleDateString('es-ES', {
       day: '2-digit', month: '2-digit', year: 'numeric',
     });
-    const nombre    = `${escapeHtml(t.apellido1)}${t.apellido2 ? ' ' + escapeHtml(t.apellido2) : ''}, ${escapeHtml(t.nombre)}`;
-    const documento = `${escapeHtml(t.tipoDocumento)}: ${escapeHtml(t.numDocumento)}${t.numSoporte ? ' / ' + escapeHtml(t.numSoporte) : ''}`;
+    const nombre    = `${escapeHtml(t.apellido1)} ${escapeHtml(t.apellido2)}, ${escapeHtml(t.nombre)}`;
     const bg        = i % 2 === 0 ? '#FFF' : '#F9F7F4';
-    return `<tr style="background:${bg};">
-      <td style="padding:10px 12px;font-family:Arial,sans-serif;font-size:12px;color:#2C2C2C;border-bottom:1px solid #F0EDE8;">${i + 1}</td>
-      <td style="padding:10px 12px;font-family:Arial,sans-serif;font-size:12px;color:#2C2C2C;border-bottom:1px solid #F0EDE8;">${nombre}</td>
-      <td style="padding:10px 12px;font-family:Arial,sans-serif;font-size:12px;color:#555;border-bottom:1px solid #F0EDE8;">${documento}</td>
-      <td style="padding:10px 12px;font-family:Arial,sans-serif;font-size:12px;color:#555;border-bottom:1px solid #F0EDE8;">${fechaNac}</td>
-      <td style="padding:10px 12px;font-family:Arial,sans-serif;font-size:12px;color:#555;border-bottom:1px solid #F0EDE8;">${escapeHtml(t.sexo)}</td>
-      <td style="padding:10px 12px;font-family:Arial,sans-serif;font-size:12px;color:#555;border-bottom:1px solid #F0EDE8;">${escapeHtml(t.pais)}</td>
-    </tr>`;
+    return `
+    <tr style="background:#2C2C2C;">
+      <td colspan="4" style="padding:8px 12px;font-family:Arial,sans-serif;font-size:11px;color:#C9A96E;letter-spacing:1px;font-weight:400;">
+        VIAJERO ${i + 1}
+      </td>
+    </tr>
+    <tr style="background:${bg};">
+      ${tdLabel('Apellidos, Nombre')}${td(escapeHtml(nombre))}
+      ${tdLabel('Fecha nacimiento')}${td(fechaNac)}
+    </tr>
+    <tr style="background:${bg};">
+      ${tdLabel('Tipo documento')}${td(escapeHtml(t.tipoDocumento))}
+      ${tdLabel('N&#186; documento')}${td(escapeHtml(t.numDocumento))}
+    </tr>
+    <tr style="background:${bg};">
+      ${tdLabel('N&#186; soporte')}${td(escapeHtml(t.numSoporte))}
+      ${tdLabel('Sexo')}${td(escapeHtml(t.sexo === 'H' ? 'Hombre' : 'Mujer'))}
+    </tr>
+    <tr style="background:${bg};">
+      ${tdLabel('Parentesco')}${td(escapeHtml(t.parentesco))}
+      ${tdLabel('Nacionalidad')}${td(escapeHtml(t.pais))}
+    </tr>
+    <tr style="background:${bg};">
+      ${tdLabel('Pa&#237;s residencia')}${td(escapeHtml(t.paisResidencia))}
+      ${tdLabel('Ciudad residencia')}${td(escapeHtml(t.ciudadResidencia))}
+    </tr>
+    <tr style="background:${bg};">
+      ${tdLabel('Direcci&#243;n')}${td(escapeHtml(t.direccionResidencia))}
+      ${tdLabel('C&#243;digo postal')}${td(escapeHtml(t.codigoPostal))}
+    </tr>
+    <tr style="background:${bg};">
+      ${tdLabel('Tel&#233;fono / Email')}${td(escapeHtml(t.contacto))}
+      <td></td><td></td>
+    </tr>
+    <tr><td colspan="4" style="padding:4px 0;"></td></tr>`;
   }).join('');
 
   return emailWrapper(
@@ -338,18 +374,8 @@ function ownerCheckinFormSubmittedHtml(booking: IBookingDocument, travelers: ICh
       ${travelers.length} viajero${travelers.length === 1 ? '' : 's'} registrado${travelers.length === 1 ? '' : 's'} &mdash; RD 933/2021.
     </p>
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #E8E4DC;border-collapse:collapse;">
-      <thead>
-        <tr style="background:#2C2C2C;">
-          <th style="padding:10px 12px;font-family:Arial,sans-serif;font-size:11px;color:#C9A96E;text-align:left;font-weight:400;letter-spacing:1px;">#</th>
-          <th style="padding:10px 12px;font-family:Arial,sans-serif;font-size:11px;color:#C9A96E;text-align:left;font-weight:400;letter-spacing:1px;">Nombre completo</th>
-          <th style="padding:10px 12px;font-family:Arial,sans-serif;font-size:11px;color:#C9A96E;text-align:left;font-weight:400;letter-spacing:1px;">Documento</th>
-          <th style="padding:10px 12px;font-family:Arial,sans-serif;font-size:11px;color:#C9A96E;text-align:left;font-weight:400;letter-spacing:1px;">F. Nacimiento</th>
-          <th style="padding:10px 12px;font-family:Arial,sans-serif;font-size:11px;color:#C9A96E;text-align:left;font-weight:400;letter-spacing:1px;">Sexo</th>
-          <th style="padding:10px 12px;font-family:Arial,sans-serif;font-size:11px;color:#C9A96E;text-align:left;font-weight:400;letter-spacing:1px;">Pa&#237;s</th>
-        </tr>
-      </thead>
       <tbody>
-        ${travelersRows}
+        ${travelersBlocks}
       </tbody>
     </table>
     <div style="margin-top:20px;padding:14px 16px;background:#F9F7F4;border-left:3px solid #C9A96E;">

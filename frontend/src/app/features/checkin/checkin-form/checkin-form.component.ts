@@ -8,30 +8,40 @@ import { ICheckinFormInfo, ITravelerInput, TipoDocumento, Sexo } from '../../../
 type FormState = 'loading' | 'invalid' | 'already-submitted' | 'form' | 'success';
 
 interface TravelerFormData {
-  tipoDocumento:   TipoDocumento;
-  numDocumento:    string;
-  numSoporte:      string;
-  apellido1:       string;
-  apellido2:       string;
-  nombre:          string;
-  sexo:            Sexo | '';
-  fechaNacimiento: string;
-  pais:            string;
-  paisResidencia:  string;
+  tipoDocumento:       TipoDocumento;
+  numDocumento:        string;
+  numSoporte:          string;
+  apellido1:           string;
+  apellido2:           string;
+  nombre:              string;
+  sexo:                Sexo | '';
+  fechaNacimiento:     string;
+  parentesco:          string;
+  pais:                string;
+  paisResidencia:      string;
+  ciudadResidencia:    string;
+  direccionResidencia: string;
+  codigoPostal:        string;
+  contacto:            string;
 }
 
 function emptyTraveler(): TravelerFormData {
   return {
-    tipoDocumento:   'DNI',
-    numDocumento:    '',
-    numSoporte:      '',
-    apellido1:       '',
-    apellido2:       '',
-    nombre:          '',
-    sexo:            '',
-    fechaNacimiento: '',
-    pais:            '',
-    paisResidencia:  '',
+    tipoDocumento:       'DNI',
+    numDocumento:        '',
+    numSoporte:          '',
+    apellido1:           '',
+    apellido2:           '',
+    nombre:              '',
+    sexo:                '',
+    fechaNacimiento:     '',
+    parentesco:          '',
+    pais:                '',
+    paisResidencia:      '',
+    ciudadResidencia:    '',
+    direccionResidencia: '',
+    codigoPostal:        '',
+    contacto:            '',
   };
 }
 
@@ -48,6 +58,18 @@ export class CheckinFormComponent {
 
   readonly TIPOS_DOCUMENTO: TipoDocumento[] = [
     'DNI', 'NIE', 'Pasaporte', 'Permiso de residencia', 'Otro',
+  ];
+
+  readonly PARENTESCOS: string[] = [
+    'Titular',
+    'Pareja / Cónyuge',
+    'Padre / Madre',
+    'Hijo / Hija',
+    'Abuelo / Abuela',
+    'Nieto / Nieta',
+    'Hermano / Hermana',
+    'Otro familiar',
+    'Acompañante',
   ];
 
   readonly state       = signal<FormState>('loading');
@@ -116,21 +138,23 @@ export class CheckinFormComponent {
       return;
     }
 
-    const payload: ITravelerInput[] = this.travelers().map(travelerData => {
-      const input: ITravelerInput = {
-        tipoDocumento:   travelerData.tipoDocumento,
-        numDocumento:    travelerData.numDocumento.trim(),
-        apellido1:       travelerData.apellido1.trim(),
-        nombre:          travelerData.nombre.trim(),
-        sexo:            travelerData.sexo as Sexo,
-        fechaNacimiento: travelerData.fechaNacimiento,
-        pais:            travelerData.pais.trim(),
-      };
-      if (travelerData.numSoporte.trim())     input.numSoporte     = travelerData.numSoporte.trim();
-      if (travelerData.apellido2.trim())      input.apellido2      = travelerData.apellido2.trim();
-      if (travelerData.paisResidencia.trim()) input.paisResidencia = travelerData.paisResidencia.trim();
-      return input;
-    });
+    const payload: ITravelerInput[] = this.travelers().map(travelerData => ({
+      tipoDocumento:       travelerData.tipoDocumento,
+      numDocumento:        travelerData.numDocumento.trim(),
+      numSoporte:          travelerData.numSoporte.trim(),
+      apellido1:           travelerData.apellido1.trim(),
+      apellido2:           travelerData.apellido2.trim(),
+      nombre:              travelerData.nombre.trim(),
+      sexo:                travelerData.sexo as Sexo,
+      fechaNacimiento:     travelerData.fechaNacimiento,
+      parentesco:          travelerData.parentesco.trim(),
+      pais:                travelerData.pais.trim(),
+      paisResidencia:      travelerData.paisResidencia.trim(),
+      ciudadResidencia:    travelerData.ciudadResidencia.trim(),
+      direccionResidencia: travelerData.direccionResidencia.trim(),
+      codigoPostal:        travelerData.codigoPostal.trim(),
+      contacto:            travelerData.contacto.trim(),
+    }));
 
     this.submitting.set(true);
     this.submitError.set('');
@@ -159,12 +183,21 @@ export class CheckinFormComponent {
     for (let i = 0; i < travelerList.length; i++) {
       const traveler = travelerList[i]!;
       const prefix   = `Viajero ${i + 1}`;
-      if (!traveler.numDocumento.trim())    return `${prefix}: el campo "Nº documento" es obligatorio.`;
-      if (!traveler.apellido1.trim())       return `${prefix}: el campo "Primer apellido" es obligatorio.`;
-      if (!traveler.nombre.trim())          return `${prefix}: el campo "Nombre" es obligatorio.`;
-      if (!traveler.sexo)                   return `${prefix}: el campo "Sexo" es obligatorio.`;
-      if (!traveler.fechaNacimiento)        return `${prefix}: el campo "Fecha de nacimiento" es obligatorio.`;
-      if (!traveler.pais.trim())            return `${prefix}: el campo "País" es obligatorio.`;
+      if (!traveler.apellido1.trim())           return `${prefix}: el campo "Primer apellido" es obligatorio.`;
+      if (!traveler.apellido2.trim())           return `${prefix}: el campo "Segundo apellido" es obligatorio.`;
+      if (!traveler.nombre.trim())              return `${prefix}: el campo "Nombre" es obligatorio.`;
+      if (!traveler.fechaNacimiento)            return `${prefix}: el campo "Fecha de nacimiento" es obligatorio.`;
+      if (!traveler.parentesco.trim())          return `${prefix}: el campo "Parentesco" es obligatorio.`;
+      if (!traveler.tipoDocumento)              return `${prefix}: el campo "Tipo de documento" es obligatorio.`;
+      if (!traveler.numDocumento.trim())        return `${prefix}: el campo "Nº de documento" es obligatorio.`;
+      if (!traveler.numSoporte.trim())          return `${prefix}: el campo "Nº de soporte" es obligatorio.`;
+      if (!traveler.sexo)                       return `${prefix}: el campo "Sexo" es obligatorio.`;
+      if (!traveler.pais.trim())                return `${prefix}: el campo "Nacionalidad" es obligatorio.`;
+      if (!traveler.paisResidencia.trim())      return `${prefix}: el campo "País de residencia" es obligatorio.`;
+      if (!traveler.ciudadResidencia.trim())    return `${prefix}: el campo "Ciudad de residencia" es obligatorio.`;
+      if (!traveler.direccionResidencia.trim()) return `${prefix}: el campo "Dirección de residencia" es obligatorio.`;
+      if (!traveler.codigoPostal.trim())        return `${prefix}: el campo "Código postal" es obligatorio.`;
+      if (!traveler.contacto.trim())            return `${prefix}: el campo "Teléfono o correo" es obligatorio.`;
     }
     return null;
   }
