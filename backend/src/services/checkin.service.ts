@@ -155,6 +155,9 @@ class CheckinService {
       guestFormSubmittedAt: new Date(),
       guestFormToken:       null,
     });
+
+    // Notificar al propietario con la lista de viajeros — fire-and-forget
+    void emailService.notifyOwnerCheckinFormSubmitted(withId(booking), travelers);
   }
 
   // ─── Admin: Check-in / Check-out ─────────────────────────────────────────────

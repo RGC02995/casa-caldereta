@@ -70,13 +70,13 @@
     "openPhoto": "Abrir foto: ",
     "loadError": "No se pudieron cargar las imágenes.",
     "categories": {
-      "exterior":   "Exterior",
-      "interior":   "Interior",
-      "cocina":     "Cocina",
+      "exterior": "Exterior",
+      "interior": "Interior",
+      "cocina": "Cocina",
       "dormitorio": "Dormitorios",
-      "bano":       "Baños",
-      "jardin":     "Jardín",
-      "otros":      "Otros"
+      "bano": "Baños",
+      "jardin": "Jardín",
+      "otros": "Otros"
     }
   },
   "routes": {
@@ -88,12 +88,12 @@
     "loadError": "No se pudieron cargar las rutas.",
     "viewRoute": "Ver ruta: ",
     "difficulty": {
-      "easy":     "Fácil",
+      "easy": "Fácil",
       "moderate": "Moderada",
-      "hard":     "Difícil"
+      "hard": "Difícil"
     },
     "types": {
-      "hiking":  "Senderismo",
+      "hiking": "Senderismo",
       "cycling": "Ciclismo",
       "driving": "En coche",
       "walking": "A pie"
@@ -114,9 +114,9 @@
       "prevMonth": "Mes anterior",
       "nextMonth": "Mes siguiente",
       "legend": {
-        "selected":    "Entrada / Salida",
-        "range":       "Estancia",
-        "booked":      "Reservado",
+        "selected": "Entrada / Salida",
+        "range": "Estancia",
+        "booked": "Reservado",
         "unavailable": "No disponible"
       },
       "days": {
@@ -130,41 +130,41 @@
       }
     },
     "form": {
-      "summary":            "Tu reserva",
-      "checkIn":            "Entrada",
-      "checkOut":           "Salida",
-      "nightSingular":      "noche",
-      "nightPlural":        "noches",
-      "nameLabel":          "Nombre *",
-      "namePlaceholder":    "Tu nombre completo",
-      "emailLabel":         "Email *",
-      "phoneLabel":         "Teléfono *",
-      "phonePlaceholder":   "+34 600 000 000",
-      "guestsLabel":        "Huéspedes *",
-      "messageLabel":       "Mensaje",
+      "summary": "Tu reserva",
+      "checkIn": "Entrada",
+      "checkOut": "Salida",
+      "nightSingular": "noche",
+      "nightPlural": "noches",
+      "nameLabel": "Nombre *",
+      "namePlaceholder": "Tu nombre completo",
+      "emailLabel": "Email *",
+      "phoneLabel": "Teléfono *",
+      "phonePlaceholder": "+34 600 000 000",
+      "guestsLabel": "Huéspedes *",
+      "messageLabel": "Mensaje",
       "messagePlaceholder": "Mascotas, peticiones especiales...",
-      "privacyText":        "He leído y acepto la",
-      "privacyLink":        "Política de Privacidad",
-      "ariaSummary":        "Formulario de solicitud de reserva",
-      "submitting":         "Preparando pago...",
-      "selectDates":        "Selecciona las fechas primero",
-      "proceed":            "Proceder al pago",
+      "privacyText": "He leído y acepto la",
+      "privacyLink": "Política de Privacidad",
+      "ariaSummary": "Formulario de solicitud de reserva",
+      "submitting": "Preparando pago...",
+      "selectDates": "Selecciona las fechas primero",
+      "proceed": "Proceder al pago",
       "errors": {
-        "nameRequired":  "El nombre es obligatorio (mínimo 2 caracteres)",
+        "nameRequired": "El nombre es obligatorio (mínimo 2 caracteres)",
         "emailRequired": "El email es obligatorio",
-        "emailInvalid":  "Introduce un email válido",
+        "emailInvalid": "Introduce un email válido",
         "phoneRequired": "El teléfono es obligatorio",
-        "phoneInvalid":  "Introduce un teléfono válido (+34 600 000 000)",
+        "phoneInvalid": "Introduce un teléfono válido (+34 600 000 000)",
         "privacyRequired": "Debes aceptar la política de privacidad",
-        "conflict":      "Esas fechas acaban de ser reservadas por otro usuario. El calendario se ha actualizado — selecciona nuevas fechas.",
-        "default":       "No se pudo preparar el pago. Inténtalo de nuevo."
+        "conflict": "Esas fechas acaban de ser reservadas por otro usuario. El calendario se ha actualizado — selecciona nuevas fechas.",
+        "default": "No se pudo preparar el pago. Inténtalo de nuevo."
       }
     }
   },
   "notFound": {
-    "title":   "Página no encontrada",
+    "title": "Página no encontrada",
     "message": "Parece que esta página no existe o ha sido movida.",
-    "cta":     "Volver al inicio"
+    "cta": "Volver al inicio"
   },
   "legal": {
     "legalNotice": "Aviso Legal",
@@ -179,7 +179,7 @@
     "manage": "Gestionar preferencias"
   },
   "footer": {
-    "tagline": "Tu refugio en el corazón de Valencia",
+    "tagline": "Tu refugio en la Vall d'Albaida",
     "navTitle": "Navegación",
     "legalTitle": "Legal",
     "contactTitle": "Contacto",

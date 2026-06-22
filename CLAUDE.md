@@ -340,6 +340,7 @@ Skill usada: `/barrido-señales` (`.claude/commands/barrido-señales.md`)
 
 ## Pendientes / Preguntas abiertas
 - [x] ~~Sistema check-in — Fase C~~ completado
+- [ ] **Resend — desactivar Click Tracking** en el dashboard (resend.com → dominio → Tracking). Los links del email de pre-llegada pasan por `awstrack.me` (tracker AWS de Resend), que uBO bloquea mostrando aviso de peligro al huésped antes de rellenar el formulario de viajeros.
 - [ ] **Comprar dominio en Namecheap** (primer paso antes de configurar DNS, Vercel, Railway, Resend)
 - [ ] Tras comprar dominio: actualizar `CORS_ORIGIN_PROD` en Railway, `BASE_URL` en `seo.service.ts`, DNS records, Vercel custom domain, Resend domain verification, `RESEND_FROM_EMAIL`
 

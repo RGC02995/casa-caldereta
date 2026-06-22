@@ -1,6 +1,5 @@
 <footer class="site-footer">
   <div class="site-footer__inner">
-
     <!-- Columna brand -->
     <div class="site-footer__brand">
       <a routerLink="/" class="site-footer__logo-link" aria-label="Casa Caldereta — Inicio">
@@ -10,7 +9,7 @@
           class="site-footer__logo-img"
           width="64"
           height="64"
-        >
+        />
         <span class="site-footer__logo-name">Casa Caldereta</span>
       </a>
       <p class="site-footer__tagline">{{ 'footer.tagline' | translate }}</p>
@@ -20,9 +19,9 @@
     <div class="site-footer__col">
       <h3 class="site-footer__col-title">{{ 'footer.navTitle' | translate }}</h3>
       <nav class="site-footer__nav" aria-label="Navegación footer">
-        <a routerLink="/"         class="site-footer__link">{{ 'nav.home'    | translate }}</a>
-        <a routerLink="/galeria"  class="site-footer__link">{{ 'nav.gallery' | translate }}</a>
-        <a routerLink="/rutas"    class="site-footer__link">{{ 'nav.routes'  | translate }}</a>
+        <a routerLink="/" class="site-footer__link">{{ 'nav.home' | translate }}</a>
+        <a routerLink="/galeria" class="site-footer__link">{{ 'nav.gallery' | translate }}</a>
+        <a routerLink="/rutas" class="site-footer__link">{{ 'nav.routes' | translate }}</a>
         <a routerLink="/reservar" class="site-footer__link">{{ 'nav.booking' | translate }}</a>
       </nav>
     </div>
@@ -31,10 +30,18 @@
     <div class="site-footer__col">
       <h3 class="site-footer__col-title">{{ 'footer.legalTitle' | translate }}</h3>
       <nav class="site-footer__nav" aria-label="Navegación legal">
-        <a routerLink="/legal/aviso-legal" class="site-footer__link">{{ 'legal.legalNotice' | translate }}</a>
-        <a routerLink="/legal/privacidad"  class="site-footer__link">{{ 'legal.privacy'     | translate }}</a>
-        <a routerLink="/legal/cookies"     class="site-footer__link">{{ 'legal.cookies'     | translate }}</a>
-        <a routerLink="/legal/terminos"    class="site-footer__link">{{ 'legal.terms'       | translate }}</a>
+        <a routerLink="/legal/aviso-legal" class="site-footer__link">{{
+          'legal.legalNotice' | translate
+        }}</a>
+        <a routerLink="/legal/privacidad" class="site-footer__link">{{
+          'legal.privacy' | translate
+        }}</a>
+        <a routerLink="/legal/cookies" class="site-footer__link">{{
+          'legal.cookies' | translate
+        }}</a>
+        <a routerLink="/legal/terminos" class="site-footer__link">{{
+          'legal.terms' | translate
+        }}</a>
       </nav>
     </div>
 
@@ -45,7 +52,6 @@
         <span class="site-footer__address-line">{{ 'footer.location' | translate }}</span>
       </address>
     </div>
-
   </div>
 
   <!-- Barra inferior: copyright + licencia turística -->
