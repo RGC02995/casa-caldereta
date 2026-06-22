@@ -338,11 +338,41 @@ Skill usada: `/barrido-señales` (`.claude/commands/barrido-señales.md`)
   - Campos RD 933/2021: tipoDocumento, numDocumento, numSoporte?, apellido1/2, nombre, sexo, fechaNacimiento, pais, paisResidencia?
   - `ICheckinFormInfo` + `ITravelerInput` en `checkin.model.ts`; `getForm()` + `submitForm()` en `checkin.service.ts`
 
+## Traspaso de cuentas — Estado (2026-06-22)
+
+### Plataformas y propietarios
+| Plataforma | Cuenta | Estado |
+|---|---|---|
+| Railway (backend nuevo) | casacaldereta@gmail.com | ✅ Activo — `backend-production-777f.up.railway.app` |
+| Railway (backend antiguo) | raulgc2995@gmail.com | ⚠️ Pendiente eliminar — `backend-production-d85c` |
+| Vercel (frontend) | raulgc2995@gmail.com | ⚠️ Pendiente transferir |
+| MongoDB Atlas | casacaldereta@gmail.com | ✅ Transferido |
+| Cloudinary | raulgc2995@gmail.com | ✅ Se queda así (cliente conforme) |
+| Stripe | casacaldereta@gmail.com | ✅ Test mode — webhook apunta a 777f |
+| Resend | casacaldereta@gmail.com | ✅ Activo — FROM: `onboarding@resend.dev` (temporal) |
+| GitHub | raulgc2995@gmail.com | ✅ Se queda así |
+| Namecheap | — | ❌ Dominio `casa-caldereta.com` sin comprar |
+
+### Email del propietario en el sistema
+- `ADMIN_EMAIL` = `casacaldereta@gmail.com`
+- `OWNER_EMAIL` = `casacaldereta@gmail.com`
+- Emails de reservas, check-in, viajeros → llegan a `casacaldereta@gmail.com` ✅
+
+---
+
 ## Pendientes / Preguntas abiertas
-- [x] ~~Sistema check-in — Fase C~~ completado
 - [ ] **Resend — desactivar Click Tracking** en el dashboard (resend.com → dominio → Tracking). Los links del email de pre-llegada pasan por `awstrack.me` (tracker AWS de Resend), que uBO bloquea mostrando aviso de peligro al huésped antes de rellenar el formulario de viajeros.
-- [ ] **Comprar dominio en Namecheap** (primer paso antes de configurar DNS, Vercel, Railway, Resend)
-- [ ] Tras comprar dominio: actualizar `CORS_ORIGIN_PROD` en Railway, `BASE_URL` en `seo.service.ts`, DNS records, Vercel custom domain, Resend domain verification, `RESEND_FROM_EMAIL`
+- [ ] **Comprar dominio `casa-caldereta.com`** en Namecheap con `casacaldereta@gmail.com`
+- [ ] **Tras comprar dominio:**
+  - DNS en Namecheap → apuntar a Vercel + Railway
+  - Vercel → dominio personalizado
+  - Resend → verificar dominio + cambiar `RESEND_FROM_EMAIL` a `reservas@casa-caldereta.com`
+  - Railway → actualizar `CORS_ORIGIN_PROD` y `FRONTEND_URL`
+  - Código → actualizar `BASE_URL` en `seo.service.ts`
+- [ ] **Stripe live** — KYC (DNI propietario + cuenta bancaria) + claves `sk_live_...` + nuevo webhook secret → actualizar Railway
+- [ ] **Vercel** — crear cuenta `casacaldereta@gmail.com` + transferir proyecto frontend
+- [ ] **Eliminar Railway backend antiguo** (`backend-production-d85c`) de la cuenta `raulgc2995@gmail.com`
+- [ ] **SEO** — `og-default.jpg`, teléfono, coordenadas GPS, Google Business Profile, Google Search Console
 
 ---
 
