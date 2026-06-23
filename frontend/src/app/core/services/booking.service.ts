@@ -2,7 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { ApiResponse } from '../models/api-response.model';
-import { IBooking, IBookingAvailability, IBookingRequest, ICheckoutSessionResult, BookingStatus } from '../models/booking.model';
+import {
+  IBooking,
+  IBookingAvailability,
+  IBookingRequest,
+  ICheckoutSessionResult,
+  IPriceEstimate,
+  BookingStatus,
+} from '../models/booking.model';
 
 @Injectable({ providedIn: 'root' })
 export class BookingService {
@@ -16,7 +23,6 @@ export class BookingService {
     return this.api.get<IBooking[]>('bookings/upcoming');
   }
 
-  // Endpoint público — solo devuelve rangos de fechas, sin datos personales
   getAvailability(): Observable<ApiResponse<IBookingAvailability[]>> {
     return this.api.get<IBookingAvailability[]>('bookings/availability');
   }
@@ -41,8 +47,14 @@ export class BookingService {
     return this.api.post<IBooking>(`bookings/${id}/refund`, {});
   }
 
-  getPriceEstimate(checkIn: string, checkOut: string): Observable<ApiResponse<{ totalPrice: number }>> {
-    return this.api.get<{ totalPrice: number }>(`bookings/price-estimate?checkIn=${checkIn}&checkOut=${checkOut}`);
+  createRemainingPaymentSession(id: string): Observable<ApiResponse<{ sessionUrl: string; remainingAmount: number }>> {
+    return this.api.post<{ sessionUrl: string; remainingAmount: number }>(`bookings/${id}/remaining-payment`, {});
+  }
+
+  getPriceEstimate(checkIn: string, checkOut: string, guests: number): Observable<ApiResponse<IPriceEstimate>> {
+    return this.api.get<IPriceEstimate>(
+      `bookings/price-estimate?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`,
+    );
   }
 
   delete(id: string): Observable<ApiResponse<void>> {

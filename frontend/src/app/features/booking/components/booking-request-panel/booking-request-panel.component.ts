@@ -6,9 +6,14 @@ import { format } from 'date-fns';
 import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 import { DateFormatPipe } from '../../../../shared/pipes/date-format.pipe';
 import { BookingService } from '../../../../core/services/booking.service';
+import { IPriceEstimate } from '../../../../core/models/booking.model';
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
 const PHONE_REGEX = /^\+?[\d\s\-]{6,20}$/;
+
+const EMPTY_ESTIMATE: IPriceEstimate = {
+  totalPrice: 0, depositAmount: 0, remainingAmount: 0, nights: 0, pricePerNight: [],
+};
 
 @Component({
   selector: 'booking-request-panel',
@@ -21,27 +26,29 @@ export class BookingRequestPanelComponent {
   private readonly destroyRef     = inject(DestroyRef);
   private readonly translate      = inject(TranslateService);
 
-  readonly checkIn    = input<Date | null>(null);
-  readonly checkOut   = input<Date | null>(null);
-  readonly nights     = input(0);
-  readonly totalPrice = input(0);
+  readonly checkIn       = input<Date | null>(null);
+  readonly checkOut      = input<Date | null>(null);
+  readonly guests        = input<number>(2);
+  readonly priceEstimate = input<IPriceEstimate>(EMPTY_ESTIMATE);
 
   readonly conflictDetected = output<void>();
+  readonly guestsChanged    = output<number>();
 
   readonly isSubmitting = signal(false);
   readonly submitError  = signal('');
 
-  readonly nameValue      = signal('');
-  readonly emailValue     = signal('');
-  readonly phoneValue     = signal('');
-  readonly guestsValue    = signal(2);
-  readonly messageValue   = signal('');
-  readonly privacyChecked = signal(false);
+  readonly nameValue           = signal('');
+  readonly emailValue          = signal('');
+  readonly phoneValue          = signal('');
+  readonly messageValue        = signal('');
+  readonly privacyChecked      = signal(false);
+  readonly cancelPolicyChecked = signal(false);
 
-  readonly nameTouched    = signal(false);
-  readonly emailTouched   = signal(false);
-  readonly phoneTouched   = signal(false);
-  readonly privacyTouched = signal(false);
+  readonly nameTouched          = signal(false);
+  readonly emailTouched         = signal(false);
+  readonly phoneTouched         = signal(false);
+  readonly privacyTouched       = signal(false);
+  readonly cancelPolicyTouched  = signal(false);
 
   readonly nameError = computed(() => {
     if (!this.nameTouched()) return '';
@@ -71,14 +78,28 @@ export class BookingRequestPanelComponent {
     return '';
   });
 
-  readonly isFormValid = computed(() => {
-    const nameValid    = this.nameValue().trim().length >= 2;
-    const emailValid   = EMAIL_REGEX.test(this.emailValue().trim());
-    const phoneValid   = PHONE_REGEX.test(this.phoneValue().trim());
-    const privacyValid = this.privacyChecked();
-    const guestsValid  = this.guestsValue() >= 1 && this.guestsValue() <= 20;
-    return nameValid && emailValid && phoneValid && privacyValid && guestsValid;
+  readonly cancelPolicyError = computed(() => {
+    if (!this.cancelPolicyTouched()) return '';
+    if (!this.cancelPolicyChecked()) return 'booking.form.errors.cancelPolicyRequired';
+    return '';
   });
+
+  readonly isFormValid = computed(() => {
+    const nameValid         = this.nameValue().trim().length >= 2;
+    const emailValid        = EMAIL_REGEX.test(this.emailValue().trim());
+    const phoneValid        = PHONE_REGEX.test(this.phoneValue().trim());
+    const guestsValid       = this.guests() >= 1 && this.guests() <= 6;
+    const privacyValid      = this.privacyChecked();
+    const cancelPolicyValid = this.cancelPolicyChecked();
+    return nameValid && emailValid && phoneValid && guestsValid && privacyValid && cancelPolicyValid;
+  });
+
+  onGuestsChange(event: Event): void {
+    const value = parseInt((event.target as HTMLSelectElement).value, 10);
+    if (!isNaN(value) && value >= 1 && value <= 6) {
+      this.guestsChanged.emit(value);
+    }
+  }
 
   submitBooking(event: Event): void {
     event.preventDefault();
@@ -86,6 +107,7 @@ export class BookingRequestPanelComponent {
     this.emailTouched.set(true);
     this.phoneTouched.set(true);
     this.privacyTouched.set(true);
+    this.cancelPolicyTouched.set(true);
 
     const checkIn  = this.checkIn();
     const checkOut = this.checkOut();
@@ -96,7 +118,6 @@ export class BookingRequestPanelComponent {
     this.isSubmitting.set(true);
     this.submitError.set('');
 
-    const phone = this.phoneValue().trim();
     const notes = this.messageValue().trim();
 
     const requestData = {
@@ -104,29 +125,27 @@ export class BookingRequestPanelComponent {
       checkOut:   format(checkOut, 'yyyy-MM-dd'),
       guestName:  this.nameValue().trim(),
       guestEmail: this.emailValue().trim(),
-      guestPhone: phone,
-      guests:     this.guestsValue(),
+      guestPhone: this.phoneValue().trim(),
+      guests:     this.guests(),
       ...(notes ? { notes } : {}),
     };
 
     this.bookingService.createCheckoutSession(requestData)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-      next: (response) => {
-        // Redirige a Stripe Checkout — salida de la SPA
-        window.location.assign(response.data.sessionUrl);
-      },
-      error: (err: HttpErrorResponse) => {
-        this.isSubmitting.set(false);
-        if (err.status === 409) {
-          this.submitError.set(this.translate.instant('booking.form.errors.conflict'));
-          this.conflictDetected.emit();
-        } else {
-          const serverMessage = err.error?.message as string | undefined;
-          this.submitError.set(serverMessage ?? this.translate.instant('booking.form.errors.default'));
-        }
-      },
-    });
+        next: (response) => {
+          window.location.assign(response.data.sessionUrl);
+        },
+        error: (err: HttpErrorResponse) => {
+          this.isSubmitting.set(false);
+          if (err.status === 409) {
+            this.submitError.set(this.translate.instant('booking.form.errors.conflict'));
+            this.conflictDetected.emit();
+          } else {
+            const serverMessage = err.error?.message as string | undefined;
+            this.submitError.set(serverMessage ?? this.translate.instant('booking.form.errors.default'));
+          }
+        },
+      });
   }
-
 }

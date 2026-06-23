@@ -53,15 +53,32 @@
     font-size: $font-size-lg;
   }
 
-  &__price {
+  &__price-block {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: $space-2;
     padding-top: $space-4;
     border-top: 1px solid $color-neutral-100;
   }
 
-  &__price-detail {
+  &__price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    &--deposit {
+      background-color: rgba($color-primary, 0.06);
+      border-radius: $border-radius-sm;
+      padding: $space-2 $space-3;
+      margin: $space-1 0;
+    }
+
+    &--remaining {
+      opacity: 0.65;
+    }
+  }
+
+  &__price-label {
     font-size: $font-size-sm;
     color: $color-neutral-500;
   }
@@ -71,6 +88,17 @@
     font-size: $font-size-2xl;
     font-weight: $font-weight-regular;
     color: $color-primary;
+  }
+
+  &__price-value {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-neutral-700;
+
+    &--highlight {
+      font-size: $font-size-lg;
+      color: $color-primary;
+    }
   }
 
   &__note {
@@ -101,6 +129,38 @@
     @include label-text;
     font-size: $font-size-xs;
     color: $color-neutral-600;
+  }
+
+  &__select {
+    padding: $space-3 $space-4;
+    border: 1px solid $color-neutral-300;
+    border-radius: $border-radius-sm;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-800;
+    background-color: $color-white;
+    width: 100%;
+    cursor: pointer;
+    transition: border-color $transition-fast;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2388ad95' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right $space-3 center;
+    background-size: 16px;
+    padding-right: $space-8;
+
+    &:focus {
+      outline: none;
+      border-color: $color-secondary;
+    }
+  }
+
+  &__payment-hint {
+    font-size: $font-size-xs;
+    color: $color-neutral-500;
+    text-align: center;
+    margin: 0;
+    line-height: $line-height-relaxed;
   }
 
   &__input,

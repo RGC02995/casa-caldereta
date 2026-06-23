@@ -9,7 +9,9 @@ import {
   updateBookingStatusHandler,
   deleteBookingHandler,
   createCheckoutSessionHandler,
+  createRemainingPaymentSessionHandler,
   refundBookingHandler,
+  getInvoiceHandler,
 } from '../controllers/booking.controller';
 import { requireAuth } from '../middleware/require-auth.middleware';
 import { publicRateLimiter, checkoutRateLimiter } from '../middleware/rate-limit.middleware';
@@ -22,11 +24,14 @@ bookingRouter.get('/upcoming',     requireAuth, getUpcomingBookingsHandler);
 bookingRouter.get('/availability',    publicRateLimiter,   getAvailabilityHandler);
 bookingRouter.get('/price-estimate', publicRateLimiter,   getPriceEstimateHandler);
 bookingRouter.post('/checkout',    checkoutRateLimiter, createCheckoutSessionHandler);
+// Ruta pública — el token HMAC reemplaza la autenticación
+bookingRouter.get('/:id/invoice',  getInvoiceHandler);
 bookingRouter.get('/:id',          requireAuth, getBookingByIdHandler);
 // POST / ahora solo admin — para reservas manuales sin Stripe
 bookingRouter.post('/',            requireAuth, createBookingHandler);
-bookingRouter.patch('/:id/status', requireAuth, updateBookingStatusHandler);
-bookingRouter.post('/:id/refund',  requireAuth, refundBookingHandler);
-bookingRouter.delete('/:id',       requireAuth, deleteBookingHandler);
+bookingRouter.patch('/:id/status',             requireAuth, updateBookingStatusHandler);
+bookingRouter.post('/:id/refund',             requireAuth, refundBookingHandler);
+bookingRouter.post('/:id/remaining-payment',  requireAuth, createRemainingPaymentSessionHandler);
+bookingRouter.delete('/:id',                  requireAuth, deleteBookingHandler);
 
 export default bookingRouter;

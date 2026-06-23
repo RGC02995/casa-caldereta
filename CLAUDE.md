@@ -360,7 +360,20 @@ Skill usada: `/barrido-señales` (`.claude/commands/barrido-señales.md`)
 
 ---
 
+### Sistema de precios + pagos + check-in automático ✅ COMPLETADO (2026-06-22)
+- [x] **Motor de precios** — `pricing.util.ts`: basePrice(día semana) + max(0, personas-2)×20€. Lun-Jue 100€ / Vie 150€ / Sáb 180€ / Dom cerrado
+- [x] **Stripe 50% depósito** — checkout cobra solo la mitad; `depositAmount`+`remainingAmount` en modelo; webhook distingue `type: deposit` vs `type: remaining`
+- [x] **Segundo pago** — `POST /bookings/:id/remaining-payment` crea sesión Stripe; cron 10:00 envía email 7 días antes con enlace de pago
+- [x] **Política cancelación** — > 7 días: reembolso; ≤ 7 días: propietario retiene. Checkbox obligatorio antes de pagar en Stripe
+- [x] **Check-in automático** — cron cada hora ejecuta a la hora configurada: registra `checkedInAt` + email bienvenida al huésped. El propietario puede seguir haciéndolo manualmente como backup
+- [x] **Domingo cerrado** — validado en backend (`SUNDAY_CLOSED`) y bloqueado en frontend
+- [x] **Frontend booking** — selector personas 1-6 (output al padre), precio dinámico en tiempo real (total + depósito + resto), checkbox política cancelación
+- [x] **T&C actualizadas** — política 50%/7días, arras penitenciales (art. 1454 CC), sin desistimiento (art. 103(l) TRLGDCU), hoja reclamaciones, tabla precios, domingos cerrado
+- [x] **Privacidad actualizada** — Stripe, Resend, Railway, Vercel, MongoDB Atlas, Cloudinary nombrados como encargados del tratamiento (art. 28 RGPD)
+
 ## Pendientes / Preguntas abiertas
+- [x] **Fix: formulario pre-llegada + segundo pago en reservas last-minute** — `checkinService.handleWebhookPostConfirmation(booking)` llamado desde el webhook de Stripe tras confirmar el depósito. Comprueba centinelas y envía inmediatamente: (1) recordatorio segundo pago si `daysUntilCheckin <= 7` y no pagado ni avisado; (2) formulario RD 933/2021 si `daysUntilCheckin <= 3` y no enviado. Los crons siguen cubriendo el caso normal (check-in > 7 días).
+- [ ] **Exportar XML SES.HOSPEDERÍA** — Botón "Exportar XML" en el panel de viajeros (admin reservas). Necesita esquema XML oficial del Ministerio del Interior antes de implementar. Pendiente de documentación técnica del portal SES.HOSPEDERÍA.
 - [ ] **Resend — desactivar Click Tracking** en el dashboard (resend.com → dominio → Tracking). Los links del email de pre-llegada pasan por `awstrack.me` (tracker AWS de Resend), que uBO bloquea mostrando aviso de peligro al huésped antes de rellenar el formulario de viajeros.
 - [ ] **Comprar dominio `casa-caldereta.com`** en Namecheap con `casacaldereta@gmail.com`
 - [ ] **Tras comprar dominio:**

@@ -41,10 +41,24 @@ app.use(`/api/${env.apiVersion}`, apiRouter);
 async function bootstrap(): Promise<void> {
   await connectDatabase();
 
-  // Cada día a las 09:00 — envía emails de pre-llegada a reservas confirmadas en 3 días
+  // 09:00 — emails pre-llegada (formulario viajeros, 3 días antes del check-in)
   cron.schedule('0 9 * * *', () => {
     checkinService.sendScheduledPreArrivalEmails().catch((err: unknown) => {
       console.error('[cron] Error en job pre-llegada:', err instanceof Error ? err.message : String(err));
+    });
+  });
+
+  // 10:00 — recordatorio segundo pago (7 días antes del check-in)
+  cron.schedule('0 10 * * *', () => {
+    checkinService.sendScheduledRemainingPaymentEmails().catch((err: unknown) => {
+      console.error('[cron] Error en job pago restante:', err instanceof Error ? err.message : String(err));
+    });
+  });
+
+  // Cada hora — check-in automático a la hora configurada + email de bienvenida
+  cron.schedule('0 * * * *', () => {
+    checkinService.runAutoCheckin().catch((err: unknown) => {
+      console.error('[cron] Error en job auto-checkin:', err instanceof Error ? err.message : String(err));
     });
   });
 

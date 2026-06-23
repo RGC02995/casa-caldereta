@@ -4,9 +4,11 @@ import { CheckinSettingsModel, ICheckinSettingsDocument } from '../models/checki
 import { TravelerDocumentModel, ITravelerDocumentDoc } from '../models/traveler-document.model';
 import { withId } from '../utils/mongoose.util';
 import { emailService } from './email.service';
+import { bookingService } from './booking.service';
 import { env } from '../config/environment';
 
-const DAYS_BEFORE_CHECKIN = 3;
+const DAYS_BEFORE_CHECKIN         = 3;
+const DAYS_BEFORE_REMAINING_PAYMENT = 7;
 
 export interface ICheckinFormInfo {
   bookingId:        string;
@@ -255,6 +257,54 @@ class CheckinService {
     return withId(updated!);
   }
 
+  // ─── Webhook: comprobaciones post-confirmación ───────────────────────────────
+  // Llamado desde el webhook de Stripe tras confirmar el depósito.
+  // Envía el recordatorio del segundo pago y/o el formulario de viajeros si el
+  // check-in está suficientemente próximo y los emails aún no se han enviado.
+  // Usa los mismos centinelas que los crons para evitar duplicados.
+
+  async handleWebhookPostConfirmation(booking: IBookingDocument): Promise<void> {
+    const now              = new Date();
+    const msPerDay         = 1000 * 60 * 60 * 24;
+    const daysUntilCheckin = Math.floor(
+      (new Date(booking.checkIn).getTime() - now.getTime()) / msPerDay,
+    );
+
+    // Segundo pago: check-in dentro de 7 días, aún sin pagar ni avisado
+    if (
+      daysUntilCheckin <= DAYS_BEFORE_REMAINING_PAYMENT &&
+      !booking.remainingPaidAt &&
+      !booking.remainingPaymentEmailSentAt
+    ) {
+      try {
+        const result = await bookingService.createRemainingPaymentSession(String(booking._id));
+        await emailService.sendRemainingPaymentReminder(booking, result.sessionUrl);
+        await BookingModel.findByIdAndUpdate(booking._id, {
+          remainingPaymentEmailSentAt: new Date(),
+        });
+        console.info(`[webhook] Email segundo pago enviado (last-minute) a ${booking.guestEmail}`);
+      } catch (err) {
+        console.error(
+          `[webhook] Error enviando segundo pago last-minute para ${String(booking._id)}:`,
+          err instanceof Error ? err.message : String(err),
+        );
+      }
+    }
+
+    // Formulario viajeros: check-in dentro de 3 días, aún no enviado
+    if (daysUntilCheckin <= DAYS_BEFORE_CHECKIN && !booking.preArrivalEmailSentAt) {
+      try {
+        await this.generateAndSendFormToken(String(booking._id));
+        console.info(`[webhook] Formulario pre-llegada enviado (last-minute) a ${booking.guestEmail}`);
+      } catch (err) {
+        console.error(
+          `[webhook] Error formulario last-minute para ${String(booking._id)}:`,
+          err instanceof Error ? err.message : String(err),
+        );
+      }
+    }
+  }
+
   // ─── Cron: emails pre-llegada ─────────────────────────────────────────────────
 
   // Llamado cada día a las 09:00 desde server.ts — envía email a reservas confirmadas
@@ -286,6 +336,111 @@ class CheckinService {
 
     if (bookings.length > 0) {
       console.info(`[checkin-cron] ${bookings.length} email(s) pre-llegada enviados`);
+    }
+  }
+
+  // ─── Cron: recordatorio segundo pago (7 días antes del check-in) ──────────────
+  // La query busca TODAS las reservas confirmadas con check-in dentro de los
+  // próximos 7 días (no solo exactamente en 7 días). Esto cubre reservas
+  // de última hora confirmadas después de que el cron normal ya pasó.
+  // Si el check-in está además a ≤ 3 días y el formulario no se envió,
+  // lo envía también en el mismo ciclo.
+
+  async sendScheduledRemainingPaymentEmails(): Promise<void> {
+    const now       = new Date();
+    const cutoff    = new Date(now);
+    cutoff.setDate(cutoff.getDate() + DAYS_BEFORE_REMAINING_PAYMENT);
+    cutoff.setHours(23, 59, 59, 999);
+
+    const bookings = await BookingModel.find({
+      status:                      'confirmed',
+      checkIn:                     { $gte: now, $lte: cutoff },
+      remainingPaidAt:             null,
+      remainingPaymentEmailSentAt: null,
+    }).lean<IBookingDocument[]>();
+
+    for (const booking of bookings) {
+      try {
+        const result = await bookingService.createRemainingPaymentSession(String(booking._id));
+        await emailService.sendRemainingPaymentReminder(booking, result.sessionUrl);
+
+        await BookingModel.findByIdAndUpdate(booking._id, {
+          remainingPaymentEmailSentAt: new Date(),
+        });
+
+        console.info(`[payment-cron] Email pago restante enviado a ${booking.guestEmail}`);
+
+        // Si el check-in está a ≤ 3 días y el formulario de viajeros no se ha enviado,
+        // enviarlo ahora (reserva last-minute, el cron de pre-llegada no lo alcanzará).
+        const msPerDay         = 1000 * 60 * 60 * 24;
+        const daysUntilCheckin = Math.floor((new Date(booking.checkIn).getTime() - now.getTime()) / msPerDay);
+
+        if (daysUntilCheckin <= DAYS_BEFORE_CHECKIN && !booking.preArrivalEmailSentAt) {
+          try {
+            await this.generateAndSendFormToken(String(booking._id));
+            console.info(`[payment-cron] Formulario pre-llegada enviado (last-minute) a ${booking.guestEmail}`);
+          } catch (formErr) {
+            console.error(
+              `[payment-cron] Error enviando formulario last-minute para ${String(booking._id)}:`,
+              formErr instanceof Error ? formErr.message : String(formErr),
+            );
+          }
+        }
+      } catch (err) {
+        console.error(
+          `[payment-cron] Error en reserva ${String(booking._id)}:`,
+          err instanceof Error ? err.message : String(err),
+        );
+      }
+    }
+  }
+
+  // ─── Cron: check-in automático ────────────────────────────────────────────────
+
+  // Llamado cada hora — registra check-in automático a la hora configurada
+  // y envía email de bienvenida si aún no se ha enviado
+  async runAutoCheckin(): Promise<void> {
+    const settings = await CheckinSettingsModel.findOne().lean<ICheckinSettingsDocument>();
+    const checkInTime  = settings?.checkInTime  ?? '16:00';
+    const checkOutTime = settings?.checkOutTime ?? '11:00';
+
+    const [checkInHour, checkInMinute] = checkInTime.split(':').map(Number);
+    const now = new Date();
+
+    // Solo ejecutar en la hora correcta (±30 min de margen)
+    const isCheckinHour =
+      now.getHours() === checkInHour &&
+      Math.abs(now.getMinutes() - (checkInMinute ?? 0)) <= 30;
+
+    if (!isCheckinHour) return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const bookings = await BookingModel.find({
+      status:               'confirmed',
+      checkIn:              { $gte: today, $lt: tomorrow },
+      checkedInAt:          null,
+      autoCheckinEmailSentAt: null,
+    }).lean<IBookingDocument[]>();
+
+    for (const booking of bookings) {
+      try {
+        await BookingModel.findByIdAndUpdate(booking._id, {
+          checkedInAt:            new Date(),
+          autoCheckinEmailSentAt: new Date(),
+        });
+
+        await emailService.sendGuestAutoCheckinWelcome(booking, checkOutTime);
+        console.info(`[checkin-auto] Check-in registrado para ${booking.guestName}`);
+      } catch (err) {
+        console.error(
+          `[checkin-auto] Error en reserva ${String(booking._id)}:`,
+          err instanceof Error ? err.message : String(err),
+        );
+      }
     }
   }
 }

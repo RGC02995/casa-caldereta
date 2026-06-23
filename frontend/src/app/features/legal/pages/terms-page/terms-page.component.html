@@ -30,12 +30,13 @@
       <h2 class="legal-page__section-title">1. Objeto y ámbito de aplicación</h2>
       <p class="legal-page__text">
         Las presentes condiciones regulan la relación entre el titular de la vivienda de uso turístico
-        Casa Caldereta ([NOMBRE Y APELLIDOS], NIF: [NIF]) y cualquier persona que realice una reserva
-        o haga uso del alojamiento.
+        Casa Caldereta (<strong>[NOMBRE Y APELLIDOS]</strong>, NIF: <strong>[NIF]</strong>) y cualquier
+        persona que realice una reserva o haga uso del alojamiento.
       </p>
       <p class="legal-page__text">
-        Al confirmar una reserva, el huésped declara haber leído, comprendido y aceptado íntegramente
-        las presentes condiciones.
+        Al confirmar una reserva y abonar el depósito inicial, el huésped declara haber leído,
+        comprendido y aceptado íntegramente las presentes condiciones, que constituyen el contrato
+        de arrendamiento turístico entre las partes.
       </p>
     </section>
 
@@ -49,9 +50,9 @@
       </div>
       <p class="legal-page__text">
         Casa Caldereta es una vivienda de uso turístico inscrita en el Registro de Turismo de la
-        Comunitat Valenciana conforme a la Ley 15/2018 y el Decreto 92/2009. Las características
-        detalladas del alojamiento se facilitan en la descripción del anuncio vigente en el momento
-        de la reserva.
+        Comunitat Valenciana conforme a la Ley 15/2018, de 7 de junio, de Turisme, Oci i Hospitalitat,
+        y el Decreto 92/2009, de 3 de julio. Las características detalladas del alojamiento se facilitan
+        en la descripción publicada en el sitio web en el momento de la reserva.
       </p>
     </section>
 
@@ -65,69 +66,105 @@
         <li>No se permiten celebraciones, fiestas ni reuniones con personas no incluidas en la reserva.</li>
         <li>El alojamiento debe entregarse en las mismas condiciones de orden y limpieza en que fue recibido.</li>
         <li>Queda prohibido mover mobiliario al exterior o dañar jardines, piscina e instalaciones.</li>
+        <li><strong>Los domingos el alojamiento permanece cerrado a nuevas entradas.</strong> Los huéspedes que ya estén alojados pueden permanecer hasta las 20:00 h del domingo.</li>
       </ul>
     </section>
 
     <section class="legal-page__section">
-      <h2 class="legal-page__section-title">4. Proceso de reserva</h2>
+      <h2 class="legal-page__section-title">4. Proceso de reserva y pagos</h2>
       <p class="legal-page__text">
-        La reserva se tramita del siguiente modo:
+        La reserva se formaliza en dos fases de pago:
       </p>
       <ul class="legal-page__list">
-        <li><strong>Solicitud:</strong> el huésped envía el formulario de reserva con las fechas, número de personas y datos de contacto.</li>
-        <li><strong>Confirmación de disponibilidad:</strong> el titular confirma la disponibilidad y comunica el precio total en el plazo de 48 horas.</li>
-        <li><strong>Señal:</strong> para formalizar la reserva, el huésped abona una señal del 30% del importe total. El contrato queda perfeccionado con la recepción de dicho pago.</li>
-        <li><strong>Pago del resto:</strong> el importe restante se abona como mínimo 7 días antes de la fecha de entrada.</li>
-        <li><strong>Check-in / Check-out:</strong> la hora de entrada y salida se acuerdan con el titular. Como referencia, entrada a partir de las 16:00 h y salida antes de las 11:00 h.</li>
+        <li>
+          <strong>Depósito inicial (50 %):</strong> al completar la reserva en el sitio web, el huésped
+          abona el 50 % del importe total a través de la pasarela de pago segura Stripe
+          (tarjeta de crédito/débito). El contrato queda perfeccionado con la recepción de este pago.
+          Las fechas quedan bloqueadas para otros huéspedes desde ese momento.
+        </li>
+        <li>
+          <strong>Pago restante (50 %):</strong> 7 días antes de la fecha de entrada, el titular enviará
+          al huésped un correo electrónico con el enlace de pago para abonar el importe restante. Si el
+          pago no se realiza en el plazo indicado, el titular podrá cancelar la reserva con retención
+          del depósito inicial conforme a la política de cancelación.
+        </li>
+        <li>
+          <strong>Check-in / Check-out:</strong> la hora de entrada y salida se acuerdan con el titular
+          en la confirmación de reserva. Como referencia, entrada a partir de las 16:00 h y salida
+          antes de las 11:00 h.
+        </li>
       </ul>
+      <p class="legal-page__text">
+        En ningún caso se almacenan datos de tarjetas de crédito en nuestros sistemas. El procesamiento
+        de pagos está gestionado íntegramente por Stripe Payments Europe, Ltd., certificada PCI-DSS nivel 1.
+      </p>
     </section>
 
     <section class="legal-page__section">
-      <h2 class="legal-page__section-title">5. Precios y formas de pago</h2>
+      <h2 class="legal-page__section-title">5. Precios</h2>
       <p class="legal-page__text">
-        Los precios indicados en el sitio web son orientativos e incluyen todos los impuestos aplicables
-        (IVA en los servicios que corresponda). El precio definitivo se comunica al huésped en la
-        confirmación de reserva.
+        El precio por noche se calcula en función del día de la semana y del número de personas:
       </p>
-      <p class="legal-page__text">
-        Se aceptan las siguientes formas de pago:
-      </p>
-      <ul class="legal-page__list">
-        <li>Transferencia bancaria (los datos se facilitan en la confirmación de reserva).</li>
-        <li>Tarjeta de crédito/débito a través de pasarela de pago segura (próximamente).</li>
-      </ul>
-    </section>
-
-    <section class="legal-page__section">
-      <h2 class="legal-page__section-title">6. Política de cancelación y modificación</h2>
       <div class="legal-page__table-wrapper">
         <table class="legal-page__table">
           <thead>
             <tr>
-              <th>Antelación de la cancelación</th>
-              <th>Reembolso de la señal</th>
+              <th>Personas</th>
+              <th>Lunes a jueves</th>
+              <th>Viernes</th>
+              <th>Sábado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>1 – 2</td><td>100 €</td><td>150 €</td><td>180 €</td></tr>
+            <tr><td>3</td><td>120 €</td><td>170 €</td><td>200 €</td></tr>
+            <tr><td>4</td><td>140 €</td><td>190 €</td><td>220 €</td></tr>
+            <tr><td>5</td><td>160 €</td><td>210 €</td><td>240 €</td></tr>
+            <tr><td>6</td><td>180 €</td><td>230 €</td><td>260 €</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="legal-page__text">
+        El precio total de la estancia se muestra desglosado antes de confirmar la reserva e incluye
+        todos los conceptos. Los <strong>domingos no se realizan entradas</strong>; los huéspedes ya
+        alojados pueden permanecer hasta las 20:00 h sin coste adicional.
+      </p>
+    </section>
+
+    <section class="legal-page__section">
+      <h2 class="legal-page__section-title">6. Política de cancelación — Arras penitenciales</h2>
+      <p class="legal-page__text">
+        El depósito inicial del 50 % tiene la consideración de <strong>arras penitenciales</strong>
+        conforme al artículo 1.454 del Código Civil español, con las siguientes consecuencias:
+      </p>
+      <div class="legal-page__table-wrapper">
+        <table class="legal-page__table">
+          <thead>
+            <tr>
+              <th>Antelación de la cancelación respecto a la entrada</th>
+              <th>Reembolso al huésped</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>Más de 30 días antes de la entrada</td>
-              <td>100%</td>
+              <td>Más de 7 días antes de la fecha de entrada</td>
+              <td>100 % del depósito abonado</td>
             </tr>
             <tr>
-              <td>Entre 15 y 30 días antes de la entrada</td>
-              <td>50%</td>
-            </tr>
-            <tr>
-              <td>Menos de 15 días antes de la entrada</td>
-              <td>Sin reembolso</td>
+              <td>7 días o menos antes de la fecha de entrada</td>
+              <td>Sin reembolso — el titular retiene el 50 % como indemnización pactada</td>
             </tr>
           </tbody>
         </table>
       </div>
       <p class="legal-page__text">
-        En caso de fuerza mayor debidamente acreditada (enfermedad grave, fallecimiento familiar de
-        primer grado, catástrofe natural), el titular estudiará soluciones alternativas como el cambio
-        de fecha o un bono para estancia futura.
+        Si el titular cancela la reserva por causa no imputable al huésped, devolverá el doble del
+        depósito recibido en el plazo de 5 días hábiles, conforme al artículo 1.454 CC.
+      </p>
+      <p class="legal-page__text">
+        En casos de <strong>fuerza mayor debidamente acreditada</strong> (fallecimiento de familiar de
+        primer grado, hospitalización urgente, catástrofe natural declarada), el titular estudiará
+        soluciones alternativas como cambio de fecha o bono para estancia futura.
       </p>
       <p class="legal-page__text">
         Las modificaciones de fechas están sujetas a disponibilidad y podrán conllevar diferencia de
@@ -136,7 +173,36 @@
     </section>
 
     <section class="legal-page__section">
-      <h2 class="legal-page__section-title">7. Responsabilidades</h2>
+      <h2 class="legal-page__section-title">7. Derecho de desistimiento — Exclusión aplicable</h2>
+      <p class="legal-page__text">
+        De conformidad con el artículo 103, apartado l), del Real Decreto Legislativo 1/2007, de 16
+        de noviembre, por el que se aprueba el Texto Refundido de la Ley General para la Defensa de
+        los Consumidores y Usuarios (TRLGDCU), <strong>el derecho de desistimiento de 14 días no es
+        aplicable</strong> a los contratos de alojamiento turístico cuando el contrato prevé una fecha
+        o un período de ejecución específicos.
+      </p>
+      <p class="legal-page__text">
+        El huésped reconoce y acepta expresamente esta exclusión al confirmar la reserva. La política
+        de cancelación aplicable es la detallada en la cláusula 6 de las presentes condiciones.
+      </p>
+    </section>
+
+    <section class="legal-page__section">
+      <h2 class="legal-page__section-title">8. Registro de viajeros — RD 933/2021</h2>
+      <p class="legal-page__text">
+        Conforme al Real Decreto 933/2021, de 26 de octubre, por el que se establecen las obligaciones
+        de registro documental e información de personas físicas o jurídicas que ejercen actividades de
+        hospedaje (sistema SES.HOSPEDERÍA), todos los viajeros mayores de edad están obligados a
+        cumplimentar el formulario de registro antes de la llegada.
+      </p>
+      <p class="legal-page__text">
+        El titular enviará un enlace al formulario con antelación a la fecha de entrada. Los datos
+        serán comunicados a las autoridades competentes en los plazos previstos en la normativa.
+      </p>
+    </section>
+
+    <section class="legal-page__section">
+      <h2 class="legal-page__section-title">9. Responsabilidades</h2>
       <p class="legal-page__text">
         El huésped es responsable de los daños y perjuicios causados al alojamiento, su mobiliario e
         instalaciones durante su estancia. Los daños detectados al check-out serán comunicados y
@@ -147,19 +213,36 @@
         en el alojamiento, ni de los accidentes derivados de un uso inadecuado de las instalaciones
         (piscina, jardín, cocina, etc.).
       </p>
+      <p class="legal-page__text">
+        El titular dispone del seguro de responsabilidad civil exigido por el artículo 5 del Decreto
+        92/2009, de la Comunitat Valenciana, sobre viviendas turísticas.
+      </p>
     </section>
 
     <section class="legal-page__section">
-      <h2 class="legal-page__section-title">8. Normativa aplicable</h2>
+      <h2 class="legal-page__section-title">10. Hoja de reclamaciones</h2>
       <p class="legal-page__text">
-        Las presentes condiciones se rigen por la legislación española. En caso de conflicto, serán
-        de aplicación preferente las siguientes normas:
+        Conforme al artículo 17 del Decreto 92/2009, el establecimiento dispone de hojas de
+        reclamaciones a disposición de los usuarios. Para solicitarlas, puede dirigirse al titular
+        mediante correo electrónico a <strong>casacaldereta&#64;gmail.com</strong>.
+      </p>
+      <p class="legal-page__text">
+        Asimismo, puede acceder a la resolución de litigios en línea a través de la plataforma
+        europea ODR: <strong>ec.europa.eu/consumers/odr</strong>.
+      </p>
+    </section>
+
+    <section class="legal-page__section">
+      <h2 class="legal-page__section-title">11. Normativa aplicable</h2>
+      <p class="legal-page__text">
+        Las presentes condiciones se rigen por la legislación española. Son de aplicación, entre otras:
       </p>
       <ul class="legal-page__list">
-        <li>Ley 15/2018, de 7 de junio, de Turisme, Oci i Hospitalitat de la Comunitat Valenciana</li>
-        <li>Decreto 92/2009, de 3 de julio, del Consell, sobre viviendas turísticas de la CV</li>
-        <li>Real Decreto Legislativo 1/2007, de 16 de noviembre, Ley General para la Defensa de los Consumidores y Usuarios</li>
-        <li>Código Civil español</li>
+        <li>Real Decreto Legislativo 1/2007, TRLGDCU (defensa de consumidores)</li>
+        <li>Código Civil español — art. 1.454 (arras penitenciales)</li>
+        <li>Ley 15/2018 de Turisme, Oci i Hospitalitat de la Comunitat Valenciana</li>
+        <li>Decreto 92/2009 sobre viviendas turísticas de la Comunitat Valenciana</li>
+        <li>Real Decreto 933/2021 (registro de viajeros — SES.HOSPEDERÍA)</li>
       </ul>
       <p class="legal-page__text">
         Para la resolución de controversias, las partes se someten a los juzgados y tribunales del

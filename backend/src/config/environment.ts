@@ -44,4 +44,7 @@ export const env = {
   stripeWebhookSecret: requireEnv('STRIPE_WEBHOOK_SECRET'),
   // URL del frontend — necesaria para success_url y cancel_url de Stripe Checkout
   frontendUrl:         requireEnv('FRONTEND_URL'),
+  // URL del backend — necesaria para construir el enlace del comprobante de pago en emails
+  // En Railway: añadir BACKEND_URL=https://backend-production-777f.up.railway.app
+  backendUrl:          process.env['BACKEND_URL'] ?? `http://localhost:${process.env['PORT'] ?? '3000'}`,
 } as const;

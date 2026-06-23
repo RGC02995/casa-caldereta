@@ -1,38 +1,54 @@
 export type BookingStatus = 'pending_payment' | 'pending' | 'confirmed' | 'cancelled' | 'completed';
 
 export interface IBooking {
-  readonly id:         string;
+  readonly id:              string;
+  readonly checkIn:         string;
+  readonly checkOut:        string;
+  readonly guestName:       string;
+  readonly guestEmail:      string;
+  readonly guestPhone:      string;
+  readonly guests:          number;
+  readonly totalPrice:      number;
+  readonly depositAmount:   number;
+  readonly remainingAmount: number;
+  readonly status:                         BookingStatus;
+  readonly notes?:                         string;
+  readonly stripePaymentIntentId?:         string;
+  readonly stripeRemainingPaymentIntentId?: string;
+  readonly remainingPaidAt?:               string;
+  readonly remainingPaymentEmailSentAt?:   string;
+  readonly checkedInAt?:                   string;
+  readonly checkedOutAt?:                  string;
+  readonly guestFormSubmittedAt?:          string;
+  readonly preArrivalEmailSentAt?:         string;
+  readonly autoCheckinEmailSentAt?:        string;
+  readonly createdAt:                      string;
+}
+
+export interface IBookingRequest {
   readonly checkIn:    string;
   readonly checkOut:   string;
   readonly guestName:  string;
   readonly guestEmail: string;
   readonly guestPhone: string;
   readonly guests:     number;
-  readonly totalPrice: number;
-  readonly status:                 BookingStatus;
-  readonly notes?:                 string;
-  readonly stripePaymentIntentId?: string;
-  readonly checkedInAt?:           string;
-  readonly checkedOutAt?:          string;
-  readonly guestFormSubmittedAt?:  string;
-  readonly preArrivalEmailSentAt?: string;
-  readonly createdAt:              string;
-}
-
-export interface IBookingRequest {
-  readonly checkIn:     string;
-  readonly checkOut:    string;
-  readonly guestName:   string;
-  readonly guestEmail:  string;
-  readonly guestPhone: string;
-  readonly guests:     number;
   readonly notes?:     string;
 }
 
 export interface ICheckoutSessionResult {
-  readonly sessionUrl:  string;
-  readonly bookingId:   string;
-  readonly totalPrice:  number;
+  readonly sessionUrl:      string;
+  readonly bookingId:       string;
+  readonly totalPrice:      number;
+  readonly depositAmount:   number;
+  readonly remainingAmount: number;
+}
+
+export interface IPriceEstimate {
+  readonly totalPrice:      number;
+  readonly depositAmount:   number;
+  readonly remainingAmount: number;
+  readonly nights:          number;
+  readonly pricePerNight:   number[];
 }
 
 // Respuesta del endpoint público /availability — solo fechas, sin datos del huésped

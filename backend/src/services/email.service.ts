@@ -168,7 +168,7 @@ function ownerNewBookingHtml(data: ITemplateData): string {
   );
 }
 
-function ownerPaymentReceivedHtml(data: ITemplateData): string {
+function ownerPaymentReceivedHtml(data: ITemplateData, label: string = 'Dep&#243;sito (50&nbsp;%) recibido &mdash; Reserva confirmada'): string {
   const { booking } = data;
   const guestName  = escapeHtml(booking.guestName);
   const guestEmail = escapeHtml(booking.guestEmail);
@@ -180,19 +180,40 @@ function ownerPaymentReceivedHtml(data: ITemplateData): string {
        </div>`
     : '';
 
+  const depositFmt   = booking.depositAmount.toLocaleString('es-ES', { minimumFractionDigits: 2 });
+  const remainingFmt = booking.remainingAmount.toLocaleString('es-ES', { minimumFractionDigits: 2 });
+  const totalFmt     = booking.totalPrice.toLocaleString('es-ES',     { minimumFractionDigits: 2 });
+
+  const paymentBreakdown = `
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:16px;border-top:1px solid #F0EDE8;">
+      <tr>
+        <td style="padding:10px 0;border-bottom:1px solid #F0EDE8;font-family:Arial,sans-serif;font-size:12px;color:#999;">Dep&oacute;sito cobrado</td>
+        <td style="padding:10px 0;border-bottom:1px solid #F0EDE8;font-family:Arial,sans-serif;font-size:13px;color:#2C2C2C;text-align:right;">${depositFmt}&nbsp;&euro;</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 0;border-bottom:1px solid #F0EDE8;font-family:Arial,sans-serif;font-size:12px;color:#999;">Restante pendiente (7&nbsp;d&iacute;as antes)</td>
+        <td style="padding:10px 0;border-bottom:1px solid #F0EDE8;font-family:Arial,sans-serif;font-size:13px;color:#888;text-align:right;">${remainingFmt}&nbsp;&euro;</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 0;font-family:Arial,sans-serif;font-size:12px;color:#999;">Total estancia</td>
+        <td style="padding:10px 0;font-family:Arial,sans-serif;font-size:15px;font-weight:700;color:#C9A96E;text-align:right;">${totalFmt}&nbsp;&euro;</td>
+      </tr>
+    </table>`;
+
   return emailWrapper(
-    'Pago recibido — reserva confirmada',
-    `<h2 style="margin:0 0 4px;font-size:20px;font-weight:400;color:#2C2C2C;">&#10003; Pago recibido — Reserva confirmada</h2>
-    <p style="margin:0 0 24px;font-size:12px;color:#999;font-family:Arial,sans-serif;">Confirmada el ${formatDateTime()}</p>
+    label,
+    `<h2 style="margin:0 0 4px;font-size:20px;font-weight:400;color:#2C2C2C;">&#10003; ${label}</h2>
+    <p style="margin:0 0 24px;font-size:12px;color:#999;font-family:Arial,sans-serif;">Recibido el ${formatDateTime()}</p>
     <p style="margin:0 0 4px;font-size:16px;color:#2C2C2C;"><strong>${guestName}</strong></p>
     <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:13px;color:#666;">
       <a href="mailto:${guestEmail}" style="color:#C9A96E;text-decoration:none;">${guestEmail}</a>
     </p>
     <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:13px;color:#666;">${guestPhone}</p>
     <div style="margin-top:12px;padding:10px 14px;background:#F0FDF4;border-left:3px solid #22C55E;font-family:Arial,sans-serif;font-size:12px;color:#166534;">
-      El pago ha sido procesado autom&#225;ticamente por Stripe. No es necesaria ninguna acci&#243;n adicional.
+      El pago ha sido procesado autom&#225;ticamente por Stripe.
     </div>
     ${detailsTable(data)}
+    ${paymentBreakdown}
     ${notesBlock}`,
   );
 }
@@ -270,6 +291,80 @@ function guestPreArrivalHtml(data: IPreArrivalTemplateData): string {
     <p style="margin:24px 0 0;font-size:13px;color:#888;font-family:Arial,sans-serif;line-height:1.6;">
       &#161;Nos vemos pronto en Casa Caldereta!
     </p>`,
+  );
+}
+
+function guestPaymentConfirmedHtml(data: ITemplateData, invoiceUrl?: string): string {
+  const { booking, checkIn, checkOut } = data;
+  const depositFmt   = booking.depositAmount.toLocaleString('es-ES', { minimumFractionDigits: 2 });
+  const remainingFmt = booking.remainingAmount.toLocaleString('es-ES', { minimumFractionDigits: 2 });
+  const totalFmt     = booking.totalPrice.toLocaleString('es-ES',     { minimumFractionDigits: 2 });
+
+  const invoiceBtn = invoiceUrl
+    ? `<table role="presentation" width="100%"><tr><td align="center" style="padding:28px 0 0;">
+        <a href="${invoiceUrl}" style="display:inline-block;padding:12px 28px;background:#2C2C2C;color:#FFF;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;text-decoration:none;border-radius:2px;letter-spacing:2px;text-transform:uppercase;">
+          Ver comprobante de pago
+        </a>
+       </td></tr></table>
+       <p style="margin:10px 0 0;font-family:Arial,sans-serif;font-size:11px;color:#AAA;text-align:center;">
+         El enlace no caduca. Gu&aacute;rdalo o impr&iacute;melo desde el navegador.
+       </p>`
+    : '';
+
+  return emailWrapper(
+    'Reserva confirmada — depósito recibido',
+    `<h2 style="margin:0 0 16px;font-size:20px;font-weight:400;color:#2C2C2C;">&#10003; Dep&oacute;sito recibido &mdash; Reserva confirmada</h2>
+    <p style="margin:0 0 20px;font-size:14px;color:#555;font-family:Arial,sans-serif;line-height:1.7;">
+      Hola, <strong>${escapeHtml(booking.guestName)}</strong>. Hemos recibido el dep&oacute;sito del 50&nbsp;%
+      y tu reserva en <strong>Casa Caldereta</strong> est&aacute; confirmada.
+    </p>
+    ${detailsTable({ booking, checkIn, checkOut })}
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:16px;border-top:1px solid #F0EDE8;">
+      <tr>
+        <td style="padding:10px 0;border-bottom:1px solid #F0EDE8;font-family:Arial,sans-serif;font-size:12px;color:#999;">Dep&oacute;sito abonado ahora</td>
+        <td style="padding:10px 0;border-bottom:1px solid #F0EDE8;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#2C2C2C;text-align:right;">${depositFmt}&nbsp;&euro;</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 0;font-family:Arial,sans-serif;font-size:12px;color:#999;">Segundo pago (7&nbsp;d&iacute;as antes del check-in)</td>
+        <td style="padding:10px 0;font-family:Arial,sans-serif;font-size:13px;color:#888;text-align:right;">${remainingFmt}&nbsp;&euro;</td>
+      </tr>
+    </table>
+    <div style="margin-top:12px;padding:10px 14px;background:#F0FDF4;border-left:3px solid #22C55E;font-family:Arial,sans-serif;font-size:12px;color:#166534;">
+      Recibir&aacute;s un email 7&nbsp;d&iacute;as antes de tu llegada con el enlace para abonar los ${remainingFmt}&nbsp;&euro; restantes.
+      Importe total de la estancia: <strong>${totalFmt}&nbsp;&euro;</strong>.
+    </div>
+    ${invoiceBtn}`,
+  );
+}
+
+function guestFullyPaidHtml(data: ITemplateData, invoiceUrl?: string): string {
+  const { booking, checkIn, checkOut } = data;
+  const totalFmt = booking.totalPrice.toLocaleString('es-ES', { minimumFractionDigits: 2 });
+
+  const invoiceBtn = invoiceUrl
+    ? `<table role="presentation" width="100%"><tr><td align="center" style="padding:28px 0 0;">
+        <a href="${invoiceUrl}" style="display:inline-block;padding:12px 28px;background:#2C2C2C;color:#FFF;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;text-decoration:none;border-radius:2px;letter-spacing:2px;text-transform:uppercase;">
+          Ver comprobante de pago
+        </a>
+       </td></tr></table>
+       <p style="margin:10px 0 0;font-family:Arial,sans-serif;font-size:11px;color:#AAA;text-align:center;">
+         El enlace no caduca. Gu&aacute;rdalo o impr&iacute;melo desde el navegador.
+       </p>`
+    : '';
+
+  return emailWrapper(
+    'Reserva completamente abonada',
+    `<h2 style="margin:0 0 16px;font-size:20px;font-weight:400;color:#2C2C2C;">&#10003; Pago completo &mdash; &#161;Todo listo!</h2>
+    <p style="margin:0 0 20px;font-size:14px;color:#555;font-family:Arial,sans-serif;line-height:1.7;">
+      Hola, <strong>${escapeHtml(booking.guestName)}</strong>. Hemos recibido el segundo pago.
+      Tu estancia en <strong>Casa Caldereta</strong> est&aacute; completamente confirmada y abonada (${totalFmt}&nbsp;&euro;).
+      &#161;Nos vemos pronto!
+    </p>
+    ${detailsTable({ booking, checkIn, checkOut })}
+    <p style="margin:20px 0 0;font-family:Arial,sans-serif;font-size:13px;color:#666;line-height:1.7;">
+      Recibir&aacute;s el email de pre-llegada con instrucciones y el formulario de registro de viajeros unos d&iacute;as antes de tu check-in.
+    </p>
+    ${invoiceBtn}`,
   );
 }
 
@@ -444,20 +539,44 @@ class EmailService {
 
     await this.send({
       to:      env.ownerEmail,
-      subject: `Pago recibido — ${booking.guestName} · ${checkIn}`,
+      subject: `Depósito recibido — ${booking.guestName} · ${checkIn}`,
       html:    ownerPaymentReceivedHtml({ booking, checkIn, checkOut }),
       text:    [
-        `Pago confirmado de ${booking.guestName}.`,
+        `Depósito (50 %) confirmado de ${booking.guestName}.`,
         `Email: ${booking.guestEmail} | Tel: ${booking.guestPhone}`,
         `Check-in: ${checkIn}`,
         `Check-out: ${checkOut}`,
-        `Huéspedes: ${booking.guests} | Total pagado: ${booking.totalPrice} €`,
+        `Huéspedes: ${booking.guests}`,
+        `Depósito: ${booking.depositAmount} € | Restante: ${booking.remainingAmount} € | Total: ${booking.totalPrice} €`,
         booking.notes ? `Notas: ${booking.notes}` : '',
       ].filter(Boolean).join('\n'),
     });
   }
 
-  async sendGuestPaymentConfirmed(booking: IBookingDocument): Promise<void> {
+  async notifyOwnerRemainingPaymentReceived(booking: IBookingDocument): Promise<void> {
+    if (!this.client || !env.ownerEmail) return;
+
+    const checkIn  = formatDate(booking.checkIn);
+    const checkOut = formatDate(booking.checkOut);
+
+    await this.send({
+      to:      env.ownerEmail,
+      subject: `Pago completo recibido — ${booking.guestName} · ${checkIn}`,
+      html:    ownerPaymentReceivedHtml(
+        { booking, checkIn, checkOut },
+        'Segundo pago recibido &mdash; Estancia completamente abonada',
+      ),
+      text:    [
+        `Segundo pago (50 %) confirmado de ${booking.guestName}.`,
+        `Email: ${booking.guestEmail} | Tel: ${booking.guestPhone}`,
+        `Check-in: ${checkIn}`,
+        `Check-out: ${checkOut}`,
+        `Total abonado: ${booking.totalPrice} €`,
+      ].join('\n'),
+    });
+  }
+
+  async sendGuestPaymentConfirmed(booking: IBookingDocument, invoiceUrl?: string): Promise<void> {
     if (!this.client) return;
 
     const checkIn  = formatDate(booking.checkIn);
@@ -467,8 +586,13 @@ class EmailService {
     await this.send({
       to:      booking.guestEmail,
       subject: 'Reserva confirmada — Casa Caldereta',
-      html:    guestStatusUpdateHtml({ booking, checkIn, checkOut, newStatus: 'confirmed' }),
-      text:    `Hola ${booking.guestName}, tu reserva en Casa Caldereta del ${checkIn} al ${checkOut} (${guests}) está confirmada. El importe de ${booking.totalPrice} € ha sido procesado. ¡Te esperamos!`,
+      html:    guestPaymentConfirmedHtml({ booking, checkIn, checkOut }, invoiceUrl),
+      text:    [
+        `Hola ${booking.guestName}, tu reserva en Casa Caldereta del ${checkIn} al ${checkOut} (${guests}) está confirmada.`,
+        `Depósito abonado: ${booking.depositAmount} €.`,
+        `Segundo pago (${booking.remainingAmount} €): recibirás el enlace 7 días antes de tu llegada.`,
+        invoiceUrl ? `Comprobante de pago: ${invoiceUrl}` : '',
+      ].filter(Boolean).join('\n'),
     });
   }
 
@@ -546,6 +670,121 @@ class EmailService {
         `Reserva: ${checkIn} al ${checkOut} · ${booking.guests} huéspedes.`,
         `Viajeros registrados: ${travelers.length}.`,
         `Consulta los detalles en el panel de administración → Reservas → Ver viajeros.`,
+      ].join('\n'),
+    });
+  }
+
+  // ─── Segundo pago — recordatorio (7 días antes del check-in) ────────────────
+
+  async sendRemainingPaymentReminder(booking: IBookingDocument, paymentUrl: string): Promise<void> {
+    const checkIn  = formatDate(booking.checkIn);
+    const checkOut = formatDate(booking.checkOut);
+    const amount   = booking.remainingAmount.toLocaleString('es-ES');
+
+    await this.send({
+      to:      booking.guestEmail,
+      subject: `Casa Caldereta — Pago pendiente: ${amount} € antes de tu llegada`,
+      html: emailWrapper('Pago pendiente — Casa Caldereta', `
+        <h2 style="margin:0 0 8px;font-size:20px;font-weight:400;color:#2C2C2C;letter-spacing:1px;">
+          Faltan 7 d&#237;as para tu llegada
+        </h2>
+        <p style="margin:0 0 20px;font-family:Arial,sans-serif;font-size:14px;color:#666;line-height:1.7;">
+          Hola, ${escapeHtml(booking.guestName)}. Tu reserva en Casa Caldereta se acerca.
+          Para completar la reserva debes abonar el pago restante antes de tu llegada.
+        </p>
+        ${detailsTable({ booking, checkIn, checkOut })}
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:16px;border-top:1px solid #F0EDE8;">
+          <tr>
+            <td style="padding:10px 0;font-family:Arial,sans-serif;font-size:12px;color:#999;">Ya pagado (dep&#243;sito)</td>
+            <td style="padding:10px 0;font-family:Arial,sans-serif;font-size:13px;color:#2C2C2C;">${booking.depositAmount.toLocaleString('es-ES')} &#8364;</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 0;font-family:Arial,sans-serif;font-size:12px;color:#999;">Pendiente de pago</td>
+            <td style="padding:10px 0;font-family:Arial,sans-serif;font-size:16px;font-weight:700;color:#C9A96E;">${amount} &#8364;</td>
+          </tr>
+        </table>
+        <div style="text-align:center;margin-top:28px;">
+          <a href="${paymentUrl}" style="display:inline-block;background:#2C2C2C;color:#FFF;text-decoration:none;padding:14px 32px;font-family:Arial,sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;border-radius:2px;">
+            Completar pago
+          </a>
+        </div>
+        <p style="margin:20px 0 0;font-family:Arial,sans-serif;font-size:11px;color:#AAA;text-align:center;line-height:1.6;">
+          Este enlace caduca en 24 horas.<br>
+          Si tienes alguna duda, escr&#237;benos a casacaldereta@gmail.com.
+        </p>
+      `),
+      text: [
+        `Hola, ${booking.guestName}.`,
+        `Faltan 7 días para tu llegada a Casa Caldereta.`,
+        ``,
+        `PAGO PENDIENTE: ${amount} €`,
+        `Enlace de pago: ${paymentUrl}`,
+        ``,
+        `Check-in: ${checkIn}`,
+        `Check-out: ${checkOut}`,
+        `Huéspedes: ${booking.guests}`,
+      ].join('\n'),
+    });
+  }
+
+  // ─── Segundo pago — confirmación ─────────────────────────────────────────────
+
+  async sendGuestRemainingPaymentConfirmed(booking: IBookingDocument, invoiceUrl?: string): Promise<void> {
+    if (!this.client) return;
+
+    const checkIn  = formatDate(booking.checkIn);
+    const checkOut = formatDate(booking.checkOut);
+    const guests   = `${booking.guests} persona${booking.guests === 1 ? '' : 's'}`;
+
+    await this.send({
+      to:      booking.guestEmail,
+      subject: 'Casa Caldereta — Pago completo ✓',
+      html:    guestFullyPaidHtml({ booking, checkIn, checkOut }, invoiceUrl),
+      text:    [
+        `Hola, ${booking.guestName}.`,
+        `Pago completo. Tu reserva del ${checkIn} al ${checkOut} (${guests}) está totalmente abonada.`,
+        `Total: ${booking.totalPrice.toLocaleString('es-ES')} €`,
+        invoiceUrl ? `Comprobante de pago: ${invoiceUrl}` : '',
+      ].filter(Boolean).join('\n'),
+    });
+  }
+
+  // ─── Check-in automático — email de bienvenida ───────────────────────────────
+
+  async sendGuestAutoCheckinWelcome(booking: IBookingDocument, checkOutTime: string): Promise<void> {
+    const checkOut = formatDate(booking.checkOut);
+
+    await this.send({
+      to:      booking.guestEmail,
+      subject: '¡Bienvenido/a a Casa Caldereta!',
+      html: emailWrapper('¡Bienvenido/a! — Casa Caldereta', `
+        <h2 style="margin:0 0 8px;font-size:20px;font-weight:400;color:#2C2C2C;letter-spacing:1px;">
+          &#161;Bienvenido/a a Casa Caldereta!
+        </h2>
+        <p style="margin:0 0 20px;font-family:Arial,sans-serif;font-size:14px;color:#666;line-height:1.7;">
+          Hola, ${escapeHtml(booking.guestName)}. Esperamos que disfrutes al m&#225;ximo de tu estancia.
+          Estamos a tu disposici&#243;n en casacaldereta@gmail.com si necesitas cualquier cosa.
+        </p>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:20px;border-top:1px solid #F0EDE8;">
+          <tr>
+            <td style="padding:10px 0;border-bottom:1px solid #F0EDE8;font-family:Arial,sans-serif;font-size:12px;color:#999;">Check-out</td>
+            <td style="padding:10px 0;border-bottom:1px solid #F0EDE8;font-family:Arial,sans-serif;font-size:13px;color:#2C2C2C;">${checkOut} antes de las ${checkOutTime} h</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 0;font-family:Arial,sans-serif;font-size:12px;color:#999;">Hu&#233;spedes</td>
+            <td style="padding:10px 0;font-family:Arial,sans-serif;font-size:13px;color:#2C2C2C;">${booking.guests} persona${booking.guests === 1 ? '' : 's'}</td>
+          </tr>
+        </table>
+        <p style="margin:20px 0 0;font-family:Arial,sans-serif;font-size:13px;color:#666;line-height:1.7;">
+          Recuerda dejar el alojamiento en el mismo estado en que lo encontraste.
+          &#161;Gracias por elegir Casa Caldereta!
+        </p>
+      `),
+      text: [
+        `¡Bienvenido/a a Casa Caldereta, ${booking.guestName}!`,
+        ``,
+        `Check-out: ${checkOut} antes de las ${checkOutTime} h`,
+        `Contacto: casacaldereta@gmail.com`,
       ].join('\n'),
     });
   }

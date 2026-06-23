@@ -3,27 +3,42 @@ import { isValidObjectId } from 'mongoose';
 import { bookingService, ICreateBookingData } from '../services/booking.service';
 import { BookingStatus } from '../models/booking.model';
 import { emailService } from '../services/email.service';
+import { verifyInvoiceToken, generateInvoiceHtml } from '../utils/invoice.util';
 
 export async function getPriceEstimateHandler(req: Request, res: Response): Promise<void> {
-  const { checkIn, checkOut } = req.query as { checkIn?: string; checkOut?: string };
+  const { checkIn, checkOut, guests } = req.query as {
+    checkIn?: string;
+    checkOut?: string;
+    guests?:  string;
+  };
+
   if (!checkIn || !checkOut) {
     res.status(400).json({ success: false, message: 'Faltan parámetros checkIn y checkOut' });
     return;
   }
+
+  const parsedGuests = guests ? parseInt(guests, 10) : 2;
+  if (isNaN(parsedGuests) || parsedGuests < 1 || parsedGuests > 6) {
+    res.status(400).json({ success: false, message: 'El número de personas debe ser entre 1 y 6' });
+    return;
+  }
+
   try {
-    const estimate = await bookingService.getEstimate(checkIn, checkOut);
+    const estimate = await bookingService.getEstimate(checkIn, checkOut, parsedGuests);
     res.status(200).json({ success: true, data: estimate, message: 'Estimación calculada' });
   } catch (error) {
-    if (error instanceof Error && (error as { code?: string }).code === 'INVALID_DATES') {
-      res.status(400).json({ success: false, message: error.message });
-      return;
+    if (error instanceof Error) {
+      const code = (error as { code?: string }).code;
+      if (code === 'INVALID_DATES' || code === 'SUNDAY_CLOSED') {
+        res.status(400).json({ success: false, message: error.message });
+        return;
+      }
     }
     res.status(500).json({ success: false, message: 'Error al calcular la estimación' });
   }
 }
 
 const VALID_STATUSES: BookingStatus[] = ['pending_payment', 'pending', 'confirmed', 'cancelled', 'completed'];
-
 const PHONE_REGEX = /^\+?[\d\s\-]{6,20}$/;
 
 function validateBookingInput(body: Partial<ICreateBookingData>): string | null {
@@ -34,8 +49,8 @@ function validateBookingInput(body: Partial<ICreateBookingData>): string | null 
     return 'El nombre debe tener entre 2 y 100 caracteres';
   if (typeof guestEmail !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail.trim()))
     return 'Email no válido';
-  if (typeof guests !== 'number' || !Number.isInteger(guests) || guests < 1 || guests > 20)
-    return 'El número de huéspedes debe ser entre 1 y 20';
+  if (typeof guests !== 'number' || !Number.isInteger(guests) || guests < 1 || guests > 6)
+    return 'El número de personas debe ser entre 1 y 6';
   if (typeof guestPhone !== 'string' || !PHONE_REGEX.test(guestPhone.trim()))
     return 'Teléfono no válido';
   if (notes !== undefined && (typeof notes !== 'string' || notes.trim().length > 500))
@@ -61,7 +76,6 @@ export async function getUpcomingBookingsHandler(_req: Request, res: Response): 
   }
 }
 
-// Endpoint público — devuelve solo fechas de reservas activas, sin datos del huésped
 export async function getAvailabilityHandler(_req: Request, res: Response): Promise<void> {
   try {
     const availability = await bookingService.getAvailability();
@@ -104,23 +118,19 @@ export async function createBookingHandler(req: Request, res: Response): Promise
       guestPhone: guestPhone.trim(),
       guests,
     };
-
     const trimmedNotes = notes?.trim();
     if (trimmedNotes) bookingData.notes = trimmedNotes;
 
     const booking = await bookingService.create(bookingData);
     res.status(201).json({ success: true, data: booking, message: 'Reserva creada correctamente' });
 
-    // Fire-and-forget — la respuesta ya ha sido enviada, los emails no bloquean
     void emailService.notifyOwnerNewBooking(booking);
     void emailService.sendGuestBookingReceived(booking);
   } catch (error) {
     if (error instanceof Error) {
       const code = (error as { code?: string }).code;
-      if (code === 'DATE_CONFLICT') {
-        res.status(409).json({ success: false, message: error.message });
-        return;
-      }
+      if (code === 'DATE_CONFLICT') { res.status(409).json({ success: false, message: error.message }); return; }
+      if (code === 'SUNDAY_CLOSED') { res.status(400).json({ success: false, message: error.message }); return; }
       if (code === 'INVALID_DATES' || error.name === 'ValidationError') {
         res.status(400).json({ success: false, message: error.message });
         return;
@@ -137,7 +147,6 @@ export async function updateBookingStatusHandler(req: Request<{ id: string }>, r
   }
 
   const { status } = req.body as { status?: BookingStatus };
-
   if (!status || !VALID_STATUSES.includes(status)) {
     res.status(400).json({ success: false, message: `Estado no válido. Valores permitidos: ${VALID_STATUSES.join(', ')}` });
     return;
@@ -151,7 +160,6 @@ export async function updateBookingStatusHandler(req: Request<{ id: string }>, r
     }
     res.status(200).json({ success: true, data: booking, message: 'Estado actualizado' });
 
-    // Notificar al huésped solo en transiciones relevantes
     if (status === 'confirmed' || status === 'cancelled') {
       void emailService.sendGuestStatusUpdate(booking, status);
     }
@@ -193,7 +201,6 @@ export async function createCheckoutSessionHandler(req: Request, res: Response):
       guestPhone: guestPhone.trim(),
       guests,
     };
-
     const trimmedNotes = notes?.trim();
     if (trimmedNotes) bookingData.notes = trimmedNotes;
 
@@ -202,16 +209,67 @@ export async function createCheckoutSessionHandler(req: Request, res: Response):
   } catch (error) {
     if (error instanceof Error) {
       const code = (error as { code?: string }).code;
-      if (code === 'DATE_CONFLICT') {
-        res.status(409).json({ success: false, message: error.message });
-        return;
-      }
+      if (code === 'DATE_CONFLICT') { res.status(409).json({ success: false, message: error.message }); return; }
+      if (code === 'SUNDAY_CLOSED') { res.status(400).json({ success: false, message: error.message }); return; }
       if (code === 'INVALID_DATES' || error.name === 'ValidationError') {
         res.status(400).json({ success: false, message: error.message });
         return;
       }
     }
     res.status(500).json({ success: false, message: 'Error al crear la sesión de pago' });
+  }
+}
+
+export async function createRemainingPaymentSessionHandler(req: Request<{ id: string }>, res: Response): Promise<void> {
+  if (!isValidObjectId(req.params.id)) {
+    res.status(400).json({ success: false, message: 'ID no válido' });
+    return;
+  }
+
+  try {
+    const result = await bookingService.createRemainingPaymentSession(req.params.id);
+    res.status(201).json({ success: true, data: result, message: 'Sesión de pago restante creada' });
+  } catch (error) {
+    if (error instanceof Error) {
+      const code = (error as { code?: string }).code;
+      if (code === 'NOT_FOUND')      { res.status(404).json({ success: false, message: error.message }); return; }
+      if (code === 'INVALID_STATUS') { res.status(422).json({ success: false, message: error.message }); return; }
+      if (code === 'ALREADY_PAID')   { res.status(409).json({ success: false, message: error.message }); return; }
+    }
+    res.status(500).json({ success: false, message: 'Error al crear la sesión de pago restante' });
+  }
+}
+
+export async function getInvoiceHandler(req: Request<{ id: string }>, res: Response): Promise<void> {
+  const { id } = req.params;
+  const { token } = req.query as { token?: string };
+
+  if (!isValidObjectId(id)) {
+    res.status(400).send('<p>ID no válido</p>');
+    return;
+  }
+
+  if (!token || !verifyInvoiceToken(id, token)) {
+    res.status(403).send('<p>Enlace de comprobante no válido o caducado.</p>');
+    return;
+  }
+
+  try {
+    const booking = await bookingService.getById(id);
+    if (!booking) {
+      res.status(404).send('<p>Reserva no encontrada.</p>');
+      return;
+    }
+
+    if (!['confirmed', 'completed'].includes(booking.status)) {
+      res.status(403).send('<p>El comprobante no está disponible para esta reserva.</p>');
+      return;
+    }
+
+    const html = generateInvoiceHtml(booking);
+    res.status(200).contentType('text/html; charset=utf-8').send(html);
+  } catch {
+    res.status(500).send('<p>Error al generar el comprobante.</p>');
   }
 }
 
@@ -228,8 +286,8 @@ export async function refundBookingHandler(req: Request<{ id: string }>, res: Re
     void emailService.sendGuestRefundCancellation(booking);
   } catch (error) {
     if (error instanceof Error) {
-      const code = (error as NodeJS.ErrnoException & { code?: string }).code;
-      if (code === 'NOT_FOUND')     { res.status(404).json({ success: false, message: error.message }); return; }
+      const code = (error as { code?: string }).code;
+      if (code === 'NOT_FOUND')      { res.status(404).json({ success: false, message: error.message }); return; }
       if (code === 'INVALID_STATUS') { res.status(422).json({ success: false, message: error.message }); return; }
       if (code === 'NO_PAYMENT')     { res.status(422).json({ success: false, message: error.message }); return; }
     }

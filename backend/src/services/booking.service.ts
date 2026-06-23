@@ -1,26 +1,31 @@
 import { BookingModel, BookingStatus, IBookingDocument } from '../models/booking.model';
-import { IPricingRuleDocument } from '../models/pricing-rule.model';
-import { pricingRuleService } from './pricing-rule.service';
 import { withId } from '../utils/mongoose.util';
 import { stripe } from '../config/stripe';
 import { env } from '../config/environment';
-
-const DEFAULT_PRICE_PER_NIGHT = 150;
+import { calculateStayTotal, isSunday } from '../utils/pricing.util';
 
 export interface ICreateBookingData {
-  checkIn:     string;
-  checkOut:    string;
-  guestName:   string;
-  guestEmail:  string;
-  guestPhone:  string;
-  guests:      number;
-  notes?:      string | undefined;
+  checkIn:    string;
+  checkOut:   string;
+  guestName:  string;
+  guestEmail: string;
+  guestPhone: string;
+  guests:     number;
+  notes?:     string | undefined;
 }
 
 export interface ICheckoutSessionResult {
+  sessionUrl:      string;
+  bookingId:       string;
+  totalPrice:      number;
+  depositAmount:   number;
+  remainingAmount: number;
+}
+
+export interface IRemainingPaymentSessionResult {
   sessionUrl:  string;
   bookingId:   string;
-  totalPrice:  number;
+  remainingAmount: number;
 }
 
 export interface IUpdateStatusData {
@@ -31,6 +36,16 @@ export interface IBookingAvailability {
   checkIn:  Date;
   checkOut: Date;
 }
+
+export interface IPriceEstimate {
+  totalPrice:      number;
+  depositAmount:   number;
+  remainingAmount: number;
+  nights:          number;
+  pricePerNight:   number[];
+}
+
+const SESSION_TTL_SECONDS = 1800; // 30 minutos
 
 class BookingService {
   async getAll(): Promise<IBookingDocument[]> {
@@ -52,8 +67,6 @@ class BookingService {
     return docs.map(withId);
   }
 
-  // Devuelve solo fechas de reservas activas — sin datos personales del huésped.
-  // Incluye pending_payment con sesión Stripe aún no expirada para evitar dobles reservas.
   async getAvailability(): Promise<IBookingAvailability[]> {
     const now = new Date();
     return BookingModel.find(
@@ -72,31 +85,30 @@ class BookingService {
     return doc ? withId(doc) : null;
   }
 
-  async getEstimate(rawCheckIn: string, rawCheckOut: string): Promise<{ totalPrice: number }> {
+  async getEstimate(
+    rawCheckIn: string,
+    rawCheckOut: string,
+    guests: number,
+  ): Promise<IPriceEstimate> {
     const { checkIn, checkOut } = this.parseDates(rawCheckIn, rawCheckOut);
-    const rules      = await pricingRuleService.getOverlapping(checkIn, checkOut);
-    const totalPrice = this.calculateTotalPrice(checkIn, checkOut, rules);
-    return { totalPrice };
-  }
-
-  private parseDates(rawCheckIn: string, rawCheckOut: string): { checkIn: Date; checkOut: Date } {
-    const checkIn  = new Date(rawCheckIn);
-    const checkOut = new Date(rawCheckOut);
-    if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) {
-      throw Object.assign(new Error('Fechas no válidas'), { code: 'INVALID_DATES' });
-    }
-    if (checkOut <= checkIn) {
-      throw Object.assign(new Error('La fecha de salida debe ser posterior a la de entrada'), { code: 'INVALID_DATES' });
-    }
-    return { checkIn, checkOut };
+    this.validateCheckInDay(checkIn);
+    const stay = calculateStayTotal(checkIn, checkOut, guests);
+    return {
+      totalPrice:      stay.subtotal,
+      depositAmount:   stay.deposit,
+      remainingAmount: stay.remaining,
+      nights:          stay.nights,
+      pricePerNight:   stay.pricePerNight,
+    };
   }
 
   async create(data: ICreateBookingData): Promise<IBookingDocument> {
     const { checkIn, checkOut } = this.parseDates(data.checkIn, data.checkOut);
+    this.validateCheckInDay(checkIn);
 
     const conflict = await BookingModel.findOne({
-      status:  { $in: ['pending', 'confirmed'] },
-      checkIn: { $lt: checkOut },
+      status:   { $in: ['pending', 'confirmed'] },
+      checkIn:  { $lt: checkOut },
       checkOut: { $gt: checkIn },
     });
 
@@ -104,18 +116,19 @@ class BookingService {
       throw Object.assign(new Error('Las fechas seleccionadas ya no están disponibles'), { code: 'DATE_CONFLICT' });
     }
 
-    const rules      = await pricingRuleService.getOverlapping(checkIn, checkOut);
-    const totalPrice = this.calculateTotalPrice(checkIn, checkOut, rules);
+    const stay = calculateStayTotal(checkIn, checkOut, data.guests);
 
     const bookingData: Record<string, unknown> = {
       checkIn,
       checkOut,
-      guestName:  data.guestName,
-      guestEmail: data.guestEmail,
-      guestPhone: data.guestPhone,
-      guests:     data.guests,
-      totalPrice,
-      status:     'pending',
+      guestName:       data.guestName,
+      guestEmail:      data.guestEmail,
+      guestPhone:      data.guestPhone,
+      guests:          data.guests,
+      totalPrice:      stay.subtotal,
+      depositAmount:   stay.deposit,
+      remainingAmount: stay.remaining,
+      status:          'pending',
     };
 
     if (data.notes) bookingData['notes'] = data.notes;
@@ -140,10 +153,11 @@ class BookingService {
     return result !== null;
   }
 
-  // ─── Stripe ────────────────────────────────────────────────────────────────
+  // ─── Stripe — depósito inicial (50 %) ────────────────────────────────────────
 
   async createCheckoutSession(data: ICreateBookingData): Promise<ICheckoutSessionResult> {
     const { checkIn, checkOut } = this.parseDates(data.checkIn, data.checkOut);
+    this.validateCheckInDay(checkIn);
 
     const now = new Date();
     const conflict = await BookingModel.findOne({
@@ -159,33 +173,36 @@ class BookingService {
       throw Object.assign(new Error('Las fechas seleccionadas ya no están disponibles'), { code: 'DATE_CONFLICT' });
     }
 
-    const rules      = await pricingRuleService.getOverlapping(checkIn, checkOut);
-    const totalPrice = this.calculateTotalPrice(checkIn, checkOut, rules);
-
-    // Sesión Stripe con expiración de 30 minutos
-    const SESSION_TTL_SECONDS = 1800;
+    const stay = calculateStayTotal(checkIn, checkOut, data.guests);
     const stripeSessionExpiresAt = new Date(Date.now() + SESSION_TTL_SECONDS * 1000);
 
+    const checkInFormatted  = new Date(checkIn).toLocaleDateString('es-ES');
+    const checkOutFormatted = new Date(checkOut).toLocaleDateString('es-ES');
+
+    // Solo se cobra el 50 % (depósito) — el resto se cobra 7 días antes de la entrada
     const session = await stripe.checkout.sessions.create({
-      mode:               'payment',
+      mode:                 'payment',
       payment_method_types: ['card'],
       line_items: [
         {
           quantity: 1,
           price_data: {
-            currency:     'eur',
-            unit_amount:  Math.round(totalPrice * 100), // Stripe trabaja en céntimos
+            currency:    'eur',
+            unit_amount: Math.round(stay.deposit * 100),
             product_data: {
-              name:        'Casa Caldereta — Reserva',
-              description: `Check-in: ${data.checkIn} · Check-out: ${data.checkOut} · ${data.guests} persona${data.guests === 1 ? '' : 's'}`,
+              name:        'Casa Caldereta — Depósito de reserva (50 %)',
+              description: `Entrada: ${checkInFormatted} · Salida: ${checkOutFormatted} · ${data.guests} persona${data.guests === 1 ? '' : 's'} · Total estancia: ${stay.subtotal} €`,
             },
           },
         },
       ],
-      customer_email:          data.guestEmail,
-      expires_at:              Math.floor(stripeSessionExpiresAt.getTime() / 1000),
-      success_url:             `${env.frontendUrl}/reservar/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url:              `${env.frontendUrl}/reservar/pago-cancelado`,
+      customer_email:  data.guestEmail,
+      expires_at:      Math.floor(stripeSessionExpiresAt.getTime() / 1000),
+      success_url:     `${env.frontendUrl}/reservar/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:      `${env.frontendUrl}/reservar/pago-cancelado`,
+      metadata: {
+        type: 'deposit',
+      },
     });
 
     if (!session.url) {
@@ -199,7 +216,9 @@ class BookingService {
       guestEmail:            data.guestEmail,
       guestPhone:            data.guestPhone,
       guests:                data.guests,
-      totalPrice,
+      totalPrice:            stay.subtotal,
+      depositAmount:         stay.deposit,
+      remainingAmount:       stay.remaining,
       status:                'pending_payment',
       stripeSessionId:       session.id,
       stripeSessionExpiresAt,
@@ -210,13 +229,15 @@ class BookingService {
     const savedDoc = await booking.save();
 
     return {
-      sessionUrl: session.url,
-      bookingId:  String(savedDoc._id),
-      totalPrice,
+      sessionUrl:      session.url,
+      bookingId:       String(savedDoc._id),
+      totalPrice:      stay.subtotal,
+      depositAmount:   stay.deposit,
+      remainingAmount: stay.remaining,
     };
   }
 
-  // Llamado desde el webhook — idempotente: si ya está confirmed lo ignora
+  // Llamado desde el webhook — idempotente
   async confirmFromStripe(
     stripeSessionId: string,
     paymentIntentId: string,
@@ -234,6 +255,87 @@ class BookingService {
     return doc ? withId(doc) : null;
   }
 
+  // ─── Stripe — segundo pago (50 % restante) ───────────────────────────────────
+
+  async createRemainingPaymentSession(id: string): Promise<IRemainingPaymentSessionResult> {
+    const booking = await BookingModel.findById(id).lean<IBookingDocument>();
+
+    if (!booking) {
+      throw Object.assign(new Error('Reserva no encontrada'), { code: 'NOT_FOUND' });
+    }
+    if (booking.status !== 'confirmed') {
+      throw Object.assign(new Error('Solo se puede cobrar el resto a reservas confirmadas'), { code: 'INVALID_STATUS' });
+    }
+    if (booking.remainingPaidAt) {
+      throw Object.assign(new Error('El pago restante ya fue abonado'), { code: 'ALREADY_PAID' });
+    }
+
+    const checkInFormatted  = new Date(booking.checkIn).toLocaleDateString('es-ES');
+    const checkOutFormatted = new Date(booking.checkOut).toLocaleDateString('es-ES');
+
+    const session = await stripe.checkout.sessions.create({
+      mode:                 'payment',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency:    'eur',
+            unit_amount: Math.round(booking.remainingAmount * 100),
+            product_data: {
+              name:        'Casa Caldereta — Pago restante de estancia',
+              description: `Entrada: ${checkInFormatted} · Salida: ${checkOutFormatted} · ${booking.guestName}`,
+            },
+          },
+        },
+      ],
+      customer_email: booking.guestEmail,
+      success_url:    `${env.frontendUrl}/reservar/pago-exitoso?type=remaining`,
+      cancel_url:     `${env.frontendUrl}/reservar/pago-cancelado`,
+      metadata: {
+        type:      'remaining',
+        bookingId: String(booking._id),
+      },
+    });
+
+    if (!session.url) {
+      throw new Error('Stripe no devolvió una URL de pago');
+    }
+
+    await BookingModel.findByIdAndUpdate(id, {
+      stripeRemainingSessionId: session.id,
+    });
+
+    return {
+      sessionUrl:      session.url,
+      bookingId:       String(booking._id),
+      remainingAmount: booking.remainingAmount,
+    };
+  }
+
+  // Llamado desde el webhook para el segundo pago
+  async confirmRemainingFromStripe(
+    stripeSessionId: string,
+    paymentIntentId: string,
+  ): Promise<IBookingDocument | null> {
+    const booking = await BookingModel.findOne({ stripeRemainingSessionId: stripeSessionId });
+    if (!booking) return null;
+    if (booking.remainingPaidAt) return withId(booking.toObject() as IBookingDocument);
+
+    const doc = await BookingModel.findByIdAndUpdate(
+      booking._id,
+      {
+        remainingPaidAt:                new Date(),
+        stripeRemainingPaymentIntentId: paymentIntentId,
+      },
+      { returnDocument: 'after', runValidators: true },
+    ).lean<IBookingDocument>();
+
+    return doc ? withId(doc) : null;
+  }
+
+  // ─── Reembolso (propietario) ─────────────────────────────────────────────────
+
   async refund(id: string): Promise<IBookingDocument> {
     const booking = await BookingModel.findById(id).lean<IBookingDocument>();
 
@@ -247,7 +349,13 @@ class BookingService {
       throw Object.assign(new Error('Esta reserva no tiene pago de Stripe asociado'), { code: 'NO_PAYMENT' });
     }
 
+    // Reembolsar el depósito inicial
     await stripe.refunds.create({ payment_intent: booking.stripePaymentIntentId });
+
+    // Si el pago restante también fue cobrado vía Stripe, reembolsarlo también
+    if (booking.stripeRemainingPaymentIntentId) {
+      await stripe.refunds.create({ payment_intent: booking.stripeRemainingPaymentIntentId });
+    }
 
     const updated = await BookingModel.findByIdAndUpdate(
       id,
@@ -258,28 +366,27 @@ class BookingService {
     return withId(updated!);
   }
 
-  private calculateTotalPrice(
-    checkIn: Date,
-    checkOut: Date,
-    rules: IPricingRuleDocument[],
-  ): number {
-    let total    = 0;
-    const cursor = new Date(checkIn);
-    cursor.setHours(12, 0, 0, 0);
+  // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-    while (cursor < checkOut) {
-      const rule = rules.find(pricingRule => {
-        const start = new Date(pricingRule.startDate);
-        const end   = new Date(pricingRule.endDate);
-        start.setHours(0, 0, 0, 0);
-        end.setHours(23, 59, 59, 999);
-        return cursor >= start && cursor <= end;
-      });
-      total += rule ? rule.pricePerNight : DEFAULT_PRICE_PER_NIGHT;
-      cursor.setDate(cursor.getDate() + 1);
+  private parseDates(rawCheckIn: string, rawCheckOut: string): { checkIn: Date; checkOut: Date } {
+    const checkIn  = new Date(rawCheckIn);
+    const checkOut = new Date(rawCheckOut);
+    if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) {
+      throw Object.assign(new Error('Fechas no válidas'), { code: 'INVALID_DATES' });
     }
+    if (checkOut <= checkIn) {
+      throw Object.assign(new Error('La fecha de salida debe ser posterior a la de entrada'), { code: 'INVALID_DATES' });
+    }
+    return { checkIn, checkOut };
+  }
 
-    return total;
+  private validateCheckInDay(checkIn: Date): void {
+    if (isSunday(checkIn)) {
+      throw Object.assign(
+        new Error('Los domingos el alojamiento está cerrado a nuevas entradas'),
+        { code: 'SUNDAY_CLOSED' },
+      );
+    }
   }
 }
 

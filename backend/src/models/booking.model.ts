@@ -3,27 +3,36 @@ import { Document, Model, Schema, model } from 'mongoose';
 export type BookingStatus = 'pending_payment' | 'pending' | 'confirmed' | 'cancelled' | 'completed';
 
 export interface IBookingDocument extends Document {
-  checkIn:                Date;
-  checkOut:               Date;
-  guestName:              string;
-  guestEmail:             string;
-  guestPhone:             string;
-  guests:                 number;
-  totalPrice:             number;
-  status:                 BookingStatus;
-  notes?:                 string;
-  stripeSessionId?:       string;
-  stripePaymentIntentId?: string;
-  stripeSessionExpiresAt?: Date;
+  checkIn:                   Date;
+  checkOut:                  Date;
+  guestName:                 string;
+  guestEmail:                string;
+  guestPhone:                string;
+  guests:                    number;
+  totalPrice:                number;  // precio total de la estancia
+  depositAmount:             number;  // 50 % cobrado al reservar
+  remainingAmount:           number;  // 50 % pendiente
+  status:                    BookingStatus;
+  notes?:                    string;
+  // Stripe — pago inicial (depósito)
+  stripeSessionId?:          string;
+  stripePaymentIntentId?:    string;
+  stripeSessionExpiresAt?:   Date;
+  // Stripe — segundo pago (restante)
+  stripeRemainingSessionId?:        string;
+  stripeRemainingPaymentIntentId?:  string;
+  remainingPaidAt?:                 Date;
+  remainingPaymentEmailSentAt?:     Date;
   // Check-in / check-out
-  guestFormToken?:         string;   // SHA-256 hash of the raw token (select:false)
-  guestFormTokenExpiresAt?: Date;
-  guestFormSubmittedAt?:   Date;
-  checkedInAt?:            Date;
-  checkedOutAt?:           Date;
-  preArrivalEmailSentAt?:  Date;
-  createdAt:              Date;
-  updatedAt:              Date;
+  guestFormToken?:           string;   // SHA-256 hash (select:false)
+  guestFormTokenExpiresAt?:  Date;
+  guestFormSubmittedAt?:     Date;
+  checkedInAt?:              Date;
+  checkedOutAt?:             Date;
+  preArrivalEmailSentAt?:    Date;
+  autoCheckinEmailSentAt?:   Date;
+  createdAt:                 Date;
+  updatedAt:                 Date;
 }
 
 const bookingSchema = new Schema<IBookingDocument>(
@@ -37,9 +46,9 @@ const bookingSchema = new Schema<IBookingDocument>(
       required: true,
     },
     guestName: {
-      type:     String,
-      required: true,
-      trim:     true,
+      type:      String,
+      required:  true,
+      trim:      true,
       maxlength: 100,
     },
     guestEmail: {
@@ -59,9 +68,19 @@ const bookingSchema = new Schema<IBookingDocument>(
       type:     Number,
       required: true,
       min:      1,
-      max:      20,
+      max:      6,
     },
     totalPrice: {
+      type:     Number,
+      required: true,
+      min:      0,
+    },
+    depositAmount: {
+      type:     Number,
+      required: true,
+      min:      0,
+    },
+    remainingAmount: {
       type:     Number,
       required: true,
       min:      0,
@@ -76,6 +95,7 @@ const bookingSchema = new Schema<IBookingDocument>(
       trim:      true,
       maxlength: 500,
     },
+    // Stripe — depósito inicial
     stripeSessionId: {
       type:   String,
       sparse: true,
@@ -89,18 +109,32 @@ const bookingSchema = new Schema<IBookingDocument>(
     stripeSessionExpiresAt: {
       type: Date,
     },
-    // Check-in / check-out — guestFormToken stored as SHA-256 hash, never the raw value
-    guestFormToken: {
+    // Stripe — segundo pago
+    stripeRemainingSessionId: {
       type:   String,
-      select: false,  // never included in API responses by default
       sparse: true,
       index:  true,
     },
-    guestFormTokenExpiresAt: { type: Date },
-    guestFormSubmittedAt:    { type: Date },
-    checkedInAt:             { type: Date },
-    checkedOutAt:            { type: Date },
-    preArrivalEmailSentAt:   { type: Date },
+    stripeRemainingPaymentIntentId: {
+      type:   String,
+      sparse: true,
+      index:  true,
+    },
+    remainingPaidAt:             { type: Date },
+    remainingPaymentEmailSentAt: { type: Date },
+    // Check-in / check-out
+    guestFormToken: {
+      type:   String,
+      select: false,
+      sparse: true,
+      index:  true,
+    },
+    guestFormTokenExpiresAt:  { type: Date },
+    guestFormSubmittedAt:     { type: Date },
+    checkedInAt:              { type: Date },
+    checkedOutAt:             { type: Date },
+    preArrivalEmailSentAt:    { type: Date },
+    autoCheckinEmailSentAt:   { type: Date },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } },
 );

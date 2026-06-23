@@ -14,8 +14,9 @@
     <booking-request-panel
       [checkIn]="checkIn()"
       [checkOut]="checkOut()"
-      [nights]="nights()"
-      [totalPrice]="totalPrice()"
+      [guests]="guests()"
+      [priceEstimate]="priceEstimate()"
+      (guestsChanged)="guests.set($event)"
       (conflictDetected)="onConflict()"
     />
   </div>

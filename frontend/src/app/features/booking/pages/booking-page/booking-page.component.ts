@@ -1,16 +1,20 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { differenceInCalendarDays, format } from 'date-fns';
+import { format } from 'date-fns';
 import { map, catchError } from 'rxjs/operators';
-import { BehaviorSubject, of, switchMap } from 'rxjs';
+import { BehaviorSubject, combineLatest, of, switchMap } from 'rxjs';
 import { BookingService } from '../../../../core/services/booking.service';
 import { BlockedPeriodService } from '../../../../core/services/blocked-period.service';
-import { IBookingAvailability } from '../../../../core/models/booking.model';
+import { IBookingAvailability, IPriceEstimate } from '../../../../core/models/booking.model';
 import { IBlockedPeriod } from '../../../../core/models/blocked-period.model';
 import { SeoService } from '../../../../core/services/seo.service';
 import { BookingHeroComponent } from '../../components/booking-hero/booking-hero.component';
 import { BookingCalendarComponent } from '../../components/booking-calendar/booking-calendar.component';
 import { BookingRequestPanelComponent } from '../../components/booking-request-panel/booking-request-panel.component';
+
+const EMPTY_ESTIMATE: IPriceEstimate = {
+  totalPrice: 0, depositAmount: 0, remainingAmount: 0, nights: 0, pricePerNight: [],
+};
 
 @Component({
   selector:    'booking-page',
@@ -25,6 +29,7 @@ export class BookingPageComponent {
   readonly loadError = signal('');
   readonly checkIn   = signal<Date | null>(null);
   readonly checkOut  = signal<Date | null>(null);
+  readonly guests    = signal(2);
 
   private readonly refresh$ = new BehaviorSubject<void>(undefined);
 
@@ -51,34 +56,27 @@ export class BookingPageComponent {
     { initialValue: [] as IBlockedPeriod[] },
   );
 
-  readonly nights = computed(() => {
-    const checkInDate  = this.checkIn();
-    const checkOutDate = this.checkOut();
-    if (!checkInDate || !checkOutDate) return 0;
-    return differenceInCalendarDays(checkOutDate, checkInDate);
+  private readonly dateRange = computed(() => {
+    const checkIn  = this.checkIn();
+    const checkOut = this.checkOut();
+    if (!checkIn || !checkOut) return null;
+    return { checkIn: format(checkIn, 'yyyy-MM-dd'), checkOut: format(checkOut, 'yyyy-MM-dd') };
   });
 
-  private readonly selectedDateRange = computed(() => {
-    const checkInDate  = this.checkIn();
-    const checkOutDate = this.checkOut();
-    if (!checkInDate || !checkOutDate) return null;
-    return {
-      checkIn:  format(checkInDate,  'yyyy-MM-dd'),
-      checkOut: format(checkOutDate, 'yyyy-MM-dd'),
-    };
-  });
-
-  readonly totalPrice = toSignal(
-    toObservable(this.selectedDateRange).pipe(
-      switchMap(dateRange => {
-        if (!dateRange) return of(0);
-        return this.bookingService.getPriceEstimate(dateRange.checkIn, dateRange.checkOut).pipe(
-          map(response => response.data.totalPrice),
-          catchError(() => of(0)),
+  readonly priceEstimate = toSignal(
+    combineLatest([
+      toObservable(this.dateRange),
+      toObservable(this.guests),
+    ]).pipe(
+      switchMap(([dateRange, guests]) => {
+        if (!dateRange) return of(EMPTY_ESTIMATE);
+        return this.bookingService.getPriceEstimate(dateRange.checkIn, dateRange.checkOut, guests).pipe(
+          map(response => response.data),
+          catchError(() => of(EMPTY_ESTIMATE)),
         );
       }),
     ),
-    { initialValue: 0 },
+    { initialValue: EMPTY_ESTIMATE },
   );
 
   constructor() {
@@ -95,5 +93,4 @@ export class BookingPageComponent {
     this.checkOut.set(null);
     this.refresh$.next();
   }
-
 }
