@@ -7,6 +7,7 @@ export const authRateLimiter = rateLimit({
   message: { success: false, message: 'Demasiados intentos. Espera 15 minutos.' },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => process.env['NODE_ENV'] === 'test',
 });
 
 export const globalRateLimiter = rateLimit({

@@ -15,26 +15,37 @@
 
 export const SUNDAY_CLOSED = true;
 
-const BASE_PRICE_BY_DAY: Record<number, number> = {
-  1: 100, // lunes
-  2: 100, // martes
-  3: 100, // miércoles
-  4: 100, // jueves
-  5: 150, // viernes
-  6: 180, // sábado
-  0: 0,   // domingo — cerrado
+export interface IPricingConfig {
+  monThuPrice:    number;
+  friPrice:       number;
+  satPrice:       number;
+  extraPerPerson: number;
+}
+
+const DEFAULT_CONFIG: IPricingConfig = {
+  monThuPrice:    100,
+  friPrice:       150,
+  satPrice:       180,
+  extraPerPerson: 20,
 };
 
-const EXTRA_PER_PERSON = 20;
-const MIN_GUESTS       = 1;
-const MAX_GUESTS       = 6;
-const BASE_GUESTS      = 2; // el precio base cubre hasta 2 personas
+const MIN_GUESTS  = 1;
+const MAX_GUESTS  = 6;
+const BASE_GUESTS = 2;
 
-export function calculateNightPrice(date: Date, guests: number): number {
-  const clamped    = Math.min(Math.max(guests, MIN_GUESTS), MAX_GUESTS);
-  const dayOfWeek  = date.getDay();
-  const base       = BASE_PRICE_BY_DAY[dayOfWeek] ?? 0;
-  const extraPax   = Math.max(0, clamped - BASE_GUESTS) * EXTRA_PER_PERSON;
+function basePriceByDay(dayOfWeek: number, config: IPricingConfig): number {
+  if (dayOfWeek === 0) return 0;           // domingo — cerrado
+  if (dayOfWeek === 5) return config.friPrice;
+  if (dayOfWeek === 6) return config.satPrice;
+  return config.monThuPrice;               // lunes–jueves
+}
+
+export function calculateNightPrice(date: Date, guests: number, config: IPricingConfig = DEFAULT_CONFIG): number {
+  const clamped   = Math.min(Math.max(guests, MIN_GUESTS), MAX_GUESTS);
+  const dayOfWeek = date.getDay();
+  const base      = basePriceByDay(dayOfWeek, config);
+  if (base === 0) return 0;  // día cerrado (domingo) — sin extra por personas
+  const extraPax  = Math.max(0, clamped - BASE_GUESTS) * config.extraPerPerson;
   return base + extraPax;
 }
 
@@ -59,6 +70,7 @@ export function calculateStayTotal(
   checkIn: Date,
   checkOut: Date,
   guests: number,
+  config: IPricingConfig = DEFAULT_CONFIG,
 ): IStayPrice {
   const pricePerNight: number[] = [];
   const current = new Date(checkIn);
@@ -67,7 +79,7 @@ export function calculateStayTotal(
   end.setHours(0, 0, 0, 0);
 
   while (current < end) {
-    pricePerNight.push(calculateNightPrice(new Date(current), guests));
+    pricePerNight.push(calculateNightPrice(new Date(current), guests, config));
     current.setDate(current.getDate() + 1);
   }
 

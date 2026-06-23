@@ -27,6 +27,7 @@ export class CookieBannerComponent {
   readonly marketingConsent = signal(false);
 
   constructor() {
+    if (typeof localStorage === 'undefined') return;
     const storedValue = localStorage.getItem(CONSENT_STORAGE_KEY);
     if (storedValue === null) {
       this.isVisible.set(true);

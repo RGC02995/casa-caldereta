@@ -18,6 +18,8 @@
     "lint": "npm run lint:frontend && npm run lint:backend"
   },
   "devDependencies": {
+    "@angular/compiler": "^21.2.16",
+    "@angular/forms": "^21.2.16",
     "concurrently": "^9.1.2"
   },
   "engines": {
