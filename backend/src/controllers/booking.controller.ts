@@ -3,7 +3,7 @@ import { isValidObjectId } from 'mongoose';
 import { bookingService, ICreateBookingData } from '../services/booking.service';
 import { BookingStatus } from '../models/booking.model';
 import { emailService } from '../services/email.service';
-import { verifyInvoiceToken, generateInvoiceHtml } from '../utils/invoice.util';
+import { verifyInvoiceToken, generateInvoiceHtml, generateInvoicePdf, buildInvoiceUrl } from '../utils/invoice.util';
 
 export async function getPriceEstimateHandler(req: Request, res: Response): Promise<void> {
   const { checkIn, checkOut, guests } = req.query as {
@@ -242,7 +242,7 @@ export async function createRemainingPaymentSessionHandler(req: Request<{ id: st
 
 export async function getInvoiceHandler(req: Request<{ id: string }>, res: Response): Promise<void> {
   const { id } = req.params;
-  const { token } = req.query as { token?: string };
+  const { token, format } = req.query as { token?: string; format?: string };
 
   if (!isValidObjectId(id)) {
     res.status(400).send('<p>ID no válido</p>');
@@ -266,7 +266,23 @@ export async function getInvoiceHandler(req: Request<{ id: string }>, res: Respo
       return;
     }
 
-    const html = generateInvoiceHtml(booking);
+    if (format === 'pdf') {
+      const isFullyPaid = !!booking.remainingPaidAt;
+      const ref         = `CC-${String(booking._id).slice(-6).toUpperCase()}`;
+      const filename    = isFullyPaid
+        ? `comprobante-pago-completo-${ref}.pdf`
+        : `comprobante-deposito-${ref}.pdf`;
+
+      const pdfBuffer = await generateInvoicePdf(booking);
+      res.status(200)
+         .contentType('application/pdf')
+         .setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+         .send(pdfBuffer);
+      return;
+    }
+
+    const pdfUrl = `${buildInvoiceUrl(id)}&format=pdf`;
+    const html   = generateInvoiceHtml(booking, pdfUrl);
     res.status(200).contentType('text/html; charset=utf-8').send(html);
   } catch {
     res.status(500).send('<p>Error al generar el comprobante.</p>');

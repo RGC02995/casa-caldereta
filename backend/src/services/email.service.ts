@@ -303,11 +303,11 @@ function guestPaymentConfirmedHtml(data: ITemplateData, invoiceUrl?: string): st
   const invoiceBtn = invoiceUrl
     ? `<table role="presentation" width="100%"><tr><td align="center" style="padding:28px 0 0;">
         <a href="${invoiceUrl}" style="display:inline-block;padding:12px 28px;background:#2C2C2C;color:#FFF;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;text-decoration:none;border-radius:2px;letter-spacing:2px;text-transform:uppercase;">
-          Ver comprobante de pago
+          Ver comprobante del dep&oacute;sito
         </a>
        </td></tr></table>
        <p style="margin:10px 0 0;font-family:Arial,sans-serif;font-size:11px;color:#AAA;text-align:center;">
-         El enlace no caduca. Gu&aacute;rdalo o impr&iacute;melo desde el navegador.
+         Disponible para descargar en PDF desde la p&aacute;gina del comprobante.
        </p>`
     : '';
 
@@ -344,11 +344,11 @@ function guestFullyPaidHtml(data: ITemplateData, invoiceUrl?: string): string {
   const invoiceBtn = invoiceUrl
     ? `<table role="presentation" width="100%"><tr><td align="center" style="padding:28px 0 0;">
         <a href="${invoiceUrl}" style="display:inline-block;padding:12px 28px;background:#2C2C2C;color:#FFF;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;text-decoration:none;border-radius:2px;letter-spacing:2px;text-transform:uppercase;">
-          Ver comprobante de pago
+          Ver comprobante de pago completo
         </a>
        </td></tr></table>
        <p style="margin:10px 0 0;font-family:Arial,sans-serif;font-size:11px;color:#AAA;text-align:center;">
-         El enlace no caduca. Gu&aacute;rdalo o impr&iacute;melo desde el navegador.
+         Disponible para descargar en PDF desde la p&aacute;gina del comprobante.
        </p>`
     : '';
 
@@ -681,12 +681,22 @@ class EmailService {
     const checkOut = formatDate(booking.checkOut);
     const amount   = booking.remainingAmount.toLocaleString('es-ES');
 
+    const msPerDay         = 1000 * 60 * 60 * 24;
+    const daysUntilCheckin = Math.floor(
+      (new Date(booking.checkIn).getTime() - Date.now()) / msPerDay,
+    );
+    const arrivalLabel = daysUntilCheckin <= 0
+      ? 'Tu llegada es hoy'
+      : daysUntilCheckin === 1
+        ? 'Falta 1 día para tu llegada'
+        : `Faltan ${daysUntilCheckin} días para tu llegada`;
+
     await this.send({
       to:      booking.guestEmail,
       subject: `Casa Caldereta — Pago pendiente: ${amount} € antes de tu llegada`,
       html: emailWrapper('Pago pendiente — Casa Caldereta', `
         <h2 style="margin:0 0 8px;font-size:20px;font-weight:400;color:#2C2C2C;letter-spacing:1px;">
-          Faltan 7 d&#237;as para tu llegada
+          ${arrivalLabel}
         </h2>
         <p style="margin:0 0 20px;font-family:Arial,sans-serif;font-size:14px;color:#666;line-height:1.7;">
           Hola, ${escapeHtml(booking.guestName)}. Tu reserva en Casa Caldereta se acerca.
@@ -715,7 +725,7 @@ class EmailService {
       `),
       text: [
         `Hola, ${booking.guestName}.`,
-        `Faltan 7 días para tu llegada a Casa Caldereta.`,
+        `${arrivalLabel} a Casa Caldereta.`,
         ``,
         `PAGO PENDIENTE: ${amount} €`,
         `Enlace de pago: ${paymentUrl}`,

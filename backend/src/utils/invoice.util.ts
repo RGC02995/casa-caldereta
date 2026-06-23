@@ -1,4 +1,5 @@
 import { createHmac } from 'crypto';
+import PDFDocument from 'pdfkit';
 import { env } from '../config/environment';
 import { IBookingDocument } from '../models/booking.model';
 
@@ -19,7 +20,7 @@ export function buildInvoiceUrl(bookingId: string): string {
   return `${env.backendUrl}/api/${env.apiVersion}/bookings/${bookingId}/invoice?token=${token}`;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Helpers compartidos ──────────────────────────────────────────────────────
 
 function escapeHtml(text: string): string {
   return text
@@ -46,7 +47,7 @@ function nightCount(checkIn: Date | string, checkOut: Date | string): number {
 
 // ─── HTML del comprobante ─────────────────────────────────────────────────────
 
-export function generateInvoiceHtml(booking: IBookingDocument): string {
+export function generateInvoiceHtml(booking: IBookingDocument, pdfUrl: string): string {
   const checkIn    = formatDate(booking.checkIn);
   const checkOut   = formatDate(booking.checkOut);
   const nights     = nightCount(booking.checkIn, booking.checkOut);
@@ -59,9 +60,17 @@ export function generateInvoiceHtml(booking: IBookingDocument): string {
   const remainingFmt = booking.remainingAmount.toLocaleString('es-ES', { minimumFractionDigits: 2 });
   const totalFmt     = booking.totalPrice.toLocaleString('es-ES',     { minimumFractionDigits: 2 });
 
+  const docLabel = isFullyPaid
+    ? 'Comprobante de pago completo'
+    : 'Comprobante de dep&oacute;sito &mdash; Primer pago (50&nbsp;%)';
+
+  const pageTitle = isFullyPaid
+    ? 'Comprobante de pago completo — Casa Caldereta'
+    : 'Comprobante de depósito — Casa Caldereta';
+
   const remainingRow = isFullyPaid
     ? `<tr>
-        <td>Segundo pago (50&nbsp;%) &mdash; cobrado 7&nbsp;d&iacute;as antes del check-in</td>
+        <td>Segundo pago (50&nbsp;%) &mdash; abonado</td>
         <td>${remainingFmt}&nbsp;&euro;</td>
        </tr>`
     : `<tr class="pending-row">
@@ -78,11 +87,14 @@ export function generateInvoiceHtml(booking: IBookingDocument): string {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Comprobante de pago &mdash; Casa Caldereta</title>
+<title>${pageTitle}</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:Georgia,serif; background:#f5f3ef; color:#2c2c2c; }
   .wrap { max-width:680px; margin:40px auto; background:#fff; padding:56px; }
+  .download-wrap { text-align:center; margin-bottom:36px; }
+  .download-btn { display:inline-block; padding:12px 36px; background:#2c2c2c; color:#fff; text-decoration:none; font-family:Arial,sans-serif; font-size:11px; letter-spacing:2px; text-transform:uppercase; border-radius:2px; }
+  .download-btn:hover { background:#444; }
   .hdr { text-align:center; padding-bottom:28px; margin-bottom:32px; border-bottom:2px solid #2c2c2c; }
   .hdr__tag { font-family:Arial,sans-serif; font-size:10px; letter-spacing:4px; color:#c9a96e; text-transform:uppercase; margin-bottom:8px; }
   .hdr__name { font-size:26px; font-weight:400; letter-spacing:2px; margin-bottom:4px; }
@@ -105,23 +117,23 @@ export function generateInvoiceHtml(booking: IBookingDocument): string {
   .status--pending { background:#fefce8; border-left:3px solid #ca8a04; color:#854d0e; }
   .legal { margin-top:36px; padding-top:20px; border-top:1px solid #f0ede8; font-family:Arial,sans-serif; font-size:11px; color:#bbb; line-height:1.8; }
   .legal p + p { margin-top:6px; }
-  .print-btn { display:block; margin:0 auto 36px; padding:12px 36px; background:#2c2c2c; color:#fff; border:none; font-family:Arial,sans-serif; font-size:11px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; border-radius:2px; }
-  .print-btn:hover { background:#444; }
   @media print {
     body { background:#fff; }
     .wrap { margin:0; padding:36px; max-width:100%; }
-    .print-btn { display:none; }
+    .download-wrap { display:none; }
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <button class="print-btn" onclick="window.print()">Imprimir / Guardar PDF</button>
+  <div class="download-wrap">
+    <a href="${pdfUrl}" class="download-btn">Descargar PDF</a>
+  </div>
   <div class="hdr">
     <p class="hdr__tag">Vivienda Tur&iacute;stica</p>
     <h1 class="hdr__name">Casa Caldereta</h1>
     <p class="hdr__sub">Aielo de Rugat &middot; Valencia &middot; CV-VUT0058371-V</p>
-    <p class="hdr__doc">Comprobante de pago</p>
+    <p class="hdr__doc">${docLabel}</p>
   </div>
   <div class="meta">
     <span>Ref:&nbsp;<strong>${ref}</strong></span>
@@ -168,4 +180,181 @@ export function generateInvoiceHtml(booking: IBookingDocument): string {
 </div>
 </body>
 </html>`;
+}
+
+// ─── PDF del comprobante ──────────────────────────────────────────────────────
+
+export async function generateInvoicePdf(booking: IBookingDocument): Promise<Buffer> {
+  const isFullyPaid  = !!booking.remainingPaidAt;
+  const ref          = `CC-${String(booking._id).slice(-6).toUpperCase()}`;
+  const emitDate     = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+  const checkInStr   = formatDate(booking.checkIn);
+  const checkOutStr  = formatDate(booking.checkOut);
+  const nights       = nightCount(booking.checkIn, booking.checkOut);
+  const guestsStr    = `${booking.guests} persona${booking.guests === 1 ? '' : 's'}`;
+  const depositFmt   = `${booking.depositAmount.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €`;
+  const remainingFmt = `${booking.remainingAmount.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €`;
+  const totalFmt     = `${booking.totalPrice.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €`;
+
+  const docTitle = isFullyPaid
+    ? 'Comprobante de pago completo'
+    : 'Comprobante de depósito — Primer pago (50%)';
+
+  return new Promise<Buffer>((resolve, reject) => {
+    const doc    = new PDFDocument({ size: 'A4', margin: 56, compress: true, info: { Title: docTitle, Author: 'Casa Caldereta' } });
+    const chunks: Buffer[] = [];
+
+    doc.on('data',  (chunk: Buffer) => chunks.push(chunk));
+    doc.on('end',   ()             => resolve(Buffer.concat(chunks)));
+    doc.on('error', (err: Error)   => reject(err));
+
+    const W    = doc.page.width - 112;
+    const L    = 56;
+    const GOLD = '#C9A96E';
+    const DARK = '#2C2C2C';
+    const GREY = '#888888';
+    const DIM  = '#BBBBBB';
+
+    // ── Header ──────────────────────────────────────────────────────────────
+    doc.fontSize(8).font('Helvetica').fillColor(GOLD)
+       .text('VIVIENDA TURÝSTICA  ·  CV-VUT0058371-V', L, doc.y, { width: W, align: 'center', characterSpacing: 2 });
+    doc.moveDown(0.4);
+    doc.fontSize(24).font('Helvetica').fillColor(DARK)
+       .text('Casa Caldereta', L, doc.y, { width: W, align: 'center' });
+    doc.moveDown(0.3);
+    doc.fontSize(9).font('Helvetica').fillColor(GREY)
+       .text('Aielo de Rugat  ·  Valencia', L, doc.y, { width: W, align: 'center' });
+    doc.moveDown(0.5);
+    doc.fontSize(11).font('Helvetica-Bold').fillColor(DARK)
+       .text(docTitle.toUpperCase(), L, doc.y, { width: W, align: 'center', characterSpacing: 0.8 });
+    doc.moveDown(0.7);
+
+    const headerLineY = doc.y;
+    doc.moveTo(L, headerLineY).lineTo(L + W, headerLineY).strokeColor(DARK).lineWidth(2).stroke();
+    doc.y = headerLineY + 16;
+
+    // ── Ref + Fecha ──────────────────────────────────────────────────────────
+    const metaY = doc.y;
+    doc.fontSize(9).font('Helvetica').fillColor(GREY)
+       .text('Ref.  ', L, metaY, { continued: true });
+    doc.font('Helvetica-Bold').fillColor(DARK).text(ref, { continued: false });
+    doc.fontSize(9).font('Helvetica').fillColor(GREY)
+       .text(emitDate, L, metaY, { width: W, align: 'right' });
+    doc.y = metaY + 22;
+    doc.moveTo(L, doc.y).lineTo(L + W, doc.y).strokeColor('#DDDDDD').lineWidth(0.5).stroke();
+    doc.y += 18;
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    const sectionLabel = (text: string): void => {
+      doc.fontSize(7.5).font('Helvetica').fillColor(DIM)
+         .text(text.toUpperCase(), L, doc.y, { width: W, characterSpacing: 2.5 });
+      doc.y += 14;
+    };
+
+    const tableRow = (
+      label: string,
+      value: string,
+      opts?: { bold?: boolean; dimmed?: boolean; topBorder?: boolean },
+    ): void => {
+      if (opts?.topBorder) {
+        doc.y += 6;
+        doc.moveTo(L, doc.y).lineTo(L + W, doc.y).strokeColor(DARK).lineWidth(1.5).stroke();
+        doc.y += 12;
+      }
+
+      const rowY     = doc.y;
+      const leftW    = W * 0.65;
+      const rightX   = L + leftW;
+      const rightW   = W * 0.35;
+      const size     = opts?.bold ? 13 : 11;
+      const font     = opts?.bold ? 'Helvetica-Bold' : 'Helvetica';
+      const labelClr = opts?.dimmed ? DIM : GREY;
+      const valueClr = opts?.bold ? GOLD : opts?.dimmed ? DIM : DARK;
+
+      doc.fontSize(size).font(font).fillColor(labelClr)
+         .text(label, L, rowY, { width: leftW });
+      const afterLabel = doc.y;
+
+      doc.fontSize(size).font(font).fillColor(valueClr)
+         .text(value, rightX, rowY, { width: rightW, align: 'right' });
+      const afterValue = doc.y;
+
+      doc.y = Math.max(afterLabel, afterValue) + 4;
+
+      if (!opts?.topBorder) {
+        doc.moveTo(L, doc.y).lineTo(L + W, doc.y).strokeColor('#EBEBEB').lineWidth(0.5).stroke();
+        doc.y += 8;
+      } else {
+        doc.y += 6;
+      }
+    };
+
+    // ── Huésped ──────────────────────────────────────────────────────────────
+    sectionLabel('Huésped');
+    doc.fontSize(13).font('Helvetica-Bold').fillColor(DARK)
+       .text(booking.guestName, L, doc.y, { width: W });
+    doc.y += 4;
+    doc.fontSize(10).font('Helvetica').fillColor(GREY)
+       .text(booking.guestEmail, L, doc.y, { width: W });
+    doc.y += 2;
+    doc.fontSize(10).font('Helvetica').fillColor(GREY)
+       .text(booking.guestPhone, L, doc.y, { width: W });
+    doc.y += 22;
+
+    // ── Estancia ─────────────────────────────────────────────────────────────
+    sectionLabel('Estancia');
+    tableRow('Check-in',   checkInStr);
+    tableRow('Check-out',  checkOutStr);
+    tableRow('Noches',     String(nights));
+    tableRow('Huéspedes', guestsStr);
+    doc.y += 8;
+
+    // ── Pagos ─────────────────────────────────────────────────────────────────
+    sectionLabel('Pagos');
+    tableRow('Depósito (50%) — cobrado al reservar', depositFmt);
+
+    if (isFullyPaid) {
+      tableRow('Segundo pago (50%) — abonado', remainingFmt);
+    } else {
+      tableRow('Segundo pago (50%) — pendiente de cobro', remainingFmt, { dimmed: true });
+    }
+
+    tableRow('Total estancia', totalFmt, { bold: true, topBorder: true });
+    doc.y += 14;
+
+    // ── Estado ───────────────────────────────────────────────────────────────
+    const statusY   = doc.y;
+    const blockH    = 40;
+    const bgColor   = isFullyPaid ? '#F0FDF4' : '#FEFCE8';
+    const acColor   = isFullyPaid ? '#22C55E' : '#CA8A04';
+    const txColor   = isFullyPaid ? '#166534' : '#854D0E';
+    const statusTxt = isFullyPaid
+      ? 'PAGO COMPLETO  —  Estancia totalmente abonada'
+      : 'DEPÓSITO ABONADO  —  Segundo pago pendiente';
+
+    doc.rect(L, statusY, W, blockH).fillColor(bgColor).fill();
+    doc.moveTo(L, statusY).lineTo(L, statusY + blockH).strokeColor(acColor).lineWidth(3).stroke();
+    doc.fontSize(11).font('Helvetica-Bold').fillColor(txColor)
+       .text(statusTxt, L + 14, statusY + 13, { width: W - 20 });
+    doc.y = statusY + blockH + 22;
+
+    // ── Legal ─────────────────────────────────────────────────────────────────
+    doc.moveTo(L, doc.y).lineTo(L + W, doc.y).strokeColor('#DDDDDD').lineWidth(0.5).stroke();
+    doc.y += 12;
+
+    const legalLines = [
+      'Este documento es un comprobante de pago emitido automáticamente. No constituye factura fiscal con desglose de IVA.',
+      'Licencia turística: CV-VUT0058371-V — Registro de Turisme de la Comunitat Valenciana (Decreto 92/2009).',
+      'Política de cancelación: reembolso íntegro si se cancela con más de 7 días de antelación.',
+      'Sin reembolso si se cancela con 7 días o menos (arras penitenciales, art. 1454 CC).',
+      'Casa Caldereta  ·  Aielo de Rugat, Valencia  ·  casacaldereta@gmail.com',
+    ];
+
+    for (const line of legalLines) {
+      doc.fontSize(8).font('Helvetica').fillColor(DIM).text(line, L, doc.y, { width: W });
+      doc.y += 4;
+    }
+
+    doc.end();
+  });
 }
