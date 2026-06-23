@@ -3,6 +3,18 @@
   <div class="admin-calendar__panel-tabs" role="tablist" aria-label="Secciones de gestión">
     <button
       class="admin-calendar__panel-tab"
+      id="tab-base"
+      role="tab"
+      type="button"
+      [class.admin-calendar__panel-tab--active]="activePanel() === 'base'"
+      [attr.aria-selected]="activePanel() === 'base' ? 'true' : 'false'"
+      aria-controls="panel-base"
+      (click)="activePanel.set('base')"
+    >
+      Tarifas base
+    </button>
+    <button
+      class="admin-calendar__panel-tab"
       id="tab-pricing"
       role="tab"
       type="button"
@@ -11,7 +23,7 @@
       aria-controls="panel-pricing"
       (click)="activePanel.set('pricing')"
     >
-      Precios
+      Períodos especiales
     </button>
     <button
       class="admin-calendar__panel-tab"
@@ -27,7 +39,17 @@
     </button>
   </div>
 
-  <!-- PANEL PRECIOS -->
+  <!-- PANEL TARIFAS BASE -->
+  @if (activePanel() === 'base') {
+    <div class="admin-calendar__panel-content"
+         id="panel-base"
+         role="tabpanel"
+         aria-labelledby="tab-base">
+      <admin-pricing-base />
+    </div>
+  }
+
+  <!-- PANEL PERÍODOS ESPECIALES -->
   @if (activePanel() === 'pricing') {
     <div class="admin-calendar__panel-content"
          id="panel-pricing"

@@ -6,10 +6,11 @@ import { PricingRuleService } from '../../../../core/services/pricing-rule.servi
 import { BlockedPeriodService } from '../../../../core/services/blocked-period.service';
 import { IPricingRule } from '../../../../core/models/pricing-rule.model';
 import { IBlockedPeriod } from '../../../../core/models/blocked-period.model';
+import { AdminPricingBaseComponent } from '../admin-pricing-base/admin-pricing-base.component';
 
 @Component({
   selector:    'admin-calendar-panel',
-  imports:     [DatePipe, CurrencyPipe],
+  imports:     [DatePipe, CurrencyPipe, AdminPricingBaseComponent],
   templateUrl: './admin-calendar-panel.component.html',
   styleUrl:    './admin-calendar-panel.component.scss',
 })
@@ -24,7 +25,7 @@ export class AdminCalendarPanelComponent {
   readonly pricingChanged = output<void>();
   readonly blockedChanged = output<void>();
 
-  readonly activePanel       = signal<'pricing' | 'blocked'>('pricing');
+  readonly activePanel       = signal<'pricing' | 'blocked' | 'base'>('pricing');
   readonly processingId      = signal<string | null>(null);
   readonly isSubmittingPrice = signal(false);
   readonly isSubmittingBlock = signal(false);

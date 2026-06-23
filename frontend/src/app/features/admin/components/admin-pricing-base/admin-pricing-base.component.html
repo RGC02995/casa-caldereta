@@ -1,0 +1,118 @@
+<div class="admin-pricing-base">
+
+  @if (isLoading()) {
+    <p class="admin-pricing-base__loading">Cargando precios…</p>
+  } @else if (loadError()) {
+    <p class="admin-pricing-base__error" role="alert">{{ loadError() }}</p>
+  } @else {
+
+    <p class="admin-pricing-base__desc">
+      Precios base por noche. Se aplican según el día de la semana salvo que exista
+      una regla de período especial que los sobreescriba.
+    </p>
+
+    @if (saveError()) {
+      <p class="admin-pricing-base__error" role="alert">{{ saveError() }}</p>
+    }
+    @if (saveSuccess()) {
+      <p class="admin-pricing-base__success" role="status">Precios actualizados correctamente.</p>
+    }
+
+    <form class="admin-pricing-base__form" (submit)="onSubmit($event)" novalidate>
+
+      <div class="admin-pricing-base__row">
+        <div class="admin-pricing-base__field">
+          <label class="admin-pricing-base__label" for="monThuPrice">
+            Lunes – Jueves
+          </label>
+          <div class="admin-pricing-base__input-wrap">
+            <input
+              id="monThuPrice"
+              class="admin-pricing-base__input"
+              type="number"
+              min="1"
+              max="10000"
+              [value]="monThuPrice()"
+              (input)="monThuPrice.set(+$any($event.target).value || 1)"
+            />
+            <span class="admin-pricing-base__unit">€/noche</span>
+          </div>
+        </div>
+
+        <div class="admin-pricing-base__field">
+          <label class="admin-pricing-base__label" for="friPrice">
+            Viernes
+          </label>
+          <div class="admin-pricing-base__input-wrap">
+            <input
+              id="friPrice"
+              class="admin-pricing-base__input"
+              type="number"
+              min="1"
+              max="10000"
+              [value]="friPrice()"
+              (input)="friPrice.set(+$any($event.target).value || 1)"
+            />
+            <span class="admin-pricing-base__unit">€/noche</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-pricing-base__row">
+        <div class="admin-pricing-base__field">
+          <label class="admin-pricing-base__label" for="satPrice">
+            Sábado
+          </label>
+          <div class="admin-pricing-base__input-wrap">
+            <input
+              id="satPrice"
+              class="admin-pricing-base__input"
+              type="number"
+              min="1"
+              max="10000"
+              [value]="satPrice()"
+              (input)="satPrice.set(+$any($event.target).value || 1)"
+            />
+            <span class="admin-pricing-base__unit">€/noche</span>
+          </div>
+        </div>
+
+        <div class="admin-pricing-base__field">
+          <label class="admin-pricing-base__label" for="extraPerPerson">
+            Extra persona
+            <span class="admin-pricing-base__hint">(a partir de la 3ª)</span>
+          </label>
+          <div class="admin-pricing-base__input-wrap">
+            <input
+              id="extraPerPerson"
+              class="admin-pricing-base__input"
+              type="number"
+              min="0"
+              max="1000"
+              [value]="extraPerPerson()"
+              (input)="extraPerPerson.set(+$any($event.target).value)"
+            />
+            <span class="admin-pricing-base__unit">€/noche</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-pricing-base__note">
+        Domingo: cerrado (sin entradas permitidas).
+      </div>
+
+      <div class="admin-pricing-base__actions">
+        <button
+          class="admin-calendar__btn admin-calendar__btn--primary"
+          type="submit"
+          [disabled]="isSubmitting()"
+          [attr.aria-busy]="isSubmitting() || null"
+        >
+          {{ isSubmitting() ? 'Guardando…' : 'Guardar tarifas' }}
+        </button>
+      </div>
+
+    </form>
+  }
+
+</div>

@@ -3,6 +3,7 @@ import { withId } from '../utils/mongoose.util';
 import { stripe } from '../config/stripe';
 import { env } from '../config/environment';
 import { calculateStayTotal, isSunday } from '../utils/pricing.util';
+import { pricingSettingsService } from './pricing-settings.service';
 
 export interface ICreateBookingData {
   checkIn:    string;
@@ -92,7 +93,8 @@ class BookingService {
   ): Promise<IPriceEstimate> {
     const { checkIn, checkOut } = this.parseDates(rawCheckIn, rawCheckOut);
     this.validateCheckInDay(checkIn);
-    const stay = calculateStayTotal(checkIn, checkOut, guests);
+    const config = await pricingSettingsService.getConfig();
+    const stay = calculateStayTotal(checkIn, checkOut, guests, config);
     return {
       totalPrice:      stay.subtotal,
       depositAmount:   stay.deposit,
@@ -116,7 +118,8 @@ class BookingService {
       throw Object.assign(new Error('Las fechas seleccionadas ya no están disponibles'), { code: 'DATE_CONFLICT' });
     }
 
-    const stay = calculateStayTotal(checkIn, checkOut, data.guests);
+    const config = await pricingSettingsService.getConfig();
+    const stay = calculateStayTotal(checkIn, checkOut, data.guests, config);
 
     const bookingData: Record<string, unknown> = {
       checkIn,
@@ -173,7 +176,8 @@ class BookingService {
       throw Object.assign(new Error('Las fechas seleccionadas ya no están disponibles'), { code: 'DATE_CONFLICT' });
     }
 
-    const stay = calculateStayTotal(checkIn, checkOut, data.guests);
+    const config = await pricingSettingsService.getConfig();
+    const stay = calculateStayTotal(checkIn, checkOut, data.guests, config);
     const stripeSessionExpiresAt = new Date(Date.now() + SESSION_TTL_SECONDS * 1000);
 
     const checkInFormatted  = new Date(checkIn).toLocaleDateString('es-ES');
