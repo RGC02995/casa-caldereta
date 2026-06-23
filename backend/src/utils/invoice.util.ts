@@ -73,10 +73,7 @@ export function generateInvoiceHtml(booking: IBookingDocument, pdfUrl: string): 
         <td>Segundo pago (50&nbsp;%) &mdash; abonado</td>
         <td>${remainingFmt}&nbsp;&euro;</td>
        </tr>`
-    : `<tr class="pending-row">
-        <td>Segundo pago (50&nbsp;%) &mdash; pendiente de cobro</td>
-        <td>${remainingFmt}&nbsp;&euro;</td>
-       </tr>`;
+    : '';
 
   const statusBlock = isFullyPaid
     ? `<div class="status status--paid">&#10003;&nbsp; Estancia completamente abonada</div>`
@@ -165,8 +162,8 @@ export function generateInvoiceHtml(booking: IBookingDocument, pdfUrl: string): 
       </tr>
       ${remainingRow}
       <tr class="total-row">
-        <td>Total estancia</td>
-        <td>${totalFmt}&nbsp;&euro;</td>
+        <td>${isFullyPaid ? 'Total estancia' : 'Importe abonado'}</td>
+        <td>${isFullyPaid ? totalFmt : depositFmt}&nbsp;&euro;</td>
       </tr>
     </table>
   </div>
@@ -217,7 +214,7 @@ export async function generateInvoicePdf(booking: IBookingDocument): Promise<Buf
 
     // ── Header ──────────────────────────────────────────────────────────────
     doc.fontSize(8).font('Helvetica').fillColor(GOLD)
-       .text('VIVIENDA TURÝSTICA  ·  CV-VUT0058371-V', L, doc.y, { width: W, align: 'center', characterSpacing: 2 });
+       .text('VIVIENDA TURISTICA  ·  CV-VUT0058371-V', L, doc.y, { width: W, align: 'center', characterSpacing: 2 });
     doc.moveDown(0.4);
     doc.fontSize(24).font('Helvetica').fillColor(DARK)
        .text('Casa Caldereta', L, doc.y, { width: W, align: 'center' });
@@ -315,11 +312,10 @@ export async function generateInvoicePdf(booking: IBookingDocument): Promise<Buf
 
     if (isFullyPaid) {
       tableRow('Segundo pago (50%) — abonado', remainingFmt);
+      tableRow('Total estancia', totalFmt, { bold: true, topBorder: true });
     } else {
-      tableRow('Segundo pago (50%) — pendiente de cobro', remainingFmt, { dimmed: true });
+      tableRow('Importe abonado', depositFmt, { bold: true, topBorder: true });
     }
-
-    tableRow('Total estancia', totalFmt, { bold: true, topBorder: true });
     doc.y += 14;
 
     // ── Estado ───────────────────────────────────────────────────────────────
