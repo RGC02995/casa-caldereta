@@ -1,6 +1,7 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, catchError, of } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { PhotoService } from '../../../../core/services/photo.service';
 import { IPhoto, PhotoCategory } from '../../../../core/models/photo.model';
@@ -38,6 +39,7 @@ interface PhotoSection {
 })
 export class GalleryPageComponent {
   private readonly photoService = inject(PhotoService);
+  private readonly route        = inject(ActivatedRoute);
 
   constructor() {
     inject(SeoService).setPage({
@@ -46,10 +48,23 @@ export class GalleryPageComponent {
       canonicalPath: '/galeria',
       keywords:      'fotos casa rural Valencia, galería alojamiento Aielo de Rugat, imágenes jacuzzi rural Valencia',
     });
+
+    effect(() => {
+      const photoId = this.photoQueryParam();
+      const photos  = this.lightboxPhotos();
+      if (!photoId || this.isLoading() || photos.length === 0) return;
+      const index = photos.findIndex(p => p.photoId === photoId);
+      if (index >= 0) this.openLightbox(index);
+    });
   }
 
   readonly isLoading = signal(true);
   readonly loadError = signal('');
+
+  readonly photoQueryParam = toSignal(
+    this.route.queryParamMap.pipe(map(p => p.get('photo') ?? '')),
+    { initialValue: '' },
+  );
 
   readonly allPhotos = toSignal(
     this.photoService.getAll().pipe(
@@ -94,9 +109,10 @@ export class GalleryPageComponent {
   readonly lightboxPhotos = computed((): GalleryPhoto[] =>
     this.photoSections().flatMap(section =>
       section.photos.map((photo, i) => ({
-        id:  section.offset + i,
-        src: photo.url,
-        alt: photo.alt,
+        id:      section.offset + i,
+        photoId: photo.id,
+        src:     photo.url,
+        alt:     photo.alt,
       }))
     )
   );

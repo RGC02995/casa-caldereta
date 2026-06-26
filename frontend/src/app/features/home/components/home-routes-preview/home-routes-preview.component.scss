@@ -54,6 +54,14 @@
     }
   }
 
+  &__card-link {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    text-decoration: none;
+    color: inherit;
+  }
+
   &__card-img {
     position: relative;
     overflow: hidden;

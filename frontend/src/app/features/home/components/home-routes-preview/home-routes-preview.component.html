@@ -7,47 +7,51 @@
     <ul class="home-routes__grid">
       @for (route of routes(); track route.id; let i = $index) {
         <li class="home-routes__card" scrollReveal [delay]="i * 100">
-          <div class="home-routes__card-img">
-            @if (route.coverImageUrl) {
-              <img
-                class="home-routes__card-photo"
-                [src]="route.coverImageUrl"
-                [alt]="route.title"
-                loading="lazy"
-              />
-            } @else {
-              <div class="home-routes__card-placeholder" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M3 20h18"/>
-                  <path d="M6 20L12 5l6 15"/>
-                  <path d="M10 14l2-4 2 4"/>
-                </svg>
-              </div>
-            }
-            <span class="home-routes__card-badge">{{ typeLabel(route.type) | translate }}</span>
-          </div>
-          <div class="home-routes__card-body">
-            <h3 class="home-routes__card-title">{{ route.title }}</h3>
-            <p class="home-routes__card-desc">{{ route.description }}</p>
-          </div>
+          <a routerLink="/rutas" class="home-routes__card-link">
+            <div class="home-routes__card-img">
+              @if (route.coverImageUrl) {
+                <img
+                  class="home-routes__card-photo"
+                  [src]="route.coverImageUrl"
+                  [alt]="route.title"
+                  loading="lazy"
+                />
+              } @else {
+                <div class="home-routes__card-placeholder" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 20h18"/>
+                    <path d="M6 20L12 5l6 15"/>
+                    <path d="M10 14l2-4 2 4"/>
+                  </svg>
+                </div>
+              }
+              <span class="home-routes__card-badge">{{ typeLabel(route.type) | translate }}</span>
+            </div>
+            <div class="home-routes__card-body">
+              <h3 class="home-routes__card-title">{{ route.title }}</h3>
+              <p class="home-routes__card-desc">{{ route.description }}</p>
+            </div>
+          </a>
         </li>
       } @empty {
         @for (fallback of routePreviewFallbacks; track fallback.title; let i = $index) {
           <li class="home-routes__card" scrollReveal [delay]="i * 100">
-            <div class="home-routes__card-img">
-              <div class="home-routes__card-placeholder" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M3 20h18"/>
-                  <path d="M6 20L12 5l6 15"/>
-                  <path d="M10 14l2-4 2 4"/>
-                </svg>
+            <a routerLink="/rutas" class="home-routes__card-link">
+              <div class="home-routes__card-img">
+                <div class="home-routes__card-placeholder" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 20h18"/>
+                    <path d="M6 20L12 5l6 15"/>
+                    <path d="M10 14l2-4 2 4"/>
+                  </svg>
+                </div>
+                <span class="home-routes__card-badge">{{ fallback.tag | translate }}</span>
               </div>
-              <span class="home-routes__card-badge">{{ fallback.tag | translate }}</span>
-            </div>
-            <div class="home-routes__card-body">
-              <h3 class="home-routes__card-title">{{ fallback.title }}</h3>
-              <p class="home-routes__card-desc">{{ fallback.description }}</p>
-            </div>
+              <div class="home-routes__card-body">
+                <h3 class="home-routes__card-title">{{ fallback.title }}</h3>
+                <p class="home-routes__card-desc">{{ fallback.description }}</p>
+              </div>
+            </a>
           </li>
         }
       }

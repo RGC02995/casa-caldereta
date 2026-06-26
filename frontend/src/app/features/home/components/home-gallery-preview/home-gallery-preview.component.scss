@@ -57,9 +57,11 @@
   }
 
   &__cell {
+    display: block;
     background-color: $color-neutral-200;
     overflow: hidden;
     aspect-ratio: 3 / 2;
+    cursor: pointer;
 
     @include respond-to('lg') {
       aspect-ratio: unset;
