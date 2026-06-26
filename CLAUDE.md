@@ -351,7 +351,7 @@ Skill usada: `/barrido-señales` (`.claude/commands/barrido-señales.md`)
 | Stripe | casacaldereta@gmail.com | ✅ Test mode — webhook apunta a 777f |
 | Resend | casacaldereta@gmail.com | ✅ Activo — FROM: `onboarding@resend.dev` (temporal) |
 | GitHub | raulgc2995@gmail.com | ✅ Se queda así |
-| Namecheap | — | ❌ Dominio `casa-caldereta.com` sin comprar |
+| Namecheap | casacaldereta@gmail.com | ✅ Dominio `casa-caldereta.com` comprado (2026-06-26) — DNS Vercel configurado |
 
 ### Email del propietario en el sistema
 - `ADMIN_EMAIL` = `casacaldereta@gmail.com`
@@ -375,13 +375,14 @@ Skill usada: `/barrido-señales` (`.claude/commands/barrido-señales.md`)
 - [x] **Fix: formulario pre-llegada + segundo pago en reservas last-minute** — `checkinService.handleWebhookPostConfirmation(booking)` llamado desde el webhook de Stripe tras confirmar el depósito. Comprueba centinelas y envía inmediatamente: (1) recordatorio segundo pago si `daysUntilCheckin <= 7` y no pagado ni avisado; (2) formulario RD 933/2021 si `daysUntilCheckin <= 3` y no enviado. Los crons siguen cubriendo el caso normal (check-in > 7 días).
 - [ ] **Exportar XML SES.HOSPEDERÍA** — Botón "Exportar XML" en el panel de viajeros (admin reservas). Necesita esquema XML oficial del Ministerio del Interior antes de implementar. Pendiente de documentación técnica del portal SES.HOSPEDERÍA.
 - [ ] **Resend — desactivar Click Tracking** en el dashboard (resend.com → dominio → Tracking). Los links del email de pre-llegada pasan por `awstrack.me` (tracker AWS de Resend), que uBO bloquea mostrando aviso de peligro al huésped antes de rellenar el formulario de viajeros.
-- [ ] **Comprar dominio `casa-caldereta.com`** en Namecheap con `casacaldereta@gmail.com`
-- [ ] **Tras comprar dominio:**
-  - DNS en Namecheap → apuntar a Vercel + Railway
-  - Vercel → dominio personalizado
-  - Resend → verificar dominio + cambiar `RESEND_FROM_EMAIL` a `reservas@casa-caldereta.com`
-  - Railway → actualizar `CORS_ORIGIN_PROD` y `FRONTEND_URL`
-  - Código → actualizar `BASE_URL` en `seo.service.ts`
+- [x] **Comprar dominio `casa-caldereta.com`** en Namecheap con `casacaldereta@gmail.com` ✅ (2026-06-26)
+- [ ] **Configurar dominio completo (pendiente Lunes 2026-06-30):**
+  - [x] DNS Namecheap → A `@` → `216.198.79.1` (Vercel) + CNAME `www` → `cname.vercel-dns.com`
+  - [x] Vercel → dominios `casa-caldereta.com` y `www.casa-caldereta.com` añadidos (pendiente propagación)
+  - [ ] Railway → añadir custom domain `api.casa-caldereta.com` → obtener CNAME → añadir en Namecheap
+  - [ ] Railway → actualizar `CORS_ORIGIN_PROD` y `FRONTEND_URL` a `https://casa-caldereta.com`
+  - [ ] Resend → verificar dominio + cambiar `RESEND_FROM_EMAIL` a `reservas@casa-caldereta.com`
+  - [ ] Código → actualizar `BASE_URL` en `seo.service.ts` + `environment.prod.ts`
 - [ ] **Stripe live** — KYC (DNI propietario + cuenta bancaria) + claves `sk_live_...` + nuevo webhook secret → actualizar Railway
 - [ ] **Vercel** — crear cuenta `casacaldereta@gmail.com` + transferir proyecto frontend
 - [ ] **Eliminar Railway backend antiguo** (`backend-production-d85c`) de la cuenta `raulgc2995@gmail.com`
@@ -413,3 +414,4 @@ Skill usada: `/barrido-señales` (`.claude/commands/barrido-señales.md`)
 | feat: admin reservas — botón reembolso Stripe y estados actualizados | Botón "Reembolsar y cancelar" para confirmed+Stripe, filtro pending eliminado, leyenda actualizada |
 | security: CORS_ORIGIN_PROD required en prod + rate limiters por endpoint público | requireEnv CORS en producción + publicRateLimiter/checkoutRateLimiter/reviewSubmitLimiter |
 | feat: check-in/out + registro RD 933/2021 | Backend: token SHA-256 + cron emails + 9 endpoints. Admin: sección Hoy, botones checkin, panel viajeros, configuración horarios |
+| docs: dominio casa-caldereta.com comprado — estado DNS y pendientes Lunes | Namecheap comprado, DNS Vercel configurado, Railway + Resend + código pendiente |
