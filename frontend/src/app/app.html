@@ -11,3 +11,7 @@
 }
 
 <cookie-banner />
+
+@if (!isAdminRoute()) {
+  <whatsapp-button />
+}

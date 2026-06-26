@@ -6,10 +6,11 @@ import { TranslateService } from '@ngx-translate/core';
 import { SiteHeaderComponent } from './core/layout/site-header/site-header.component';
 import { SiteFooterComponent } from './core/layout/site-footer/site-footer.component';
 import { CookieBannerComponent } from './shared/components/cookie-banner/cookie-banner.component';
+import { WhatsappButtonComponent } from './shared/components/whatsapp-button/whatsapp-button.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, SiteHeaderComponent, SiteFooterComponent, CookieBannerComponent],
+  imports: [RouterOutlet, SiteHeaderComponent, SiteFooterComponent, CookieBannerComponent, WhatsappButtonComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
