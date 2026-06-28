@@ -17,8 +17,12 @@ const app = express();
 app.set('trust proxy', 1);
 app.use(helmet());
 
+const allowedOrigins = env.nodeEnv === 'production'
+  ? env.corsOriginProd.split(',').map(o => o.trim())
+  : [env.corsOriginDev];
+
 app.use(cors({
-  origin:      env.nodeEnv === 'production' ? env.corsOriginProd : env.corsOriginDev,
+  origin:      allowedOrigins,
   credentials: true,
 }));
 
