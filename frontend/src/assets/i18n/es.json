@@ -135,6 +135,8 @@
       "checkOut": "Salida",
       "nightSingular": "noche",
       "nightPlural": "noches",
+      "personSingular": "persona",
+      "personPlural": "personas",
       "nameLabel": "Nombre *",
       "namePlaceholder": "Tu nombre completo",
       "emailLabel": "Email *",
