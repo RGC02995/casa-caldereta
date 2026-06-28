@@ -1,21 +1,38 @@
 <section class="home-highlights">
-  <div class="home-highlights__inner">
-    <div class="home-highlights__heading" scrollReveal>
-      <p class="home-highlights__label">{{ 'home.highlights.label' | translate }}</p>
-      <h2 class="home-highlights__title">{{ 'home.highlights.title' | translate }}</h2>
-    </div>
-    <ul class="home-highlights__list">
-      @for (highlight of highlights; track highlight.title; let i = $index) {
-        <li class="home-highlights__item" scrollReveal [delay]="i * 80">
-          <svg class="home-highlights__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path [attr.d]="highlight.icon"/>
-          </svg>
-          <div class="home-highlights__item-body">
-            <h3 class="home-highlights__item-title">{{ highlight.title }}</h3>
-            <p class="home-highlights__item-desc">{{ highlight.description }}</p>
-          </div>
-        </li>
-      }
-    </ul>
+
+  <div class="home-highlights__header" scrollReveal>
+    <p class="home-highlights__label">{{ 'home.highlights.label' | translate }}</p>
+    <h2 class="home-highlights__title">{{ 'home.highlights.title' | translate }}</h2>
   </div>
+
+  @for (highlight of highlights; track highlight.image; let i = $index) {
+    @if (highlight.text) {
+      <article
+        [class]="'home-highlights__item home-highlights__item--' + highlight.size + (i % 2 !== 0 ? ' home-highlights__item--reverse' : '')"
+      >
+        <div
+          class="home-highlights__image-wrap"
+          scrollReveal
+          [revealFrom]="i % 2 === 0 ? 'wipe-right' : 'wipe-left'"
+        >
+          <img
+            class="home-highlights__image"
+            [src]="highlight.image"
+            [alt]="highlight.alt"
+            loading="lazy"
+          />
+        </div>
+
+        <div
+          class="home-highlights__content"
+          scrollReveal
+          revealFrom="bottom"
+          [delay]="200"
+        >
+          <p class="home-highlights__quote">{{ highlight.text }}</p>
+        </div>
+      </article>
+    }
+  }
+
 </section>

@@ -2,30 +2,18 @@
 @use '../../../../../styles/mixins' as *;
 
 .home-highlights {
-  background-color: $color-neutral-100;
+  background-color: $color-white;
 
-  &__inner {
+  // ─── Header ──────────────────────────────────────────────────────────────
+
+  &__header {
     @include container;
-    padding-block: $space-20;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: $space-12;
-
-    @include respond-to('lg') {
-      grid-template-columns: 1fr 2fr;
-      gap: $space-16;
-      align-items: start;
-    }
-  }
-
-  &__heading {
-    @include flex-column;
+    padding-block: $space-20 $space-16;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     gap: $space-4;
-
-    @include respond-to('lg') {
-      position: sticky;
-      top: $space-24;
-    }
+    text-align: center;
   }
 
   &__label {
@@ -43,55 +31,105 @@
     letter-spacing: $letter-spacing-tight;
   }
 
-  &__list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: $space-1;
-
-    @include respond-to('md') { grid-template-columns: repeat(2, 1fr); }
-  }
+  // ─── Split 60/40 ─────────────────────────────────────────────────────────
 
   &__item {
+    display: grid;
+    grid-template-columns: 1fr;
+
+    @include respond-to('md') {
+      grid-template-columns: 3fr 2fr;
+      height: 72vh;
+      min-height: 520px;
+    }
+
+    @supports (height: 100svh) {
+      @include respond-to('md') {
+        height: 72svh;
+      }
+    }
+
+    & + & {
+      border-top: 1px solid $color-neutral-100;
+    }
+  }
+
+  // Items alternos: imagen a la derecha, texto a la izquierda
+  &__item--reverse {
+    @include respond-to('md') {
+      grid-template-columns: 2fr 3fr;
+    }
+
+    .home-highlights__image-wrap {
+      @include respond-to('md') {
+        order: 2;
+      }
+    }
+
+    .home-highlights__content {
+      @include respond-to('md') {
+        order: 1;
+      }
+    }
+  }
+
+  // ─── Imagen ──────────────────────────────────────────────────────────────
+
+  &__image-wrap {
+    position: relative;
+    height: 56vw;
+    min-height: 260px;
+    overflow: hidden;
+
+    @include respond-to('md') {
+      height: 100%;
+      min-height: unset;
+    }
+  }
+
+  &__image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+    .home-highlights__image-wrap:hover & {
+      transform: scale(1.03);
+    }
+  }
+
+  // ─── Panel de texto ───────────────────────────────────────────────────────
+
+  &__content {
     display: flex;
-    gap: $space-5;
-    padding: $space-8 $space-6;
+    align-items: center;
+    justify-content: center;
+    padding: $space-10 $space-8;
     background-color: $color-white;
-    transition: background-color $transition-normal;
 
-    &:hover { background-color: rgba($color-primary, 0.03); }
+    @include respond-to('md') {
+      padding: $space-12 clamp(#{$space-8}, 4vw, #{$space-16});
+    }
+
+    @include respond-to('lg') {
+      padding: $space-16 clamp(#{$space-10}, 5vw, #{$space-20});
+    }
   }
 
-  &__icon {
-    width: 36px;
-    height: 36px;
-    flex-shrink: 0;
-    margin-top: 2px;
-    color: $color-accent;
-    transition: color $transition-fast;
+  // ─── Cita con Fraunces ────────────────────────────────────────────────────
 
-    .home-highlights__item:hover & { color: $color-primary; }
-  }
-
-  &__item-body {
-    @include flex-column;
-    gap: $space-2;
-  }
-
-  &__item-title {
-    font-family: $font-family-heading;
-    font-size: $font-size-lg;
-    font-weight: $font-weight-light;
+  &__quote {
+    font-family: 'Fraunces', Georgia, serif;
+    font-variation-settings: 'opsz' 9, 'WONK' 1;
+    font-size: clamp(#{$font-size-base}, 1.5vw, #{$font-size-xl});
+    font-weight: 300;
+    font-style: italic;
     color: $color-primary-dark;
+    line-height: 1.9;
     margin: 0;
-  }
-
-  &__item-desc {
-    font-size: $font-size-sm;
-    color: $color-neutral-600;
-    line-height: $line-height-relaxed;
-    margin: 0;
+    letter-spacing: 0.01em;
   }
 }

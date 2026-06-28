@@ -7,7 +7,7 @@ export class ScrollRevealDirective implements OnInit, OnDestroy {
   private readonly elementRef = inject(ElementRef<HTMLElement>);
 
   readonly delay      = input<number>(0);
-  readonly revealFrom = input<'bottom' | 'left' | 'right' | 'scale'>('bottom');
+  readonly revealFrom = input<'bottom' | 'left' | 'right' | 'scale' | 'wipe-right' | 'wipe-left' | 'focus'>('bottom');
 
   private observer: IntersectionObserver | null = null;
 
