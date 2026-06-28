@@ -6,7 +6,7 @@
   </div>
 
   @for (highlight of highlights; track highlight.image; let i = $index) {
-    @if (highlight.text) {
+    @if (highlight.segments.length) {
       <article
         [class]="'home-highlights__item home-highlights__item--' + highlight.size + (i % 2 !== 0 ? ' home-highlights__item--reverse' : '')"
       >
@@ -29,7 +29,15 @@
           revealFrom="bottom"
           [delay]="200"
         >
-          <p class="home-highlights__quote">{{ highlight.text }}</p>
+          <p class="home-highlights__quote">
+            @for (seg of highlight.segments; track $index) {
+              @if (seg.em) {
+                <em class="home-highlights__em">{{ seg.text }}</em>
+              } @else {
+                {{ seg.text }}
+              }
+            }
+          </p>
         </div>
       </article>
     }

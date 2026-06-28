@@ -50,7 +50,7 @@
     }
 
     & + & {
-      border-top: 1px solid $color-neutral-100;
+      margin-top: 3px;
     }
   }
 
@@ -117,6 +117,14 @@
     @include respond-to('lg') {
       padding: $space-16 clamp(#{$space-10}, 5vw, #{$space-20});
     }
+  }
+
+  // ─── Énfasis dentro de la cita ───────────────────────────────────────────
+
+  &__em {
+    font-style: normal;
+    color: $color-secondary;
+    font-weight: $font-weight-regular;
   }
 
   // ─── Cita con Fraunces ────────────────────────────────────────────────────

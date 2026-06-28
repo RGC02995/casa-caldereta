@@ -1,0 +1,97 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+.home-activities {
+  background-color: $color-primary-dark;
+
+  &__inner {
+    @include container;
+    padding-block: $space-24;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-16;
+  }
+
+  &__label {
+    @include label-text;
+    color: $color-secondary;
+    letter-spacing: $letter-spacing-wider;
+  }
+
+  // ─── Tarjetas de actividad ────────────────────────────────────────────────
+
+  &__grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $space-6;
+
+    @include respond-to('md') {
+      grid-template-columns: 1fr 1fr;
+      gap: $space-8;
+    }
+  }
+
+  &__card {
+    padding: $space-10 $space-8;
+    border: 1px solid rgba($color-white, 0.09);
+
+    @include respond-to('lg') {
+      padding: $space-12 $space-10;
+    }
+  }
+
+  &__card-title {
+    font-family: $font-family-heading;
+    font-size: clamp(#{$font-size-xl}, 3vw, #{$font-size-2xl});
+    font-weight: $font-weight-light;
+    color: $color-secondary;
+    margin: 0 0 $space-4;
+    letter-spacing: $letter-spacing-tight;
+  }
+
+  &__card-text {
+    font-size: $font-size-base;
+    line-height: $line-height-relaxed;
+    color: rgba($color-white, 0.7);
+    margin: 0;
+    max-width: 100%;
+  }
+
+  &__em {
+    font-style: normal;
+    color: $color-secondary-light;
+    font-weight: $font-weight-medium;
+  }
+
+  // ─── Divisor ──────────────────────────────────────────────────────────────
+
+  &__separator {
+    border: none;
+    width: 100px;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgba($color-secondary, 0.35),
+      transparent
+    );
+    margin: 0;
+  }
+
+  // ─── Texto de cierre ─────────────────────────────────────────────────────
+
+  &__manifesto {
+    font-family: 'Fraunces', Georgia, serif;
+    font-variation-settings: 'opsz' 9, 'WONK' 1;
+    font-size: clamp(#{$font-size-lg}, 2.5vw, #{$font-size-2xl});
+    font-weight: 300;
+    font-style: italic;
+    color: rgba($color-white, 0.85);
+    line-height: 1.75;
+    text-align: center;
+    margin: 0;
+    max-width: 58ch;
+  }
+}

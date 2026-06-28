@@ -10,6 +10,7 @@ import { IReview } from '../../../../core/models/review.model';
 import { SeoService } from '../../../../core/services/seo.service';
 import { HomeHeroComponent } from '../../components/home-hero/home-hero.component';
 import { HomeHighlightsComponent } from '../../components/home-highlights/home-highlights.component';
+import { HomeActivitiesComponent } from '../../components/home-activities/home-activities.component';
 import { HomeAmenitiesComponent } from '../../components/home-amenities/home-amenities.component';
 import { HomeGalleryPreviewComponent } from '../../components/home-gallery-preview/home-gallery-preview.component';
 import { HomeReviewsComponent } from '../../components/home-reviews/home-reviews.component';
@@ -22,6 +23,7 @@ import { HomeBookingCtaComponent } from '../../components/home-booking-cta/home-
   imports: [
     HomeHeroComponent,
     HomeHighlightsComponent,
+    HomeActivitiesComponent,
     HomeAmenitiesComponent,
     HomeGalleryPreviewComponent,
     HomeReviewsComponent,
