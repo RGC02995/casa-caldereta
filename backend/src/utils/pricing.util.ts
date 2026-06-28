@@ -22,6 +22,13 @@ export interface IPricingConfig {
   extraPerPerson: number;
 }
 
+// Minimal shape needed from PricingRule records — avoids circular imports
+export interface IPricingRuleOverride {
+  startDate:     Date;
+  endDate:       Date;
+  pricePerNight: number;
+}
+
 const DEFAULT_CONFIG: IPricingConfig = {
   monThuPrice:    100,
   friPrice:       150,
@@ -40,12 +47,16 @@ function basePriceByDay(dayOfWeek: number, config: IPricingConfig): number {
   return config.monThuPrice;               // lunes–jueves
 }
 
-export function calculateNightPrice(date: Date, guests: number, config: IPricingConfig = DEFAULT_CONFIG): number {
-  const clamped   = Math.min(Math.max(guests, MIN_GUESTS), MAX_GUESTS);
-  const dayOfWeek = date.getDay();
-  const base      = basePriceByDay(dayOfWeek, config);
+export function calculateNightPrice(
+  date: Date,
+  guests: number,
+  config: IPricingConfig = DEFAULT_CONFIG,
+  baseOverride?: number,
+): number {
+  const clamped  = Math.min(Math.max(guests, MIN_GUESTS), MAX_GUESTS);
+  const base     = baseOverride ?? basePriceByDay(date.getDay(), config);
   if (base === 0) return 0;  // día cerrado (domingo) — sin extra por personas
-  const extraPax  = Math.max(0, clamped - BASE_GUESTS) * config.extraPerPerson;
+  const extraPax = Math.max(0, clamped - BASE_GUESTS) * config.extraPerPerson;
   return base + extraPax;
 }
 
@@ -71,6 +82,7 @@ export function calculateStayTotal(
   checkOut: Date,
   guests: number,
   config: IPricingConfig = DEFAULT_CONFIG,
+  rules: IPricingRuleOverride[] = [],
 ): IStayPrice {
   const pricePerNight: number[] = [];
   const current = new Date(checkIn);
@@ -79,7 +91,14 @@ export function calculateStayTotal(
   end.setHours(0, 0, 0, 0);
 
   while (current < end) {
-    pricePerNight.push(calculateNightPrice(new Date(current), guests, config));
+    const day = new Date(current);
+    // Last matching rule wins (same priority as the admin calendar view)
+    const matchingRule = rules.filter(r => {
+      const s = new Date(r.startDate); s.setHours(0, 0, 0, 0);
+      const e = new Date(r.endDate);   e.setHours(23, 59, 59, 999);
+      return day >= s && day <= e;
+    }).at(-1);
+    pricePerNight.push(calculateNightPrice(day, guests, config, matchingRule?.pricePerNight));
     current.setDate(current.getDate() + 1);
   }
 
