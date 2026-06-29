@@ -3,6 +3,11 @@
 
 .home-highlights {
   background-color: $color-white;
+  padding-block-end: 0;
+
+  @include respond-to('md') {
+    padding-block-end: $space-12;
+  }
 
   // ─── Header ──────────────────────────────────────────────────────────────
 
@@ -41,6 +46,10 @@
       grid-template-columns: 3fr 2fr;
       height: 72vh;
       min-height: 520px;
+      margin-inline: $space-6;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 24px rgba(0, 0, 0, 0.07);
     }
 
     @supports (height: 100svh) {
@@ -51,6 +60,10 @@
 
     & + & {
       margin-top: 3px;
+
+      @include respond-to('md') {
+        margin-top: $space-6;
+      }
     }
   }
 
