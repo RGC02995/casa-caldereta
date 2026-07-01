@@ -46,9 +46,14 @@
           [class.booking-cal__day--blocked]="day.isBlocked"
           [disabled]="day.isDisabled"
           (click)="onDayClick(day)"
-          [attr.aria-label]="day.dayNumber + ' ' + monthLabel()"
+          [attr.aria-label]="day.dayNumber + ' ' + monthLabel() + (day.price > 0 ? ', ' + day.price + '€' : '')"
           [attr.aria-pressed]="day.isCheckIn || day.isCheckOut"
-        >{{ day.dayNumber }}</button>
+        >
+          <span class="booking-cal__day-number">{{ day.dayNumber }}</span>
+          @if (day.price > 0) {
+            <span class="booking-cal__day-price">{{ day.price }}€</span>
+          }
+        </button>
       } @else {
         <div class="booking-cal__day-empty" role="gridcell" aria-hidden="true"></div>
       }

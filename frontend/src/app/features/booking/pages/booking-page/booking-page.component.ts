@@ -5,8 +5,10 @@ import { map, catchError } from 'rxjs/operators';
 import { BehaviorSubject, combineLatest, of, switchMap } from 'rxjs';
 import { BookingService } from '../../../../core/services/booking.service';
 import { BlockedPeriodService } from '../../../../core/services/blocked-period.service';
+import { PricingSettingsService } from '../../../../core/services/pricing-settings.service';
 import { IBookingAvailability, IPriceEstimate } from '../../../../core/models/booking.model';
 import { IBlockedPeriod } from '../../../../core/models/blocked-period.model';
+import { IPricingSettings } from '../../../../core/models/pricing-settings.model';
 import { SeoService } from '../../../../core/services/seo.service';
 import { BookingHeroComponent } from '../../components/booking-hero/booking-hero.component';
 import { BookingCalendarComponent } from '../../components/booking-calendar/booking-calendar.component';
@@ -23,8 +25,9 @@ const EMPTY_ESTIMATE: IPriceEstimate = {
   styleUrl:    './booking-page.component.scss',
 })
 export class BookingPageComponent {
-  private readonly bookingService = inject(BookingService);
-  private readonly blockedService = inject(BlockedPeriodService);
+  private readonly bookingService      = inject(BookingService);
+  private readonly blockedService      = inject(BlockedPeriodService);
+  private readonly pricingSettingsService = inject(PricingSettingsService);
 
   readonly loadError = signal('');
   readonly checkIn   = signal<Date | null>(null);
@@ -32,6 +35,14 @@ export class BookingPageComponent {
   readonly guests    = signal(2);
 
   private readonly refresh$ = new BehaviorSubject<void>(undefined);
+
+  readonly pricingSettings = toSignal(
+    this.pricingSettingsService.get().pipe(
+      map(response => response.data),
+      catchError(() => of(null as IPricingSettings | null)),
+    ),
+    { initialValue: null as IPricingSettings | null },
+  );
 
   readonly bookedRanges = toSignal(
     this.refresh$.pipe(

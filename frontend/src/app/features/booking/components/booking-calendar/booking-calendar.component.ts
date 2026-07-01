@@ -9,6 +9,7 @@ import {
 import { es } from 'date-fns/locale';
 import { IBookingAvailability } from '../../../../core/models/booking.model';
 import { IBlockedPeriod } from '../../../../core/models/blocked-period.model';
+import { IPricingSettings } from '../../../../core/models/pricing-settings.model';
 
 interface CalendarDay {
   readonly date:       Date | null;
@@ -21,6 +22,7 @@ interface CalendarDay {
   readonly isCheckOut: boolean;
   readonly isInRange:  boolean;
   readonly isDisabled: boolean;
+  readonly price:      number;
 }
 
 @Component({
@@ -30,11 +32,12 @@ interface CalendarDay {
   styleUrl: './booking-calendar.component.scss',
 })
 export class BookingCalendarComponent {
-  readonly bookedRanges   = input<IBookingAvailability[]>([]);
-  readonly blockedPeriods = input<IBlockedPeriod[]>([]);
-  readonly checkIn        = input<Date | null>(null);
-  readonly checkOut       = input<Date | null>(null);
-  readonly loadError      = input('');
+  readonly bookedRanges    = input<IBookingAvailability[]>([]);
+  readonly blockedPeriods  = input<IBlockedPeriod[]>([]);
+  readonly checkIn         = input<Date | null>(null);
+  readonly checkOut        = input<Date | null>(null);
+  readonly loadError       = input('');
+  readonly pricingSettings = input<IPricingSettings | null>(null);
 
   readonly checkInChange  = output<Date | null>();
   readonly checkOutChange = output<Date | null>();
@@ -54,6 +57,7 @@ export class BookingCalendarComponent {
       this.checkOut(),
       this.bookedRanges(),
       this.blockedPeriods(),
+      this.pricingSettings(),
     )
   );
 
@@ -120,6 +124,7 @@ export class BookingCalendarComponent {
     checkOutDate: Date | null,
     bookedRanges: IBookingAvailability[],
     blockedPeriods: IBlockedPeriod[],
+    pricingSettings: IPricingSettings | null,
   ): CalendarDay[] {
     const monthStart   = startOfMonth(month);
     const monthEnd     = endOfMonth(month);
@@ -134,6 +139,7 @@ export class BookingCalendarComponent {
         date: null, dayNumber: 0, isToday: false, isPast: false,
         isBooked: false, isBlocked: false,
         isCheckIn: false, isCheckOut: false, isInRange: false, isDisabled: true,
+        price: 0,
       });
     }
 
@@ -152,6 +158,14 @@ export class BookingCalendarComponent {
       const isBooked  = parsedBooked.some(r  => !isBefore(current, r.start) && isBefore(current, r.end));
       const isBlocked = parsedBlocked.some(r => !isBefore(current, r.start) && isBefore(current, r.end));
 
+      let price = 0;
+      if (!isPast && !isBooked && !isBlocked && pricingSettings) {
+        const dow = getDay(current); // 0=Dom, 1=Lun, ..., 5=Vie, 6=Sáb
+        if (dow === 5)      price = pricingSettings.friPrice;
+        else if (dow === 6) price = pricingSettings.satPrice;
+        else if (dow !== 0) price = pricingSettings.monThuPrice;
+      }
+
       days.push({
         date:       current,
         dayNumber:  getDate(current),
@@ -164,6 +178,7 @@ export class BookingCalendarComponent {
         isInRange:  checkInDate !== null && checkOutDate !== null &&
                     isAfter(current, checkInDate) && isBefore(current, checkOutDate),
         isDisabled: isPast || isBooked || isBlocked,
+        price,
       });
       current = addDays(current, 1);
     }
