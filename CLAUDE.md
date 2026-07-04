@@ -371,6 +371,15 @@ Skill usada: `/barrido-señales` (`.claude/commands/barrido-señales.md`)
 - [x] **T&C actualizadas** — política 50%/7días, arras penitenciales (art. 1454 CC), sin desistimiento (art. 103(l) TRLGDCU), hoja reclamaciones, tabla precios, domingos cerrado
 - [x] **Privacidad actualizada** — Stripe, Resend, Railway, Vercel, MongoDB Atlas, Cloudinary nombrados como encargados del tratamiento (art. 28 RGPD)
 
+### Sincronización de calendario iCal — Airbnb/Booking.com ✅ COMPLETADO (2026-07-04)
+- [x] **Gap de seguridad cerrado** — `booking.service.ts` → `create()`/`createCheckoutSession()` validan conflicto de fechas también contra `BlockedPeriodModel` (antes solo contra `BookingModel`); evita pagar por Stripe fechas ya bloqueadas manualmente
+- [x] **`BlockedPeriodModel`** — campo `origin: 'manual'|'airbnb'|'booking'` + `externalUid` con índice único `sparse` (evita duplicados en cada sincronización)
+- [x] **Importación** — `ical-sync.service.ts` (nuevo): cron cada 15 min descarga y parsea (`node-ical`) los feeds `.ics` de Airbnb/Booking, upsert por `UID` + borra los que ya no aparecen (reserva cancelada). Fallo en una plataforma no afecta a la otra ni borra datos si la descarga falla
+- [x] **Exportación** — `GET /calendar.ics` (público, sin auth, cache 5 min): genera al vuelo un feed con reservas activas + bloqueos, mismo patrón que `sitemap.controller.ts`
+- [x] **Admin** — `/admin/configuracion` muestra la URL de exportación con botón "Copiar" (`navigator.clipboard`)
+- [x] Probado end-to-end: reservas/exportación con datos reales (`curl`); importación con un `.ics` de ejemplo hecho a mano (parseo → upsert → borrado de obsoletos correcto)
+- **Decisión de diseño:** las URLs `.ics` de Airbnb/Booking se quedan en variables de entorno (`AIRBNB_ICAL_URL`/`BOOKING_ICAL_URL`), no en un ajuste editable desde el admin — el propietario final no es técnico, así que las gestiona raul directamente en `.env`/Railway
+
 ## Pendientes / Preguntas abiertas
 - [x] **Fix: formulario pre-llegada + segundo pago en reservas last-minute** — `checkinService.handleWebhookPostConfirmation(booking)` llamado desde el webhook de Stripe tras confirmar el depósito. Comprueba centinelas y envía inmediatamente: (1) recordatorio segundo pago si `daysUntilCheckin <= 7` y no pagado ni avisado; (2) formulario RD 933/2021 si `daysUntilCheckin <= 3` y no enviado. Los crons siguen cubriendo el caso normal (check-in > 7 días).
 - [ ] **Exportar XML SES.HOSPEDERÍA** — Botón "Exportar XML" en el panel de viajeros (admin reservas). Necesita esquema XML oficial del Ministerio del Interior antes de implementar. Pendiente de documentación técnica del portal SES.HOSPEDERÍA.
@@ -398,7 +407,9 @@ Skill usada: `/barrido-señales` (`.claude/commands/barrido-señales.md`)
   - [x] Google Search Console — verificado + sitemap `https://api.casa-caldereta.com/sitemap.xml` enviado ✅ (2026-07-04)
   - [ ] **`[NIF]` del titular** — sigue como placeholder en Aviso Legal, Privacidad y Términos; pendiente de que el usuario lo facilite
   - [ ] Google Business Profile — crear ficha completa (nombre, categoría "Casa rural", dirección pública Carrer de Baix 3, teléfono, fotos) y pasar la verificación postal/telefónica de Google
-- [ ] **Sincronizar calendario con Booking.com y Airbnb** — evitar doble reserva entre plataformas. Greenfield: no existe ninguna integración iCal/OTA todavía (verificado 2026-07-04). Probablemente vía feeds iCal (.ics): importar los calendarios de Airbnb/Booking como bloqueos automáticos (integrándose con `blocked-period.service.ts`) y exportar un feed `.ics` propio con las reservas de `booking.service.ts` para que Airbnb/Booking lo importen
+- [ ] **Sincronizar calendario con Booking.com y Airbnb** — código completo ✅ (ver sección arriba), quedan solo 2 pasos manuales:
+  - [ ] Conseguir las URLs `.ics` reales de Airbnb y Booking.com y añadirlas como `AIRBNB_ICAL_URL`/`BOOKING_ICAL_URL` en `backend/.env` (local) y en Railway (producción)
+  - [ ] Pegar la URL de exportación (visible en `/admin/configuracion`) en el panel de "sincronizar calendarios" de Airbnb y de Booking.com
 
 ---
 
@@ -427,3 +438,4 @@ Skill usada: `/barrido-señales` (`.claude/commands/barrido-señales.md`)
 | security: CORS_ORIGIN_PROD required en prod + rate limiters por endpoint público | requireEnv CORS en producción + publicRateLimiter/checkoutRateLimiter/reviewSubmitLimiter |
 | feat: check-in/out + registro RD 933/2021 | Backend: token SHA-256 + cron emails + 9 endpoints. Admin: sección Hoy, botones checkin, panel viajeros, configuración horarios |
 | docs: dominio casa-caldereta.com comprado — estado DNS y pendientes Lunes | Namecheap comprado, DNS Vercel configurado, Railway + Resend + código pendiente |
+| feat: sincronización de calendario iCal con Airbnb/Booking.com | Gap seguridad cerrado, BlockedPeriodModel con origen, ical-sync.service.ts (cron 15min), GET /calendar.ics, admin con URL de exportación |
