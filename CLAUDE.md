@@ -380,6 +380,35 @@ Skill usada: `/barrido-señales` (`.claude/commands/barrido-señales.md`)
 - [x] Probado end-to-end: reservas/exportación con datos reales (`curl`); importación con un `.ics` de ejemplo hecho a mano (parseo → upsert → borrado de obsoletos correcto)
 - **Decisión de diseño:** las URLs `.ics` de Airbnb/Booking se quedan en variables de entorno (`AIRBNB_ICAL_URL`/`BOOKING_ICAL_URL`), no en un ajuste editable desde el admin — el propietario final no es técnico, así que las gestiona raul directamente en `.env`/Railway
 
+### Auditoría de calendario iCal + fixes CORS/FRONTEND_URL (2026-07-05) — EN CURSO, sin commitear
+Objetivo: comprobar funcionamiento y seguridad del calendario (disponibilidad, conflictos, sincronización iCal Airbnb/Booking) con una suite de tests nueva, ya que no existía ninguna.
+
+- [x] **Suite de tests nueva — 201 tests, todos en verde** (sin commitear todavía):
+  - Backend (7 ficheros en `backend/src/__tests__/`): `routes/booking-availability.routes.spec.ts`, `routes/booking-checkout.routes.spec.ts`, `routes/booking-admin.routes.spec.ts`, `routes/ical-export.spec.ts`, `services/ical-sync.service.spec.ts`, `routes/calendar-round-trip.spec.ts`, `routes/blocked-period.routes.spec.ts`
+  - Frontend: `features/booking/components/booking-calendar/booking-calendar.component.spec.ts`
+  - Feeds de Airbnb/Booking simulados con un servidor HTTP local (`node-ical` real, sin mocks del parser) — útil para seguir probando la sync sin tener aún las URLs reales
+  - Stripe mockeado solo donde hace falta (las validaciones 400/409 ocurren antes de llamar a Stripe)
+- [x] **Bug fix — export iCal liberaba el último día de bloqueos manuales** (`backend/src/controllers/ical-export.controller.ts`): RFC 5545 trata `DTEND` como exclusivo pero los bloqueos `origin: 'manual'` son inclusivos (el admin los pinta así) → ahora se exporta `endDate + 1 día` solo para `origin === 'manual'`; los importados de Airbnb/Booking se exportan tal cual (ya vienen exclusivos)
+- [x] **Bug fix — feed corrupto (200 + HTML) borraba todos los bloqueos de la plataforma** (`backend/src/services/ical-sync.service.ts`): `node-ical` devuelve `{}` sin lanzar error ante una respuesta no-iCal con HTTP 200 (típico de página de mantenimiento); ahora se valida que exista un componente `VCALENDAR` antes de procesar — si no, se lanza error y el `try/catch` existente preserva los bloqueos de esa plataforma (mismo comportamiento que ante un HTTP 500)
+- [x] **Hallazgo detectado durante la auditoría — `CORS_ORIGIN_PROD` y `FRONTEND_URL` en Railway seguían con el dominio antiguo de Vercel**, pese a que `CLAUDE.md` documentaba el cambio como hecho el 2026-07-04:
+  - Confirmado con petición `OPTIONS` real contra `api.casa-caldereta.com`: el origen `casa-caldereta.com` sí recibía `access-control-allow-origin` correcto, pero `casa-caldereta-frontend.vercel.app` no recibía ningún header CORS
+  - `FRONTEND_URL` mal apuntado afecta a **5 sitios**: redirección Stripe tras pagar depósito (éxito/cancelación), redirección tras pagar el resto (éxito/cancelación), y el enlace del formulario de check-in RD 933/2021 enviado por email — confirmado en vivo: tras un pago de prueba, Stripe redirigió a `https://casa-caldereta-frontend.vercel.app/reservar/pago-exitoso?...` en vez de al dominio propio
+  - `backend/.env` **local** corregido: `CORS_ORIGIN_PROD="https://casa-caldereta.com,https://casa-caldereta-frontend.vercel.app"` (se decidió mantener el dominio antiguo de Vercel funcionando, de ahí la lista con coma) y `FRONTEND_URL="https://casa-caldereta.com"` (aquí solo puede haber un valor — es la URL de redirección)
+  - **Railway (producción) — PENDIENTE, el usuario debe actualizarlo manualmente** (sin acceso desde aquí): mismas variables, mismos valores, en el servicio backend → Variables → esperar redeploy automático
+- [ ] **Hallazgos de menor severidad, pendientes de decisión (pospuestos explícitamente para después):**
+  1. `POST /bookings` (admin) no comprueba `pending_payment` vivo como conflicto → posible doble reserva sobre un pago en curso
+  2. Calendario público no deshabilita los domingos (el backend sí los rechaza al pagar, con 400) — pero un domingo sí es válido como día de salida, cuidado al corregirlo
+  3. No se puede terminar una estancia el día que entra otra reserva (back-to-back), aunque el backend lo permitiría
+  4. `GET /blocked-periods` (público) expone `reason` (notas internas del propietario), `origin` y `externalUid`
+  5. Backend permite check-in en el día `endDate` de un bloqueo manual (lo trata como exclusivo); incoherente con el fix de export de hoy
+  6. Comprobación de conflicto + guardado no es atómica — ventana teórica de doble reserva bajo concurrencia alta
+  7. `/calendar.ics` no lleva token secreto en la URL (bajo impacto, solo expone ocupación)
+
+**Para retomar mañana:**
+1. Confirmar que el usuario actualizó `CORS_ORIGIN_PROD` y `FRONTEND_URL` en Railway → verificar con petición `OPTIONS` real y con un pago de prueba
+2. Decidir y aplicar (o no) los 7 hallazgos de menor severidad de la lista de arriba
+3. Commitear la suite de tests + los 2 bug fixes (todavía sin commitear, ver `git status`)
+
 ## Pendientes / Preguntas abiertas
 - [x] **Fix: formulario pre-llegada + segundo pago en reservas last-minute** — `checkinService.handleWebhookPostConfirmation(booking)` llamado desde el webhook de Stripe tras confirmar el depósito. Comprueba centinelas y envía inmediatamente: (1) recordatorio segundo pago si `daysUntilCheckin <= 7` y no pagado ni avisado; (2) formulario RD 933/2021 si `daysUntilCheckin <= 3` y no enviado. Los crons siguen cubriendo el caso normal (check-in > 7 días).
 - [ ] **Exportar XML SES.HOSPEDERÍA** — Botón "Exportar XML" en el panel de viajeros (admin reservas). Necesita esquema XML oficial del Ministerio del Interior antes de implementar. Pendiente de documentación técnica del portal SES.HOSPEDERÍA.
@@ -407,9 +436,10 @@ Skill usada: `/barrido-señales` (`.claude/commands/barrido-señales.md`)
   - [x] Google Search Console — verificado + sitemap `https://api.casa-caldereta.com/sitemap.xml` enviado ✅ (2026-07-04)
   - [ ] **`[NIF]` del titular** — sigue como placeholder en Aviso Legal, Privacidad y Términos; pendiente de que el usuario lo facilite
   - [ ] Google Business Profile — crear ficha completa (nombre, categoría "Casa rural", dirección pública Carrer de Baix 3, teléfono, fotos) y pasar la verificación postal/telefónica de Google
-- [ ] **Sincronizar calendario con Booking.com y Airbnb** — código completo ✅ (ver sección arriba), quedan solo 2 pasos manuales:
+- [ ] **Sincronizar calendario con Booking.com y Airbnb** — código completo + auditado con tests ✅ (ver sección de auditoría arriba), quedan solo 2 pasos manuales:
   - [ ] Conseguir las URLs `.ics` reales de Airbnb y Booking.com y añadirlas como `AIRBNB_ICAL_URL`/`BOOKING_ICAL_URL` en `backend/.env` (local) y en Railway (producción)
   - [ ] Pegar la URL de exportación (visible en `/admin/configuracion`) en el panel de "sincronizar calendarios" de Airbnb y de Booking.com
+- [ ] **Railway — `CORS_ORIGIN_PROD` y `FRONTEND_URL` desactualizadas** (detectado 2026-07-05, ver sección de auditoría arriba) — pese a que este mismo fichero decía "hecho" el 2026-07-04, en producción seguían apuntando a `casa-caldereta-frontend.vercel.app`. Pendiente que el usuario las actualice en Railway a los valores ya corregidos en `backend/.env` local
 
 ---
 

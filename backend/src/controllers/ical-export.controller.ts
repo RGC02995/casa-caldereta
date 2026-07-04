@@ -6,6 +6,14 @@ function pad(value: number): string {
   return String(value).padStart(2, '0');
 }
 
+// Los bloqueos manuales se crean/pintan como inclusivos (endDate incluido);
+// RFC 5545 trata DTEND como exclusivo — hay que sumar un día al exportarlos.
+// Los bloqueos importados (airbnb/booking) ya llegan con endDate exclusivo
+// desde el feed origen, así que se exportan tal cual.
+function addOneDay(date: Date): Date {
+  return new Date(date.getTime() + 24 * 60 * 60 * 1000);
+}
+
 function formatDateOnly(date: Date): string {
   return `${date.getUTCFullYear()}${pad(date.getUTCMonth() + 1)}${pad(date.getUTCDate())}`;
 }
@@ -39,9 +47,10 @@ export async function icalExportHandler(_req: Request, res: Response): Promise<v
       buildEvent(`booking-${booking.id}@casa-caldereta.com`, 'Reservado', booking.checkIn, booking.checkOut, dtstamp),
     );
 
-    const blockedEvents = blockedPeriods.map(period =>
-      buildEvent(`blocked-${String(period._id)}@casa-caldereta.com`, 'No disponible', period.startDate, period.endDate, dtstamp),
-    );
+    const blockedEvents = blockedPeriods.map(period => {
+      const exportEndDate = period.origin === 'manual' ? addOneDay(period.endDate) : period.endDate;
+      return buildEvent(`blocked-${String(period._id)}@casa-caldereta.com`, 'No disponible', period.startDate, exportEndDate, dtstamp);
+    });
 
     const ics = [
       'BEGIN:VCALENDAR',

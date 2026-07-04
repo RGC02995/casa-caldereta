@@ -34,6 +34,15 @@ class IcalSyncService {
 
   private async syncPlatform(platform: IPlatformConfig): Promise<void> {
     const events = await ical.async.fromURL(platform.url);
+
+    // Un iCal válido, incluso sin eventos, siempre incluye un componente VCALENDAR.
+    // Su ausencia indica que la respuesta (p. ej. HTTP 200 con una página de
+    // mantenimiento) no es un feed real — abortamos para no borrar bloqueos vigentes.
+    const hasValidCalendar = Object.values(events).some(component => component?.type === 'VCALENDAR');
+    if (!hasValidCalendar) {
+      throw new Error(`Feed de ${platform.label} no es un iCal válido`);
+    }
+
     const activeUids: string[] = [];
 
     for (const component of Object.values(events)) {
