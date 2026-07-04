@@ -27,8 +27,8 @@ export class HomeHighlightsComponent {
       alt: 'Exterior de Casa Caldereta en Aielo de Rugat',
       size: 'landscape',
       segments: [
-        { text: 'Un alojamiento pensado para desconectar en plena naturaleza, donde solo se oye el canto de los pájaros y el sonar de las ' },
-        { text: 'campanas del pueblo', em: true },
+        { text: 'Un alojamiento elegante pensado para desconectar y relajarse en un pequeño pueblo tranquilo rodeado de naturaleza, donde solo oirás el canto de los pájaros y el sonar del toque de las horas de las ' },
+        { text: 'campanas', em: true },
         { text: '.' },
       ],
     },
@@ -37,9 +37,9 @@ export class HomeHighlightsComponent {
       alt: 'Terraza con vistas al Castell de Rugat y el Benicadell',
       size: 'panoramic',
       segments: [
-        { text: 'Barbacoa en la terraza con vistas directas al ' },
+        { text: 'Preparar una barbacoa en la terraza contemplando las ruinas del ' },
         { text: 'Castell de Rugat', em: true },
-        { text: ' y el reflejo del sol sobre el ' },
+        { text: ' entre las montañas que rodean el pueblo, o el reflejo del sol sobre el ' },
         { text: 'Benicadell', em: true },
         { text: ' al atardecer.' },
       ],
@@ -49,11 +49,11 @@ export class HomeHighlightsComponent {
       alt: 'Cocina moderna equipada con comedor y estufa de leña',
       size: 'portrait',
       segments: [
-        { text: 'Cocina moderna abierta al comedor, con ' },
-        { text: 'televisión de 65"', em: true },
-        { text: ' y ' },
+        { text: 'La moderna cocina, totalmente equipada, la cual está abierta al comedor, donde podrás cocinar viendo la ' },
+        { text: 'televisión de 65 pulgadas', em: true },
+        { text: ' y, en invierno, calentarse con la acogedora ' },
         { text: 'estufa de leña', em: true },
-        { text: ' para las noches de invierno.' },
+        { text: '.' },
       ],
     },
     {
@@ -61,8 +61,9 @@ export class HomeHighlightsComponent {
       alt: 'Jacuzzi interior de 180×180 junto a la terraza interior',
       size: 'cinematic',
       segments: [
-        { text: 'Jacuzzi', em: true },
-        { text: ' de 180×180 cm junto a la terraza interior, con capacidad para cinco personas.' },
+        { text: 'Unido al comedor y junto a una terraza interior, podréis relajaros en el gran ' },
+        { text: 'jacuzzi', em: true },
+        { text: ' de 180×180 cm, con capacidad para cinco personas.' },
       ],
     },
     {
@@ -70,9 +71,11 @@ export class HomeHighlightsComponent {
       alt: 'Salón-biblioteca del primer piso con habitaciones de matrimonio',
       size: 'classic',
       segments: [
-        { text: 'Salón-biblioteca luminoso, ' },
+        { text: 'La casa dispone en el primer piso de un salón-biblioteca muy luminoso y ' },
         { text: 'dos habitaciones de matrimonio', em: true },
-        { text: ' con camas de 180 cm y sofá cama de 160 cm en el comedor.' },
+        { text: ' con camas de 180 cm, que se pueden separar en cuatro camas de 90 cm avisando con antelación, y en el comedor un ' },
+        { text: 'sofá cama de 160 cm', em: true },
+        { text: ' muy cómodo.' },
       ],
     },
   ];

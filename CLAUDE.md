@@ -343,15 +343,15 @@ Skill usada: `/barrido-señales` (`.claude/commands/barrido-señales.md`)
 ### Plataformas y propietarios
 | Plataforma | Cuenta | Estado |
 |---|---|---|
-| Railway (backend nuevo) | casacaldereta@gmail.com | ✅ Activo — `backend-production-777f.up.railway.app` |
-| Railway (backend antiguo) | raulgc2995@gmail.com | ⚠️ Pendiente eliminar — `backend-production-d85c` |
-| Vercel (frontend) | raulgc2995@gmail.com | ⚠️ Pendiente transferir |
+| Railway (backend nuevo) | casacaldereta@gmail.com | ✅ Activo — custom domain `api.casa-caldereta.com` |
+| Railway (backend antiguo) | raulgc2995@gmail.com | ✅ Eliminado (2026-07-04) |
+| Vercel (frontend) | casacaldereta@gmail.com | ✅ Transferido (2026-07-04) |
 | MongoDB Atlas | casacaldereta@gmail.com | ✅ Transferido |
 | Cloudinary | raulgc2995@gmail.com | ✅ Se queda así (cliente conforme) |
-| Stripe | casacaldereta@gmail.com | ✅ Test mode — webhook apunta a 777f |
-| Resend | casacaldereta@gmail.com | ✅ Activo — FROM: `onboarding@resend.dev` (temporal) |
+| Stripe | casacaldereta@gmail.com | ✅ Test mode — webhook apunta a `api.casa-caldereta.com` |
+| Resend | casacaldereta@gmail.com | ✅ Activo — FROM: `reservas@casa-caldereta.com`, dominio verificado, click tracking off |
 | GitHub | raulgc2995@gmail.com | ✅ Se queda así |
-| Namecheap | casacaldereta@gmail.com | ✅ Dominio `casa-caldereta.com` comprado (2026-06-26) — DNS Vercel configurado |
+| Namecheap | casacaldereta@gmail.com | ✅ Dominio `casa-caldereta.com` — migración completa (2026-07-04) |
 
 ### Email del propietario en el sistema
 - `ADMIN_EMAIL` = `casacaldereta@gmail.com`
@@ -374,19 +374,22 @@ Skill usada: `/barrido-señales` (`.claude/commands/barrido-señales.md`)
 ## Pendientes / Preguntas abiertas
 - [x] **Fix: formulario pre-llegada + segundo pago en reservas last-minute** — `checkinService.handleWebhookPostConfirmation(booking)` llamado desde el webhook de Stripe tras confirmar el depósito. Comprueba centinelas y envía inmediatamente: (1) recordatorio segundo pago si `daysUntilCheckin <= 7` y no pagado ni avisado; (2) formulario RD 933/2021 si `daysUntilCheckin <= 3` y no enviado. Los crons siguen cubriendo el caso normal (check-in > 7 días).
 - [ ] **Exportar XML SES.HOSPEDERÍA** — Botón "Exportar XML" en el panel de viajeros (admin reservas). Necesita esquema XML oficial del Ministerio del Interior antes de implementar. Pendiente de documentación técnica del portal SES.HOSPEDERÍA.
-- [ ] **Resend — desactivar Click Tracking** en el dashboard (resend.com → dominio → Tracking). Los links del email de pre-llegada pasan por `awstrack.me` (tracker AWS de Resend), que uBO bloquea mostrando aviso de peligro al huésped antes de rellenar el formulario de viajeros.
+- [x] **Resend — Click Tracking desactivado** ✅ (2026-07-04) en resend.com → Domains → `casa-caldereta.com` → Configuration → Enable tracking metrics. Resuelve el problema de los links `awstrack.me` bloqueados por uBO en el email de pre-llegada.
 - [x] **Comprar dominio `casa-caldereta.com`** en Namecheap con `casacaldereta@gmail.com` ✅ (2026-06-26)
-- [ ] **Configurar dominio completo (pendiente Lunes 2026-06-30):**
+- [x] **Configurar dominio completo** ✅ (2026-07-04):
   - [x] DNS Namecheap → A `@` → `216.198.79.1` (Vercel) + CNAME `www` → `cname.vercel-dns.com`
-  - [x] Vercel → dominios `casa-caldereta.com` y `www.casa-caldereta.com` añadidos (pendiente propagación)
-  - [ ] Railway → añadir custom domain `api.casa-caldereta.com` → obtener CNAME → añadir en Namecheap
-  - [ ] Railway → actualizar `CORS_ORIGIN_PROD` y `FRONTEND_URL` a `https://casa-caldereta.com`
-  - [ ] Resend → verificar dominio + cambiar `RESEND_FROM_EMAIL` a `reservas@casa-caldereta.com`
-  - [ ] Código → actualizar `BASE_URL` en `seo.service.ts` + `environment.prod.ts`
+  - [x] Vercel → dominios `casa-caldereta.com` y `www.casa-caldereta.com` añadidos y propagados
+  - [x] Railway → custom domain `api.casa-caldereta.com` añadido, funcionando en producción
+  - [x] Railway → `CORS_ORIGIN_PROD` y `FRONTEND_URL` actualizadas a `https://casa-caldereta.com`
+  - [x] Código → `BASE_URL` en `seo.service.ts` + `apiUrl` en `environment.prod.ts` + `sitemap.controller.ts` apuntan a `casa-caldereta.com` / `api.casa-caldereta.com`
+  - [x] `vercel.json` → rewrite de `/sitemap.xml` actualizado a `https://api.casa-caldereta.com/sitemap.xml`
+  - [x] `backend/.env.example` → placeholders de Vercel sustituidos por `casa-caldereta.com`
+  - [x] Resend → dominio verificado + `RESEND_FROM_EMAIL` cambiado a `reservas@casa-caldereta.com`
 - [ ] **Stripe live** — KYC (DNI propietario + cuenta bancaria) + claves `sk_live_...` + nuevo webhook secret → actualizar Railway
-- [ ] **Vercel** — crear cuenta `casacaldereta@gmail.com` + transferir proyecto frontend
-- [ ] **Eliminar Railway backend antiguo** (`backend-production-d85c`) de la cuenta `raulgc2995@gmail.com`
+- [x] **Vercel** — cuenta `casacaldereta@gmail.com` creada + proyecto frontend transferido ✅ (2026-07-04)
+- [x] **Railway backend antiguo eliminado** (`backend-production-d85c`) de la cuenta `raulgc2995@gmail.com` ✅ (2026-07-04)
 - [ ] **SEO** — `og-default.jpg`, teléfono, coordenadas GPS, Google Business Profile, Google Search Console
+- [ ] **Sincronizar calendario con Booking.com y Airbnb** — evitar doble reserva entre plataformas. Greenfield: no existe ninguna integración iCal/OTA todavía (verificado 2026-07-04). Probablemente vía feeds iCal (.ics): importar los calendarios de Airbnb/Booking como bloqueos automáticos (integrándose con `blocked-period.service.ts`) y exportar un feed `.ics` propio con las reservas de `booking.service.ts` para que Airbnb/Booking lo importen
 
 ---
 

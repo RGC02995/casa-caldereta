@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/sitemap.xml",
-      "destination": "https://backend-production-777f.up.railway.app/sitemap.xml"
+      "destination": "https://api.casa-caldereta.com/sitemap.xml"
     },
     {
       "source": "/(.*)",

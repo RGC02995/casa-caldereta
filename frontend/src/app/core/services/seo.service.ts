@@ -10,7 +10,6 @@ export interface ISeoConfig {
   readonly keywords?:     string;
 }
 
-// ⚠️ PENDIENTE: cambiar cuando el dominio esté activo en Namecheap
 const BASE_URL      = 'https://casa-caldereta.com';
 const SITE_NAME     = 'Casa Caldereta';
 const DEFAULT_IMAGE = `${BASE_URL}/assets/images/og-default.jpg`;
