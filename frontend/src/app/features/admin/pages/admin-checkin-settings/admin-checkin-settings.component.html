@@ -78,4 +78,39 @@
     </form>
   }
 
+  <section class="admin-checkin-settings__sync" aria-labelledby="sync-title">
+    <h2 id="sync-title" class="admin-checkin-settings__sync-title">Sincronización de calendarios</h2>
+    <p class="admin-checkin-settings__subtitle">
+      URL de tu calendario para pegar en Airbnb y Booking.com (panel de cada plataforma → "Sincronizar calendarios" → importar calendario externo).
+      Las URLs de Airbnb/Booking para traer sus reservas a esta web se configuran aparte, directamente en el servidor.
+    </p>
+
+    <div class="admin-checkin-settings__card">
+      <div class="admin-checkin-settings__field">
+        <label class="admin-checkin-settings__label" for="exportCalendarUrl">
+          URL de exportación
+        </label>
+        <div class="admin-checkin-settings__copy-row">
+          <input
+            class="admin-checkin-settings__input admin-checkin-settings__copy-input"
+            id="exportCalendarUrl"
+            type="text"
+            [value]="exportCalendarUrl"
+            readonly
+          />
+          <button
+            class="admin-checkin-settings__copy-btn"
+            type="button"
+            (click)="copyExportUrl()"
+          >
+            Copiar
+          </button>
+        </div>
+        @if (copySuccess()) {
+          <p class="admin-checkin-settings__save-success" role="status">URL copiada al portapapeles.</p>
+        }
+      </div>
+    </div>
+  </section>
+
 </div>

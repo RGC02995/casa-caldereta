@@ -1,6 +1,8 @@
 import { Component, inject, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { timer } from 'rxjs';
 import { CheckinService } from '../../../../core/services/checkin.service';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector:    'admin-checkin-settings',
@@ -19,6 +21,18 @@ export class AdminCheckinSettingsComponent {
   readonly loadError    = signal('');
   readonly saveError    = signal('');
   readonly saveSuccess  = signal(false);
+
+  // URL pública del feed .ics para pegar en Airbnb/Booking.com (ver /calendar.ics en el backend)
+  readonly exportCalendarUrl = environment.apiUrl.replace(/\/api\/v\d+$/, '') + '/calendar.ics';
+  readonly copySuccess       = signal(false);
+
+  copyExportUrl(): void {
+    navigator.clipboard.writeText(this.exportCalendarUrl).catch(() => undefined);
+    this.copySuccess.set(true);
+    timer(2000)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.copySuccess.set(false));
+  }
 
   constructor() {
     this.checkinService.getSettings()

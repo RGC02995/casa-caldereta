@@ -10,7 +10,9 @@ import { globalRateLimiter } from './middleware/rate-limit.middleware';
 import apiRouter from './routes/index';
 import { stripeWebhookHandler } from './controllers/stripe-webhook.controller';
 import { sitemapHandler } from './controllers/sitemap.controller';
+import { icalExportHandler } from './controllers/ical-export.controller';
 import { checkinService } from './services/checkin.service';
+import { icalSyncService } from './services/ical-sync.service';
 
 const app = express();
 
@@ -40,6 +42,7 @@ app.use(cookieParser());
 app.use(globalRateLimiter);
 
 app.get('/sitemap.xml', sitemapHandler);
+app.get('/calendar.ics', icalExportHandler);
 app.use(`/api/${env.apiVersion}`, apiRouter);
 
 async function bootstrap(): Promise<void> {
@@ -63,6 +66,13 @@ async function bootstrap(): Promise<void> {
   cron.schedule('0 * * * *', () => {
     checkinService.runAutoCheckin().catch((err: unknown) => {
       console.error('[cron] Error en job auto-checkin:', err instanceof Error ? err.message : String(err));
+    });
+  });
+
+  // Cada 15 minutos — sincronización de calendarios externos (Airbnb/Booking.com)
+  cron.schedule('*/15 * * * *', () => {
+    icalSyncService.syncAll().catch((err: unknown) => {
+      console.error('[cron] Error en sincronización iCal:', err instanceof Error ? err.message : String(err));
     });
   });
 

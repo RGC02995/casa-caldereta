@@ -1,4 +1,5 @@
 import { BookingModel, BookingStatus, IBookingDocument } from '../models/booking.model';
+import { BlockedPeriodModel } from '../models/blocked-period.model';
 import { withId } from '../utils/mongoose.util';
 import { stripe } from '../config/stripe';
 import { env } from '../config/environment';
@@ -35,6 +36,12 @@ export interface IUpdateStatusData {
 }
 
 export interface IBookingAvailability {
+  checkIn:  Date;
+  checkOut: Date;
+}
+
+export interface IBookingExportRange {
+  id:       string;
   checkIn:  Date;
   checkOut: Date;
 }
@@ -82,6 +89,22 @@ class BookingService {
     ).lean<IBookingAvailability[]>();
   }
 
+  // Reservas a exportar en el feed .ics público (mismos criterios que getAvailability, con id)
+  async getExportRanges(): Promise<IBookingExportRange[]> {
+    const now = new Date();
+    const docs = await BookingModel.find(
+      {
+        $or: [
+          { status: { $in: ['pending', 'confirmed'] } },
+          { status: 'pending_payment', stripeSessionExpiresAt: { $gt: now } },
+        ],
+      },
+      { checkIn: 1, checkOut: 1 },
+    ).lean<{ _id: unknown; checkIn: Date; checkOut: Date }[]>();
+
+    return docs.map(doc => ({ id: String(doc._id), checkIn: doc.checkIn, checkOut: doc.checkOut }));
+  }
+
   async getById(id: string): Promise<IBookingDocument | null> {
     const doc = await BookingModel.findById(id).lean<IBookingDocument>();
     return doc ? withId(doc) : null;
@@ -112,13 +135,16 @@ class BookingService {
     const { checkIn, checkOut } = this.parseDates(data.checkIn, data.checkOut);
     this.validateCheckInDay(checkIn);
 
-    const conflict = await BookingModel.findOne({
-      status:   { $in: ['pending', 'confirmed'] },
-      checkIn:  { $lt: checkOut },
-      checkOut: { $gt: checkIn },
-    });
+    const [conflict, blockedConflict] = await Promise.all([
+      BookingModel.findOne({
+        status:   { $in: ['pending', 'confirmed'] },
+        checkIn:  { $lt: checkOut },
+        checkOut: { $gt: checkIn },
+      }),
+      this.hasBlockedConflict(checkIn, checkOut),
+    ]);
 
-    if (conflict) {
+    if (conflict || blockedConflict) {
       throw Object.assign(new Error('Las fechas seleccionadas ya no están disponibles'), { code: 'DATE_CONFLICT' });
     }
 
@@ -170,16 +196,19 @@ class BookingService {
     this.validateCheckInDay(checkIn);
 
     const now = new Date();
-    const conflict = await BookingModel.findOne({
-      $or: [
-        { status: { $in: ['pending', 'confirmed'] } },
-        { status: 'pending_payment', stripeSessionExpiresAt: { $gt: now } },
-      ],
-      checkIn:  { $lt: checkOut },
-      checkOut: { $gt: checkIn },
-    });
+    const [conflict, blockedConflict] = await Promise.all([
+      BookingModel.findOne({
+        $or: [
+          { status: { $in: ['pending', 'confirmed'] } },
+          { status: 'pending_payment', stripeSessionExpiresAt: { $gt: now } },
+        ],
+        checkIn:  { $lt: checkOut },
+        checkOut: { $gt: checkIn },
+      }),
+      this.hasBlockedConflict(checkIn, checkOut),
+    ]);
 
-    if (conflict) {
+    if (conflict || blockedConflict) {
       throw Object.assign(new Error('Las fechas seleccionadas ya no están disponibles'), { code: 'DATE_CONFLICT' });
     }
 
@@ -401,6 +430,14 @@ class BookingService {
         { code: 'SUNDAY_CLOSED' },
       );
     }
+  }
+
+  private async hasBlockedConflict(checkIn: Date, checkOut: Date): Promise<boolean> {
+    const conflict = await BlockedPeriodModel.findOne({
+      startDate: { $lt: checkOut },
+      endDate:   { $gt: checkIn },
+    });
+    return conflict !== null;
   }
 }
 

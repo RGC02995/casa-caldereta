@@ -128,6 +128,49 @@
     justify-content: flex-end;
   }
 
+  &__sync {
+    margin-top: $space-8;
+  }
+
+  &__sync-title {
+    font-family: $font-family-heading;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-800;
+    margin: 0 0 $space-2;
+  }
+
+  &__copy-row {
+    display: flex;
+    gap: $space-3;
+  }
+
+  &__copy-input {
+    flex: 1;
+    color: $color-neutral-500;
+    background-color: $color-neutral-100;
+  }
+
+  &__copy-btn {
+    padding: 0 $space-5;
+    border: 1px solid $color-neutral-300;
+    border-radius: $border-radius-sm;
+    background-color: $color-white;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-800;
+    cursor: pointer;
+    transition: background-color 140ms ease;
+
+    &:hover { background-color: $color-neutral-100; }
+
+    &:focus-visible {
+      outline: 2px solid $color-primary;
+      outline-offset: 2px;
+    }
+  }
+
   &__save-btn {
     padding: 10px $space-6;
     border: none;

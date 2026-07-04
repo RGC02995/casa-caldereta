@@ -47,4 +47,7 @@ export const env = {
   // URL del backend — necesaria para construir el enlace del comprobante de pago en emails
   // En Railway: añadir BACKEND_URL=https://api.casa-caldereta.com
   backendUrl:          process.env['BACKEND_URL'] ?? `http://localhost:${process.env['PORT'] ?? '3000'}`,
+  // Sincronización iCal (Airbnb/Booking.com) — opcionales: mientras no estén configuradas, el cron no hace nada
+  airbnbIcalUrl:       process.env['AIRBNB_ICAL_URL'] ?? '',
+  bookingIcalUrl:      process.env['BOOKING_ICAL_URL'] ?? '',
 } as const;

@@ -394,9 +394,9 @@ Skill usada: `/barrido-señales` (`.claude/commands/barrido-señales.md`)
   - [x] SEO propio (`SeoService.setPage`) añadido a las 4 páginas legales — title/description/canonical ya no comparten el genérico de la home
   - [x] Nombre del titular (Santiago Giner Giner) y código postal (46842) corregidos en las páginas legales
   - [x] Archivo de verificación de Google Search Console (`googlefa134d315ebf21e5.html`) copiado a `frontend/public/`
+  - [x] Commiteado + push + deploy a Vercel ✅ (2026-07-04) — verificado en vivo `https://www.casa-caldereta.com/googlefa134d315ebf21e5.html` devuelve 200 con contenido correcto
+  - [x] Google Search Console — verificado + sitemap `https://api.casa-caldereta.com/sitemap.xml` enviado ✅ (2026-07-04)
   - [ ] **`[NIF]` del titular** — sigue como placeholder en Aviso Legal, Privacidad y Términos; pendiente de que el usuario lo facilite
-  - [ ] **Ningún cambio de esta sesión está commiteado ni desplegado todavía** — mensaje de commit ya acordado con el usuario, pendiente de que lo haga él
-  - [ ] Tras desplegar: pulsar "Verificar" en Search Console y enviar el sitemap `https://api.casa-caldereta.com/sitemap.xml`
   - [ ] Google Business Profile — crear ficha completa (nombre, categoría "Casa rural", dirección pública Carrer de Baix 3, teléfono, fotos) y pasar la verificación postal/telefónica de Google
 - [ ] **Sincronizar calendario con Booking.com y Airbnb** — evitar doble reserva entre plataformas. Greenfield: no existe ninguna integración iCal/OTA todavía (verificado 2026-07-04). Probablemente vía feeds iCal (.ics): importar los calendarios de Airbnb/Booking como bloqueos automáticos (integrándose con `blocked-period.service.ts`) y exportar un feed `.ics` propio con las reservas de `booking.service.ts` para que Airbnb/Booking lo importen
 
