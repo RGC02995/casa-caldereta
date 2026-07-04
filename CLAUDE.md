@@ -388,7 +388,16 @@ Skill usada: `/barrido-señales` (`.claude/commands/barrido-señales.md`)
 - [ ] **Stripe live** — KYC (DNI propietario + cuenta bancaria) + claves `sk_live_...` + nuevo webhook secret → actualizar Railway
 - [x] **Vercel** — cuenta `casacaldereta@gmail.com` creada + proyecto frontend transferido ✅ (2026-07-04)
 - [x] **Railway backend antiguo eliminado** (`backend-production-d85c`) de la cuenta `raulgc2995@gmail.com` ✅ (2026-07-04)
-- [ ] **SEO** — `og-default.jpg`, teléfono, coordenadas GPS, Google Business Profile, Google Search Console
+- [ ] **SEO** — código listo, pendiente de commit + deploy y de pasos manuales en Google:
+  - [x] JSON-LD `LodgingBusiness` en `index.html` — teléfono (+34677876219), dirección (Carrer de Baix, 3, 46842 Aielo de Rugat) y coordenadas GPS reales (38.8813665, -0.3441232)
+  - [x] `og-default.jpg` (1200×630) generado a partir del logo, en `frontend/src/assets/images/`
+  - [x] SEO propio (`SeoService.setPage`) añadido a las 4 páginas legales — title/description/canonical ya no comparten el genérico de la home
+  - [x] Nombre del titular (Santiago Giner Giner) y código postal (46842) corregidos en las páginas legales
+  - [x] Archivo de verificación de Google Search Console (`googlefa134d315ebf21e5.html`) copiado a `frontend/public/`
+  - [ ] **`[NIF]` del titular** — sigue como placeholder en Aviso Legal, Privacidad y Términos; pendiente de que el usuario lo facilite
+  - [ ] **Ningún cambio de esta sesión está commiteado ni desplegado todavía** — mensaje de commit ya acordado con el usuario, pendiente de que lo haga él
+  - [ ] Tras desplegar: pulsar "Verificar" en Search Console y enviar el sitemap `https://api.casa-caldereta.com/sitemap.xml`
+  - [ ] Google Business Profile — crear ficha completa (nombre, categoría "Casa rural", dirección pública Carrer de Baix 3, teléfono, fotos) y pasar la verificación postal/telefónica de Google
 - [ ] **Sincronizar calendario con Booking.com y Airbnb** — evitar doble reserva entre plataformas. Greenfield: no existe ninguna integración iCal/OTA todavía (verificado 2026-07-04). Probablemente vía feeds iCal (.ics): importar los calendarios de Airbnb/Booking como bloqueos automáticos (integrándose con `blocked-period.service.ts`) y exportar un feed `.ics` propio con las reservas de `booking.service.ts` para que Airbnb/Booking lo importen
 
 ---
