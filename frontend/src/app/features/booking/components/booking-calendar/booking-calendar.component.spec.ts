@@ -87,14 +87,19 @@ describe('BookingCalendarComponent', () => {
     expect(day(16).isBlocked).toBe(false);
   });
 
-  it('HALLAZGO: el domingo NO esta deshabilitado (solo price=0) aunque el backend rechaza check-in en domingo con 400', () => {
+  it('domingo deshabilitado como check-in cuando no hay seleccion previa (coincide con SUNDAY_CLOSED del backend)', () => {
     fixture.componentRef.setInput('pricingSettings', PRICING);
     const sunday = day(16);
     expect(sunday.date?.getDay()).toBe(0);
-    // Comportamiento actual documentado: seleccionable como check-in, el usuario
-    // solo descubre el error al intentar pagar
-    expect(sunday.isDisabled).toBe(false);
+    expect(sunday.isDisabled).toBe(true);
     expect(sunday.price).toBe(0);
+  });
+
+  it('domingo SI es seleccionable como check-out cuando ya hay un check-in valido (viernes→domingo, 2 noches)', () => {
+    fixture.componentRef.setInput('pricingSettings', PRICING);
+    fixture.componentRef.setInput('checkIn', new Date(2026, 7, 14)); // viernes
+    const sunday = day(16);
+    expect(sunday.isDisabled).toBe(false);
   });
 
   it('precios por dia: lun-jue=100, vie=150, sab=180, dom=0', () => {
@@ -135,10 +140,10 @@ describe('BookingCalendarComponent', () => {
     it('click posterior con dia reservado en medio → reinicia el checkIn al dia clicado (hasUnavailableBetween)', () => {
       fixture.componentRef.setInput('bookedRanges', [bookedRange('2026-08-14', '2026-08-15')]);
       fixture.componentRef.setInput('checkIn', new Date(2026, 7, 13));
-      component.onDayClick(day(16));
-      // El 14 esta reservado entre el 13 y el 16 → no puede ser un rango valido
+      component.onDayClick(day(17)); // lunes — evita el 16 (domingo) para no mezclar con esa regla
+      // El 14 esta reservado entre el 13 y el 17 → no puede ser un rango valido
       expect(checkInEmits).toHaveLength(1);
-      expect(checkInEmits[0]?.getDate()).toBe(16);
+      expect(checkInEmits[0]?.getDate()).toBe(17);
       expect(checkOutEmits).toEqual([null]);
     });
 
@@ -175,6 +180,20 @@ describe('BookingCalendarComponent', () => {
       component.onDayClick(day(14));
       expect(checkInEmits).toHaveLength(0);
       expect(checkOutEmits).toHaveLength(0);
+    });
+
+    it('domingo sin checkIn previo: boton deshabilitado, el click no emite nada', () => {
+      component.onDayClick(day(16));
+      expect(checkInEmits).toHaveLength(0);
+      expect(checkOutEmits).toHaveLength(0);
+    });
+
+    it('domingo con checkIn valido previo: es un checkOut valido y emite checkOutChange', () => {
+      fixture.componentRef.setInput('checkIn', new Date(2026, 7, 14)); // viernes
+      component.onDayClick(day(16)); // domingo
+      expect(checkOutEmits).toHaveLength(1);
+      expect(checkOutEmits[0]?.getDate()).toBe(16);
+      expect(checkInEmits).toHaveLength(0);
     });
   });
 

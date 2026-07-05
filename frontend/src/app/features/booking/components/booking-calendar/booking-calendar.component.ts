@@ -99,6 +99,14 @@ export class BookingCalendarComponent {
     }
   }
 
+  private wouldStartNewRange(date: Date, checkInDate: Date | null, checkOutDate: Date | null): boolean {
+    if (!checkInDate || checkOutDate !== null) return true;
+    if (isAfter(date, checkInDate)) {
+      return this.hasUnavailableBetween(checkInDate, date);
+    }
+    return true;
+  }
+
   private hasUnavailableBetween(start: Date, end: Date): boolean {
     const parsedBooked  = this.bookedRanges().map(b => ({
       start: startOfDay(new Date(b.checkIn)),
@@ -158,9 +166,11 @@ export class BookingCalendarComponent {
       const isBooked  = parsedBooked.some(r  => !isBefore(current, r.start) && isBefore(current, r.end));
       const isBlocked = parsedBlocked.some(r => !isBefore(current, r.start) && isBefore(current, r.end));
 
+      const dow = getDay(current); // 0=Dom, 1=Lun, ..., 5=Vie, 6=Sáb
+      const isSundayCheckInAttempt = dow === 0 && this.wouldStartNewRange(current, checkInDate, checkOutDate);
+
       let price = 0;
       if (!isPast && !isBooked && !isBlocked && pricingSettings) {
-        const dow = getDay(current); // 0=Dom, 1=Lun, ..., 5=Vie, 6=Sáb
         if (dow === 5)      price = pricingSettings.friPrice;
         else if (dow === 6) price = pricingSettings.satPrice;
         else if (dow !== 0) price = pricingSettings.monThuPrice;
@@ -177,7 +187,7 @@ export class BookingCalendarComponent {
         isCheckOut: checkOutDate !== null && isSameDay(current, checkOutDate),
         isInRange:  checkInDate !== null && checkOutDate !== null &&
                     isAfter(current, checkInDate) && isBefore(current, checkOutDate),
-        isDisabled: isPast || isBooked || isBlocked,
+        isDisabled: isPast || isBooked || isBlocked || isSundayCheckInAttempt,
         price,
       });
       current = addDays(current, 1);
