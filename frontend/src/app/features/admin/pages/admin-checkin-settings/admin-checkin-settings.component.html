@@ -95,12 +95,13 @@
             class="admin-checkin-settings__input admin-checkin-settings__copy-input"
             id="exportCalendarUrl"
             type="text"
-            [value]="exportCalendarUrl"
+            [value]="exportCalendarUrl()"
             readonly
           />
           <button
             class="admin-checkin-settings__copy-btn"
             type="button"
+            [disabled]="!exportCalendarUrl()"
             (click)="copyExportUrl()"
           >
             Copiar

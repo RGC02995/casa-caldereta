@@ -31,13 +31,12 @@ afterEach(async () => {
 });
 
 describe('GET /api/v1/blocked-periods', () => {
-  it('publico sin token → 200 con array', async () => {
+  it('sin Authorization → 401 (ya no es publico, expondria reason/origin/externalUid)', async () => {
     const res = await request(app).get('/api/v1/blocked-periods');
-    expect(res.status).toBe(200);
-    expect(Array.isArray(res.body.data)).toBe(true);
+    expect(res.status).toBe(401);
   });
 
-  it('HALLAZGO: el endpoint publico expone reason (notas internas), origin y externalUid', async () => {
+  it('con token de admin → 200 e incluye reason, origin y externalUid', async () => {
     await BlockedPeriodModel.create({
       startDate: new Date('2026-08-10'), endDate: new Date('2026-08-12'),
       origin: 'manual', reason: 'Visita del fontanero — no molestar',
@@ -47,12 +46,44 @@ describe('GET /api/v1/blocked-periods', () => {
       origin: 'airbnb', externalUid: 'airbnb-uid-privado-1',
     });
 
-    const res = await request(app).get('/api/v1/blocked-periods');
-    // Comportamiento actual documentado: cualquiera puede leer las notas internas del propietario
+    const res = await request(app)
+      .get('/api/v1/blocked-periods')
+      .set('Authorization', `Bearer ${authToken}`);
+    expect(res.status).toBe(200);
     const raw = JSON.stringify(res.body);
     expect(raw).toContain('Visita del fontanero');
     expect(raw).toContain('airbnb-uid-privado-1');
     expect(raw).toContain('"origin"');
+  });
+});
+
+describe('GET /api/v1/blocked-periods/availability', () => {
+  it('publico sin token → 200 con array', async () => {
+    const res = await request(app).get('/api/v1/blocked-periods/availability');
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.data)).toBe(true);
+  });
+
+  it('no expone reason, origin ni externalUid — solo startDate/endDate', async () => {
+    await BlockedPeriodModel.create({
+      startDate: new Date('2026-08-10'), endDate: new Date('2026-08-12'),
+      origin: 'manual', reason: 'Visita del fontanero — no molestar',
+    });
+    await BlockedPeriodModel.create({
+      startDate: new Date('2026-08-20'), endDate: new Date('2026-08-22'),
+      origin: 'airbnb', externalUid: 'airbnb-uid-privado-1',
+    });
+
+    const res = await request(app).get('/api/v1/blocked-periods/availability');
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveLength(2);
+    const raw = JSON.stringify(res.body);
+    expect(raw).not.toContain('Visita del fontanero');
+    expect(raw).not.toContain('airbnb-uid-privado-1');
+    expect(raw).not.toContain('"origin"');
+    expect(raw).not.toContain('"reason"');
+    expect(res.body.data[0]).toHaveProperty('startDate');
+    expect(res.body.data[0]).toHaveProperty('endDate');
   });
 });
 

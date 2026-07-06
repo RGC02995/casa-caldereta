@@ -12,6 +12,12 @@ import { BlockedPeriodModel } from '../../models/blocked-period.model';
 const app = express();
 app.get('/calendar.ics', icalExportHandler);
 
+const TOKEN = 'test-ical-export-token-for-testing-only'; // debe coincidir con __tests__/setup.ts
+
+function getCalendar(query = `?token=${TOKEN}`): request.Test {
+  return request(app).get(`/calendar.ics${query}`);
+}
+
 const IN_10_MIN  = () => new Date(Date.now() + 10 * 60 * 1000);
 const AGO_10_MIN = () => new Date(Date.now() - 10 * 60 * 1000);
 
@@ -53,8 +59,19 @@ afterEach(async () => {
 });
 
 describe('GET /calendar.ics — exportacion iCal publica', () => {
+  it('sin token → 401 y no devuelve el calendario', async () => {
+    const res = await getCalendar('');
+    expect(res.status).toBe(401);
+    expect(res.text).not.toContain('BEGIN:VCALENDAR');
+  });
+
+  it('token incorrecto → 401', async () => {
+    const res = await getCalendar('?token=token-equivocado');
+    expect(res.status).toBe(401);
+  });
+
   it('estructura VCALENDAR valida: BEGIN/END, VERSION 2.0, PRODID y separadores CRLF', async () => {
-    const res = await request(app).get('/calendar.ics');
+    const res = await getCalendar();
     expect(res.status).toBe(200);
     expect(res.text.startsWith('BEGIN:VCALENDAR')).toBe(true);
     expect(res.text.endsWith('END:VCALENDAR')).toBe(true);
@@ -64,13 +81,13 @@ describe('GET /calendar.ics — exportacion iCal publica', () => {
   });
 
   it('headers correctos: Content-Type text/calendar y Cache-Control 5 min', async () => {
-    const res = await request(app).get('/calendar.ics');
+    const res = await getCalendar();
     expect(res.headers['content-type']).toContain('text/calendar');
     expect(res.headers['cache-control']).toBe('public, max-age=300');
   });
 
   it('BD vacia → VCALENDAR valido sin VEVENTs', async () => {
-    const res = await request(app).get('/calendar.ics');
+    const res = await getCalendar();
     expect(countVevents(res.text)).toBe(0);
     expect(() => ical.sync.parseICS(res.text)).not.toThrow();
   });
@@ -78,7 +95,7 @@ describe('GET /calendar.ics — exportacion iCal publica', () => {
   it('el output es parseable por node-ical (round-trip de formato)', async () => {
     await seedBooking();
     await BlockedPeriodModel.create({ startDate: new Date('2026-08-20'), endDate: new Date('2026-08-22'), origin: 'manual' });
-    const res = await request(app).get('/calendar.ics');
+    const res = await getCalendar();
     const parsed = ical.sync.parseICS(res.text);
     const vevents = Object.values(parsed).filter(c => c.type === 'VEVENT');
     expect(vevents).toHaveLength(2);
@@ -86,7 +103,7 @@ describe('GET /calendar.ics — exportacion iCal publica', () => {
 
   it('reserva confirmed → VEVENT "Reservado" con DTSTART=checkIn y DTEND=checkOut', async () => {
     const booking = await seedBooking();
-    const res = await request(app).get('/calendar.ics');
+    const res = await getCalendar();
     expect(res.text).toContain(`UID:booking-${String(booking._id)}@casa-caldereta.com`);
     expect(res.text).toContain('SUMMARY:Reservado');
     expect(res.text).toContain('DTSTART;VALUE=DATE:20260810');
@@ -97,7 +114,7 @@ describe('GET /calendar.ics — exportacion iCal publica', () => {
     await seedBooking({ status: 'pending_payment', stripeSessionExpiresAt: IN_10_MIN() });
     await seedBooking({ status: 'pending_payment', stripeSessionExpiresAt: AGO_10_MIN(), checkIn: new Date('2026-08-17'), checkOut: new Date('2026-08-19') });
     await seedBooking({ status: 'cancelled', checkIn: new Date('2026-08-24'), checkOut: new Date('2026-08-26') });
-    const res = await request(app).get('/calendar.ics');
+    const res = await getCalendar();
     expect(countVevents(res.text)).toBe(1);
     expect(res.text).toContain('DTSTART;VALUE=DATE:20260810');
   });
@@ -106,7 +123,7 @@ describe('GET /calendar.ics — exportacion iCal publica', () => {
     const blocked = await BlockedPeriodModel.create({
       startDate: new Date('2026-08-20'), endDate: new Date('2026-08-22'), origin: 'manual',
     });
-    const res = await request(app).get('/calendar.ics');
+    const res = await getCalendar();
     expect(res.text).toContain(`UID:blocked-${String(blocked._id)}@casa-caldereta.com`);
     expect(res.text).toContain('SUMMARY:No disponible');
   });
@@ -115,7 +132,7 @@ describe('GET /calendar.ics — exportacion iCal publica', () => {
     await BlockedPeriodModel.create({
       startDate: new Date('2026-08-20'), endDate: new Date('2026-08-22'), origin: 'manual',
     });
-    const res = await request(app).get('/calendar.ics');
+    const res = await getCalendar();
     expect(res.text).toContain('DTSTART;VALUE=DATE:20260820');
     // La semantica del admin es inclusiva (el frontend bloquea el 22): el feed debe exportar DTEND 23
     expect(res.text).toContain('DTEND;VALUE=DATE:20260823');
@@ -127,7 +144,7 @@ describe('GET /calendar.ics — exportacion iCal publica', () => {
       startDate: new Date('2026-08-20'), endDate: new Date('2026-08-22'),
       origin: 'manual', reason: 'MOTIVO-PRIVADO obras en la casa',
     });
-    const res = await request(app).get('/calendar.ics');
+    const res = await getCalendar();
     expect(res.text).not.toContain('NOMBRE-SECRETO');
     expect(res.text).not.toContain('secreto@example.com');
     expect(res.text).not.toContain('+34999888777');
@@ -140,7 +157,7 @@ describe('GET /calendar.ics — exportacion iCal publica', () => {
       startDate: new Date('2026-08-20'), endDate: new Date('2026-08-22'),
       origin: 'manual', reason: 'linea1\r\nSUMMARY:INYECTADO;X-EVIL:1',
     });
-    const res = await request(app).get('/calendar.ics');
+    const res = await getCalendar();
     expect(res.text).not.toContain('INYECTADO');
     expect(res.text).not.toContain('X-EVIL');
     expect(() => ical.sync.parseICS(res.text)).not.toThrow();

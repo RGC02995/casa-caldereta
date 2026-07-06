@@ -11,4 +11,5 @@ process.env['CLOUDINARY_API_SECRET'] = 'test-cloudinary-api-secret-value';
 process.env['STRIPE_SECRET_KEY']     = 'sk_test_mock_key_for_testing_purposes';
 process.env['STRIPE_WEBHOOK_SECRET'] = 'whsec_test_mock_webhook_secret_value';
 process.env['FRONTEND_URL']          = 'http://localhost:4200';
+process.env['ICAL_EXPORT_TOKEN']     = 'test-ical-export-token-for-testing-only';
 process.env['NODE_ENV']              = 'test';

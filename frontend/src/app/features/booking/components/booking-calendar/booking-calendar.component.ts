@@ -8,7 +8,7 @@ import {
 } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { IBookingAvailability } from '../../../../core/models/booking.model';
-import { IBlockedPeriod } from '../../../../core/models/blocked-period.model';
+import { IBlockedPeriodAvailability } from '../../../../core/models/blocked-period.model';
 import { IPricingSettings } from '../../../../core/models/pricing-settings.model';
 
 interface CalendarDay {
@@ -33,7 +33,7 @@ interface CalendarDay {
 })
 export class BookingCalendarComponent {
   readonly bookedRanges    = input<IBookingAvailability[]>([]);
-  readonly blockedPeriods  = input<IBlockedPeriod[]>([]);
+  readonly blockedPeriods  = input<IBlockedPeriodAvailability[]>([]);
   readonly checkIn         = input<Date | null>(null);
   readonly checkOut        = input<Date | null>(null);
   readonly loadError       = input('');
@@ -131,7 +131,7 @@ export class BookingCalendarComponent {
     checkInDate: Date | null,
     checkOutDate: Date | null,
     bookedRanges: IBookingAvailability[],
-    blockedPeriods: IBlockedPeriod[],
+    blockedPeriods: IBlockedPeriodAvailability[],
     pricingSettings: IPricingSettings | null,
   ): CalendarDay[] {
     const monthStart   = startOfMonth(month);
@@ -162,8 +162,15 @@ export class BookingCalendarComponent {
 
     let current = monthStart;
     while (!isAfter(current, monthEnd)) {
-      const isPast    = isBefore(startOfDay(current), today);
-      const isBooked  = parsedBooked.some(r  => !isBefore(current, r.start) && isBefore(current, r.end));
+      const isPast = isBefore(startOfDay(current), today);
+
+      // El dia de llegada de otra reserva (r.start) solo bloquea si el clic definiria un
+      // NUEVO check-in; si ya hay un check-in seleccionado, es un check-out valido (back-to-back).
+      const isBookedInterior       = parsedBooked.some(r => isAfter(current, r.start) && isBefore(current, r.end));
+      const isBookedCheckInArrival = parsedBooked.some(r => isSameDay(current, r.start));
+      const isBooked = isBookedInterior ||
+        (isBookedCheckInArrival && this.wouldStartNewRange(current, checkInDate, checkOutDate));
+
       const isBlocked = parsedBlocked.some(r => !isBefore(current, r.start) && isBefore(current, r.end));
 
       const dow = getDay(current); // 0=Dom, 1=Lun, ..., 5=Vie, 6=Sáb

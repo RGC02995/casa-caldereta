@@ -196,9 +196,24 @@ describe('POST /api/v1/bookings/checkout — bloqueos de calendario (409)', () =
     expect(res.status).toBe(409);
   });
 
-  it('HALLAZGO: checkIn en el dia endDate de un bloqueo manual → 201 (backend trata endDate como exclusivo; el admin lo pinta inclusivo)', async () => {
+  it('checkIn en el dia endDate de un bloqueo manual → 409 (bloqueo manual es inclusivo)', async () => {
     await BlockedPeriodModel.create({ startDate: new Date('2026-08-10'), endDate: new Date('2026-08-12'), origin: 'manual' });
     const res = await postCheckout(checkoutBody({ checkIn: '2026-08-12', checkOut: '2026-08-14' }));
+    expect(res.status).toBe(409);
+  });
+
+  it('checkIn en el dia endDate de un bloqueo importado de airbnb → 201 (exclusivo, sin cambios)', async () => {
+    await BlockedPeriodModel.create({
+      startDate: new Date('2026-08-10'), endDate: new Date('2026-08-12'),
+      origin: 'airbnb', externalUid: 'uid-checkout-1',
+    });
+    const res = await postCheckout(checkoutBody({ checkIn: '2026-08-12', checkOut: '2026-08-14' }));
+    expect(res.status).toBe(201);
+  });
+
+  it('checkOut en el dia startDate de un bloqueo manual sigue permitido (sin solape real)', async () => {
+    await BlockedPeriodModel.create({ startDate: new Date('2026-08-12'), endDate: new Date('2026-08-15'), origin: 'manual' });
+    const res = await postCheckout(checkoutBody({ checkIn: '2026-08-10', checkOut: '2026-08-12' }));
     expect(res.status).toBe(201);
   });
 });

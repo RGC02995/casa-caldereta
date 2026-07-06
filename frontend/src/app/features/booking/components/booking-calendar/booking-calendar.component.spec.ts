@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideTranslateService } from '@ngx-translate/core';
 import { BookingCalendarComponent } from './booking-calendar.component';
 import { IPricingSettings } from '../../../../core/models/pricing-settings.model';
-import { IBlockedPeriod } from '../../../../core/models/blocked-period.model';
+import { IBlockedPeriodAvailability } from '../../../../core/models/blocked-period.model';
 import { IBookingAvailability } from '../../../../core/models/booking.model';
 
 const PRICING: IPricingSettings = {
@@ -17,8 +17,8 @@ function bookedRange(checkIn: string, checkOut: string): IBookingAvailability {
   return { checkIn, checkOut };
 }
 
-function blockedPeriod(startDate: string, endDate: string): IBlockedPeriod {
-  return { id: 'bp-1', startDate, endDate, createdAt: '', updatedAt: '' };
+function blockedPeriod(startDate: string, endDate: string): IBlockedPeriodAvailability {
+  return { startDate, endDate };
 }
 
 // Agosto 2026: sáb 1 · lun 10, mar 11, mié 12, jue 13, vie 14, sáb 15, dom 16
@@ -147,15 +147,23 @@ describe('BookingCalendarComponent', () => {
       expect(checkOutEmits).toEqual([null]);
     });
 
-    it('HALLAZGO: no se puede terminar la estancia el dia que ENTRA otra reserva — el dia esta deshabilitado aunque el backend lo permitiria (back-to-back perdido)', () => {
+    it('dia de llegada de otra reserva SI es seleccionable como check-out cuando ya hay un check-in valido (back-to-back)', () => {
       fixture.componentRef.setInput('bookedRanges', [bookedRange('2026-08-15', '2026-08-18')]);
       fixture.componentRef.setInput('checkIn', new Date(2026, 7, 13));
-      // El backend acepta checkOut == checkIn existente (semiabierto), pero el dia 15
-      // se pinta deshabilitado y el click no emite nada — comportamiento actual documentado
+      expect(day(15).isDisabled).toBe(false);
       component.onDayClick(day(15));
-      expect(checkOutEmits).toHaveLength(0);
+      expect(checkOutEmits).toHaveLength(1);
+      expect(checkOutEmits[0]?.getDate()).toBe(15);
       expect(checkInEmits).toHaveLength(0);
+    });
+
+    it('dia de llegada de otra reserva sigue bloqueado como nuevo check-in sin seleccion previa', () => {
+      fixture.componentRef.setInput('bookedRanges', [bookedRange('2026-08-15', '2026-08-18')]);
+      expect(day(15).isBooked).toBe(true);
       expect(day(15).isDisabled).toBe(true);
+      component.onDayClick(day(15));
+      expect(checkInEmits).toHaveLength(0);
+      expect(checkOutEmits).toHaveLength(0);
     });
 
     it('click anterior al checkIn → mueve el checkIn', () => {

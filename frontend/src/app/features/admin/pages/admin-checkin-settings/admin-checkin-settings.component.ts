@@ -2,7 +2,7 @@ import { Component, inject, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { timer } from 'rxjs';
 import { CheckinService } from '../../../../core/services/checkin.service';
-import { environment } from '../../../../../environments/environment';
+import { ApiService } from '../../../../core/services/api.service';
 
 @Component({
   selector:    'admin-checkin-settings',
@@ -12,6 +12,7 @@ import { environment } from '../../../../../environments/environment';
 })
 export class AdminCheckinSettingsComponent {
   private readonly checkinService = inject(CheckinService);
+  private readonly api            = inject(ApiService);
   private readonly destroyRef     = inject(DestroyRef);
 
   readonly checkInTime  = signal('16:00');
@@ -22,12 +23,13 @@ export class AdminCheckinSettingsComponent {
   readonly saveError    = signal('');
   readonly saveSuccess  = signal(false);
 
-  // URL pública del feed .ics para pegar en Airbnb/Booking.com (ver /calendar.ics en el backend)
-  readonly exportCalendarUrl = environment.apiUrl.replace(/\/api\/v\d+$/, '') + '/calendar.ics';
+  // URL del feed .ics para pegar en Airbnb/Booking.com — incluye un token secreto, no puede
+  // construirse en el bundle público (se pide autenticada a /calendar-export-url)
+  readonly exportCalendarUrl = signal('');
   readonly copySuccess       = signal(false);
 
   copyExportUrl(): void {
-    navigator.clipboard.writeText(this.exportCalendarUrl).catch(() => undefined);
+    navigator.clipboard.writeText(this.exportCalendarUrl()).catch(() => undefined);
     this.copySuccess.set(true);
     timer(2000)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -47,6 +49,13 @@ export class AdminCheckinSettingsComponent {
           this.loadError.set('No se pudo cargar la configuración. Comprueba la conexión.');
           this.loading.set(false);
         },
+      });
+
+    this.api.get<{ url: string }>('calendar-export-url')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => this.exportCalendarUrl.set(response.data.url),
+        error: () => undefined, // el campo se queda vacio; no es un fallo critico de la pagina
       });
   }
 

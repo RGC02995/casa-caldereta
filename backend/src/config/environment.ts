@@ -50,4 +50,6 @@ export const env = {
   // Sincronización iCal (Airbnb/Booking.com) — opcionales: mientras no estén configuradas, el cron no hace nada
   airbnbIcalUrl:       process.env['AIRBNB_ICAL_URL'] ?? '',
   bookingIcalUrl:      process.env['BOOKING_ICAL_URL'] ?? '',
+  // Token secreto que protege /calendar.ics (nuestra exportación pública) de accesos no autorizados
+  icalExportToken:     requireEnv('ICAL_EXPORT_TOKEN'),
 } as const;

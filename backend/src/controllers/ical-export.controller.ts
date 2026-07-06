@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { env } from '../config/environment';
 import { bookingService } from '../services/booking.service';
 import { blockedPeriodService } from '../services/blocked-period.service';
 
@@ -34,7 +35,17 @@ function buildEvent(uid: string, summary: string, start: Date, end: Date, dtstam
   ].join('\r\n');
 }
 
-export async function icalExportHandler(_req: Request, res: Response): Promise<void> {
+export function getIcalExportUrlHandler(_req: Request, res: Response): void {
+  const url = `${env.backendUrl}/calendar.ics?token=${env.icalExportToken}`;
+  res.status(200).json({ success: true, data: { url }, message: 'URL de exportación obtenida' });
+}
+
+export async function icalExportHandler(req: Request, res: Response): Promise<void> {
+  if (req.query['token'] !== env.icalExportToken) {
+    res.status(401).send('No autorizado');
+    return;
+  }
+
   try {
     const [bookings, blockedPeriods] = await Promise.all([
       bookingService.getExportRanges(),

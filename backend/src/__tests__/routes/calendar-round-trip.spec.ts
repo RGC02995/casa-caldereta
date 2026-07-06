@@ -108,7 +108,7 @@ describe('Round-trip calendario: plataforma externa ⇄ web de reservas', () => 
       .send(checkoutBody());
     expect(checkout.status).toBe(201);
 
-    const feed = await request(app).get('/calendar.ics');
+    const feed = await request(app).get('/calendar.ics?token=test-ical-export-token-for-testing-only');
     expect(feed.status).toBe(200);
     expect(feed.text).toContain(`UID:booking-${checkout.body.data.bookingId}@casa-caldereta.com`);
     expect(feed.text).toContain('SUMMARY:Reservado');
@@ -122,7 +122,7 @@ describe('Round-trip calendario: plataforma externa ⇄ web de reservas', () => 
     );
     const doc = await BlockedPeriodModel.findOne({ externalUid: 'airbnb-uid-rt-3' });
 
-    const feed = await request(app).get('/calendar.ics');
+    const feed = await request(app).get('/calendar.ics?token=test-ical-export-token-for-testing-only');
     // Airbnb deduplica sus propios eventos por fechas; Booking podria mostrar el eco
     expect(feed.text).toContain(`UID:blocked-${String(doc?._id)}@casa-caldereta.com`);
     expect(feed.text).toContain('SUMMARY:No disponible');

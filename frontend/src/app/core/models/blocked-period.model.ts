@@ -12,3 +12,8 @@ export interface ICreateBlockedPeriodRequest {
   readonly endDate:   string;
   readonly reason?:   string;
 }
+
+export interface IBlockedPeriodAvailability {
+  readonly startDate: string;
+  readonly endDate:   string;
+}

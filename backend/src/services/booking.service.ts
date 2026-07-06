@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import { BookingModel, BookingStatus, IBookingDocument } from '../models/booking.model';
 import { BlockedPeriodModel } from '../models/blocked-period.model';
 import { withId } from '../utils/mongoose.util';
@@ -175,7 +176,13 @@ class BookingService {
 
     const booking  = new BookingModel(bookingData);
     const savedDoc = await booking.save();
-    const result   = await BookingModel.findById(savedDoc._id).lean<IBookingDocument>();
+
+    if (await this.revalidateAfterSave(savedDoc._id, checkIn, checkOut)) {
+      await BookingModel.findByIdAndDelete(savedDoc._id);
+      throw Object.assign(new Error('Las fechas seleccionadas ya no están disponibles'), { code: 'DATE_CONFLICT' });
+    }
+
+    const result = await BookingModel.findById(savedDoc._id).lean<IBookingDocument>();
     return withId(result!);
   }
 
@@ -274,6 +281,16 @@ class BookingService {
 
     const booking  = new BookingModel(bookingData);
     const savedDoc = await booking.save();
+
+    if (await this.revalidateAfterSave(savedDoc._id, checkIn, checkOut)) {
+      await BookingModel.findByIdAndDelete(savedDoc._id);
+      try {
+        await stripe.checkout.sessions.expire(session.id);
+      } catch (err) {
+        console.error('[booking] No se pudo expirar la sesion de Stripe tras conflicto de concurrencia:', err);
+      }
+      throw Object.assign(new Error('Las fechas seleccionadas ya no están disponibles'), { code: 'DATE_CONFLICT' });
+    }
 
     return {
       sessionUrl:      session.url,
@@ -436,10 +453,39 @@ class BookingService {
     }
   }
 
+  // Revalida tras guardar de forma optimista, para cerrar la ventana de carrera entre la
+  // comprobacion previa y el guardado. Desempate por _id: los ObjectId de Mongo son
+  // estrictamente crecientes en este proceso Node, asi que solo la reserva creada DESPUES
+  // se autocancela si detecta a otra ya guardada antes con fechas solapadas.
+  private async revalidateAfterSave(
+    savedId: Types.ObjectId,
+    checkIn: Date,
+    checkOut: Date,
+  ): Promise<boolean> {
+    const now = new Date();
+    const [conflict, blockedConflict] = await Promise.all([
+      BookingModel.findOne({
+        _id: { $lt: savedId },
+        $or: [
+          { status: { $in: ['pending', 'confirmed'] } },
+          { status: 'pending_payment', stripeSessionExpiresAt: { $gt: now } },
+        ],
+        checkIn:  { $lt: checkOut },
+        checkOut: { $gt: checkIn },
+      }),
+      this.hasBlockedConflict(checkIn, checkOut),
+    ]);
+    return conflict !== null || blockedConflict;
+  }
+
   private async hasBlockedConflict(checkIn: Date, checkOut: Date): Promise<boolean> {
+    // Los bloqueos manuales se crean/pintan como inclusivos (endDate incluido);
+    // los importados de Airbnb/Booking ya son exclusivos por naturaleza del feed.
     const conflict = await BlockedPeriodModel.findOne({
-      startDate: { $lt: checkOut },
-      endDate:   { $gt: checkIn },
+      $or: [
+        { origin: 'manual',          startDate: { $lt: checkOut }, endDate: { $gte: checkIn } },
+        { origin: { $ne: 'manual' }, startDate: { $lt: checkOut }, endDate: { $gt:  checkIn } },
+      ],
     });
     return conflict !== null;
   }

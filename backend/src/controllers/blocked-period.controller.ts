@@ -11,6 +11,15 @@ export async function getAllBlockedPeriodsHandler(_req: Request, res: Response):
   }
 }
 
+export async function getPublicAvailabilityHandler(_req: Request, res: Response): Promise<void> {
+  try {
+    const periods = await blockedPeriodService.getPublicAvailability();
+    res.status(200).json({ success: true, data: periods, message: 'Disponibilidad obtenida' });
+  } catch {
+    res.status(500).json({ success: false, message: 'Error al obtener la disponibilidad' });
+  }
+}
+
 export async function createBlockedPeriodHandler(req: Request, res: Response): Promise<void> {
   const { startDate, endDate, reason } = req.body as Partial<ICreateBlockedPeriodData>;
 

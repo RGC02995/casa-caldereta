@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { ApiResponse } from '../models/api-response.model';
-import { IBlockedPeriod, ICreateBlockedPeriodRequest } from '../models/blocked-period.model';
+import { IBlockedPeriod, IBlockedPeriodAvailability, ICreateBlockedPeriodRequest } from '../models/blocked-period.model';
 
 @Injectable({ providedIn: 'root' })
 export class BlockedPeriodService {
@@ -10,6 +10,10 @@ export class BlockedPeriodService {
 
   getAll(): Observable<ApiResponse<IBlockedPeriod[]>> {
     return this.api.get<IBlockedPeriod[]>('blocked-periods');
+  }
+
+  getAvailability(): Observable<ApiResponse<IBlockedPeriodAvailability[]>> {
+    return this.api.get<IBlockedPeriodAvailability[]>('blocked-periods/availability');
   }
 
   create(data: ICreateBlockedPeriodRequest): Observable<ApiResponse<IBlockedPeriod>> {

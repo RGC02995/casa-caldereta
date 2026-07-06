@@ -7,7 +7,7 @@ import { BookingService } from '../../../../core/services/booking.service';
 import { BlockedPeriodService } from '../../../../core/services/blocked-period.service';
 import { PricingSettingsService } from '../../../../core/services/pricing-settings.service';
 import { IBookingAvailability, IPriceEstimate } from '../../../../core/models/booking.model';
-import { IBlockedPeriod } from '../../../../core/models/blocked-period.model';
+import { IBlockedPeriodAvailability } from '../../../../core/models/blocked-period.model';
 import { IPricingSettings } from '../../../../core/models/pricing-settings.model';
 import { SeoService } from '../../../../core/services/seo.service';
 import { BookingHeroComponent } from '../../components/booking-hero/booking-hero.component';
@@ -59,12 +59,12 @@ export class BookingPageComponent {
 
   readonly blockedPeriods = toSignal(
     this.refresh$.pipe(
-      switchMap(() => this.blockedService.getAll().pipe(
+      switchMap(() => this.blockedService.getAvailability().pipe(
         map(response => response.data),
-        catchError(() => of([] as IBlockedPeriod[])),
+        catchError(() => of([] as IBlockedPeriodAvailability[])),
       )),
     ),
-    { initialValue: [] as IBlockedPeriod[] },
+    { initialValue: [] as IBlockedPeriodAvailability[] },
   );
 
   private readonly dateRange = computed(() => {

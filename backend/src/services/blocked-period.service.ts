@@ -9,10 +9,22 @@ export interface ICreateBlockedPeriodData {
   externalUid?: string;
 }
 
+export interface IBlockedPeriodAvailability {
+  startDate: Date;
+  endDate:   Date;
+}
+
 class BlockedPeriodService {
   async getAll(): Promise<IBlockedPeriodDocument[]> {
     const docs = await BlockedPeriodModel.find().sort({ startDate: 1 }).lean<IBlockedPeriodDocument[]>();
     return docs.map(withId);
+  }
+
+  // Proyección mínima para el calendario público — sin reason/origin/externalUid
+  async getPublicAvailability(): Promise<IBlockedPeriodAvailability[]> {
+    return BlockedPeriodModel.find({}, { startDate: 1, endDate: 1, _id: 0 })
+      .sort({ startDate: 1 })
+      .lean<IBlockedPeriodAvailability[]>();
   }
 
   async create(data: ICreateBlockedPeriodData): Promise<IBlockedPeriodDocument> {

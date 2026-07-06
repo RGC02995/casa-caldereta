@@ -97,6 +97,17 @@ describe('POST /api/v1/bookings — reserva manual del admin', () => {
     expect(res.status).toBe(409);
   });
 
+  it('con token y checkIn en el dia endDate de un bloqueo manual → 409 (bloqueo manual es inclusivo)', async () => {
+    await BlockedPeriodModel.create({
+      startDate: new Date('2026-08-10'), endDate: new Date('2026-08-12'), origin: 'manual',
+    });
+    const res = await request(app)
+      .post('/api/v1/bookings')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send(bookingBody({ checkIn: '2026-08-12', checkOut: '2026-08-14' }));
+    expect(res.status).toBe(409);
+  });
+
   it('con token y checkIn en domingo → 400', async () => {
     const res = await request(app)
       .post('/api/v1/bookings')

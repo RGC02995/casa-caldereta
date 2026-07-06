@@ -37,7 +37,8 @@
                 class="admin-gallery__img"
                 [src]="photo.url"
                 [alt]="photo.alt"
-                loading="lazy"
+                [attr.loading]="$index < 4 ? 'eager' : 'lazy'"
+                [attr.fetchpriority]="$index === 0 ? 'high' : null"
               />
             </div>
 
