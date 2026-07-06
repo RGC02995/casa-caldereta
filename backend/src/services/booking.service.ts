@@ -135,9 +135,13 @@ class BookingService {
     const { checkIn, checkOut } = this.parseDates(data.checkIn, data.checkOut);
     this.validateCheckInDay(checkIn);
 
+    const now = new Date();
     const [conflict, blockedConflict] = await Promise.all([
       BookingModel.findOne({
-        status:   { $in: ['pending', 'confirmed'] },
+        $or: [
+          { status: { $in: ['pending', 'confirmed'] } },
+          { status: 'pending_payment', stripeSessionExpiresAt: { $gt: now } },
+        ],
         checkIn:  { $lt: checkOut },
         checkOut: { $gt: checkIn },
       }),

@@ -380,7 +380,7 @@ Skill usada: `/barrido-señales` (`.claude/commands/barrido-señales.md`)
 - [x] Probado end-to-end: reservas/exportación con datos reales (`curl`); importación con un `.ics` de ejemplo hecho a mano (parseo → upsert → borrado de obsoletos correcto)
 - **Decisión de diseño:** las URLs `.ics` de Airbnb/Booking se quedan en variables de entorno (`AIRBNB_ICAL_URL`/`BOOKING_ICAL_URL`), no en un ajuste editable desde el admin — el propietario final no es técnico, así que las gestiona raul directamente en `.env`/Railway
 
-### Auditoría de calendario iCal + fixes CORS/FRONTEND_URL (2026-07-05) — EN CURSO, sin commitear
+### Auditoría de calendario iCal + fixes CORS/FRONTEND_URL (2026-07-05) ✅ COMMITEADO (commits `18bb0ef` + `61c8b29`)
 Objetivo: comprobar funcionamiento y seguridad del calendario (disponibilidad, conflictos, sincronización iCal Airbnb/Booking) con una suite de tests nueva, ya que no existía ninguna.
 
 - [x] **Suite de tests nueva — 201 tests, todos en verde** (sin commitear todavía):
@@ -396,18 +396,17 @@ Objetivo: comprobar funcionamiento y seguridad del calendario (disponibilidad, c
   - `backend/.env` **local** corregido: `CORS_ORIGIN_PROD="https://casa-caldereta.com,https://casa-caldereta-frontend.vercel.app"` (se decidió mantener el dominio antiguo de Vercel funcionando, de ahí la lista con coma) y `FRONTEND_URL="https://casa-caldereta.com"` (aquí solo puede haber un valor — es la URL de redirección)
   - **Railway (producción) — PENDIENTE, el usuario debe actualizarlo manualmente** (sin acceso desde aquí): mismas variables, mismos valores, en el servicio backend → Variables → esperar redeploy automático
 - [x] **Fix hallazgo #2 — calendario del frontend no deshabilitaba el domingo como check-in** (`booking-calendar.component.ts`): el backend ya rechazaba con 400 cualquier `checkIn` en domingo (`validateCheckInDay`, coincide con el modelo Airbnb/Booking: domingo solo día de salida, sin cobrar esa noche), pero el calendario dejaba clicarlo igual que cualquier otro día y el usuario solo lo descubría al pedir presupuesto o pagar. Nuevo método `wouldStartNewRange()` replica la lógica de `onDayClick` para saber si un clic definiría un nuevo check-in; `isDisabled` ahora también es `true` cuando el día es domingo y ese clic sería un check-in. El domingo sigue siendo perfectamente seleccionable como check-out (sin cambios en `onDayClick`, precios ni backend). Tests actualizados: hallazgo documentado pasa a test de comportamiento correcto + 2 tests nuevos confirman domingo como check-out válido. 67/67 tests frontend en verde.
-- [ ] **Hallazgos de menor severidad, pendientes de decisión (pospuestos explícitamente para después):**
-  1. `POST /bookings` (admin) no comprueba `pending_payment` vivo como conflicto → posible doble reserva sobre un pago en curso
-  2. No se puede terminar una estancia el día que entra otra reserva (back-to-back), aunque el backend lo permitiría
-  3. `GET /blocked-periods` (público) expone `reason` (notas internas del propietario), `origin` y `externalUid`
-  4. Backend permite check-in en el día `endDate` de un bloqueo manual (lo trata como exclusivo); incoherente con el fix de export de hoy
-  5. Comprobación de conflicto + guardado no es atómica — ventana teórica de doble reserva bajo concurrencia alta
-  6. `/calendar.ics` no lleva token secreto en la URL (bajo impacto, solo expone ocupación)
+- [x] **Fix hallazgo #1 — `POST /bookings` (admin) no comprobaba `pending_payment` vivo como conflicto** (2026-07-06, `backend/src/services/booking.service.ts`): `create()` solo comprobaba solape contra `pending`/`confirmed`, ignorando reservas `pending_payment` con sesión Stripe todavía viva (ventana de 30 min, `stripeSessionExpiresAt`) — el admin podía crear una reserva manual solapada con un pago en curso. Alineado con el patrón ya usado en `createCheckoutSession()`/`getAvailability()`/`getExportRanges()`: `$or` con `pending`/`confirmed` más `pending_payment` solo si `stripeSessionExpiresAt > now`. Test que documentaba el bug (esperaba 201) cambiado a exigir 409; test nuevo confirma que un `pending_payment` con sesión ya caducada sigue permitiendo 201 (no bloquea fechas indefinidamente).
+- [ ] **Hallazgos de menor severidad restantes, pendientes de decisión (pospuestos explícitamente para después):**
+  1. No se puede terminar una estancia el día que entra otra reserva (back-to-back), aunque el backend lo permitiría
+  2. `GET /blocked-periods` (público) expone `reason` (notas internas del propietario), `origin` y `externalUid`
+  3. Backend permite check-in en el día `endDate` de un bloqueo manual (lo trata como exclusivo); incoherente con el fix de export de hoy
+  4. Comprobación de conflicto + guardado no es atómica — ventana teórica de doble reserva bajo concurrencia alta
+  5. `/calendar.ics` no lleva token secreto en la URL (bajo impacto, solo expone ocupación)
 
-**Para retomar mañana:**
+**Pendiente:**
 1. Confirmar que el usuario actualizó `CORS_ORIGIN_PROD` y `FRONTEND_URL` en Railway → verificar con petición `OPTIONS` real y con un pago de prueba
-2. Decidir y aplicar (o no) los 6 hallazgos de menor severidad restantes de la lista de arriba
-3. Commitear la suite de tests + los 2 bug fixes + el fix del calendario domingo (todavía sin commitear, ver `git status`)
+2. Decidir y aplicar (o no) los 5 hallazgos de menor severidad restantes de la lista de arriba
 
 ## Pendientes / Preguntas abiertas
 - [x] **Fix: formulario pre-llegada + segundo pago en reservas last-minute** — `checkinService.handleWebhookPostConfirmation(booking)` llamado desde el webhook de Stripe tras confirmar el depósito. Comprueba centinelas y envía inmediatamente: (1) recordatorio segundo pago si `daysUntilCheckin <= 7` y no pagado ni avisado; (2) formulario RD 933/2021 si `daysUntilCheckin <= 3` y no enviado. Los crons siguen cubriendo el caso normal (check-in > 7 días).

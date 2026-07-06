@@ -105,7 +105,7 @@ describe('POST /api/v1/bookings — reserva manual del admin', () => {
     expect(res.status).toBe(400);
   });
 
-  it('HALLAZGO: pending_payment con sesion viva NO bloquea el create admin → 201 (el checkout publico lo rechazaria con 409)', async () => {
+  it('con token y solape con pending_payment de sesion viva → 409', async () => {
     await seedBooking({
       status: 'pending_payment',
       stripeSessionExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
@@ -114,7 +114,18 @@ describe('POST /api/v1/bookings — reserva manual del admin', () => {
       .post('/api/v1/bookings')
       .set('Authorization', `Bearer ${authToken}`)
       .send(bookingBody());
-    // Comportamiento actual documentado: posible doble reserva sobre un pago en curso
+    expect(res.status).toBe(409);
+  });
+
+  it('con token y pending_payment de sesion ya caducada → 201 (no bloquea)', async () => {
+    await seedBooking({
+      status: 'pending_payment',
+      stripeSessionExpiresAt: new Date(Date.now() - 10 * 60 * 1000),
+    });
+    const res = await request(app)
+      .post('/api/v1/bookings')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send(bookingBody());
     expect(res.status).toBe(201);
   });
 });
