@@ -62,26 +62,29 @@
     }
 
     // ── Curtain wipe (para imágenes: revela como cortina que se descorre) ───────
-    // opacity como red de seguridad: si clip-path no renderiza el cambio en
-    // algún navegador/viewport (mismo motivo que el fallback móvil de abajo),
-    // el contenido igualmente aparece en vez de quedarse invisible.
-    &--wipe-right {
-      opacity: 0;
-      clip-path: inset(0 100% 0 0);
-      transition:
-        opacity 1.1s ease,
-        clip-path 1.1s cubic-bezier(0.76, 0, 0.24, 1);
-      transition-delay: var(--reveal-delay, 0ms);
+    // El propio elemento observado NUNCA se encoge a área 0 (con clip-path
+    // como estado inicial, el IntersectionObserver deja de detectarlo como
+    // visible para siempre — no hay forma de que se dispare "is-visible").
+    // En su lugar, el efecto cortina vive en un ::before opaco que se encoge
+    // con transform (no afecta el área/geometría del elemento observado).
+    &--wipe-right,
+    &--wipe-left {
+      position: relative;
+      overflow: hidden;
+
+      &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        background-color: var(--reveal-curtain-bg, #{$color-white});
+        transition: transform 1.1s cubic-bezier(0.76, 0, 0.24, 1);
+        transition-delay: var(--reveal-delay, 0ms);
+      }
     }
 
-    &--wipe-left {
-      opacity: 0;
-      clip-path: inset(0 0 0 100%);
-      transition:
-        opacity 1.1s ease,
-        clip-path 1.1s cubic-bezier(0.76, 0, 0.24, 1);
-      transition-delay: var(--reveal-delay, 0ms);
-    }
+    &--wipe-right::before { transform-origin: left; }
+    &--wipe-left::before  { transform-origin: right; }
 
     // ── Focus (para texto: aparece desde desenfocado) ────────────────────────
     &--focus {
@@ -99,33 +102,14 @@
       transform: none;
     }
 
-    &--wipe-right.is-visible { opacity: 1; clip-path: inset(0 0% 0 0); }
-    &--wipe-left.is-visible  { opacity: 1; clip-path: inset(0 0 0 0%); }
+    &--wipe-right.is-visible::before,
+    &--wipe-left.is-visible::before {
+      transform: scaleX(0);
+    }
 
     &--focus.is-visible {
       opacity: 1;
       filter: blur(0);
-    }
-
-    // ── Móvil: wipe → fade+slide (clip-path poco fiable en algunos navegadores móvil)
-    @media (max-width: 767px) {
-      &--wipe-right,
-      &--wipe-left {
-        clip-path: none;
-        opacity: 0;
-        transform: translateY(24px);
-        transition:
-          opacity 0.7s ease,
-          transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-        transition-delay: var(--reveal-delay, 0ms);
-      }
-
-      &--wipe-right.is-visible,
-      &--wipe-left.is-visible {
-        clip-path: none;
-        opacity: 1;
-        transform: none;
-      }
     }
   }
 }

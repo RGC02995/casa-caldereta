@@ -39,7 +39,6 @@
   // ─── Split 60/40 ─────────────────────────────────────────────────────────
 
   &__item {
-    @include container;
     display: grid;
     grid-template-columns: 1fr;
 
@@ -47,6 +46,7 @@
       grid-template-columns: 3fr 2fr;
       height: 72vh;
       min-height: 520px;
+      margin-inline: $space-6;
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 2px 24px rgba(0, 0, 0, 0.07);

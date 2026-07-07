@@ -34,6 +34,8 @@
   }
 
   &__card {
+    --reveal-curtain-bg: #{$color-primary-dark};
+
     padding: $space-10 $space-8;
     border: 1px solid rgba($color-white, 0.09);
 
