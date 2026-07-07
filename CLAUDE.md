@@ -435,9 +435,7 @@ Objetivo: comprobar funcionamiento y seguridad del calendario (disponibilidad, c
   - [x] Google Search Console — verificado + sitemap `https://api.casa-caldereta.com/sitemap.xml` enviado ✅ (2026-07-04)
   - [x] **NIF del titular** ✅ (2026-07-07) — `25422225A` añadido en Aviso Legal, Privacidad y Términos (sustituye placeholder `[NIF]`)
   - [ ] Google Business Profile — crear ficha completa (nombre, categoría "Casa rural", dirección pública Carrer de Baix 3, teléfono, fotos) y pasar la verificación postal/telefónica de Google
-- [ ] **Sincronizar calendario con Booking.com y Airbnb** — código completo + auditado con tests ✅ (ver sección de auditoría arriba), quedan solo 2 pasos manuales:
-  - [ ] Conseguir las URLs `.ics` reales de Airbnb y Booking.com y añadirlas como `AIRBNB_ICAL_URL`/`BOOKING_ICAL_URL` en `backend/.env` (local) y en Railway (producción)
-  - [ ] Pegar la URL de exportación (visible en `/admin/configuracion`) en el panel de "sincronizar calendarios" de Airbnb y de Booking.com
+- [x] **Sincronizar calendario con Booking.com y Airbnb** ✅ COMPLETADO (2026-07-07) — código completo + auditado con tests (ver sección de auditoría arriba), URLs `.ics` reales configuradas en `backend/.env`/Railway y URL de exportación pegada en el panel de sincronización de ambas plataformas
 - [x] **Railway — `CORS_ORIGIN_PROD` y `FRONTEND_URL`** ✅ (2026-07-07) — verificado con petición `OPTIONS` real (`casa-caldereta.com` recibe CORS correcto, Vercel antiguo ya no) y con un pago de prueba real en Stripe test mode (redirigió correctamente a `casa-caldereta.com/reservar/pago-exitoso`)
 - [x] **`ICAL_EXPORT_TOKEN` en Railway** ✅ (2026-07-07) — añadida, redeploy correcto, backend saludable
 
