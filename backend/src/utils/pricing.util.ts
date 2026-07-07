@@ -4,16 +4,17 @@
  * Fórmula: precioBase(diaSemana) + max(0, personas - 2) * 20
  *
  * Precio base por noche:
- *   - Lunes a jueves : 100 €
- *   - Viernes        : 150 €
- *   - Sábado         : 180 €
- *   - Domingo        : cerrado (no se admiten entradas)
+ *   - Lunes a jueves y domingo : 100 €
+ *   - Viernes                  : 150 €
+ *   - Sábado                   : 180 €
+ *
+ * Domingo no admite nuevas entradas (check-in), pero como noche intermedia o de
+ * salida de una estancia se factura igual que lunes-jueves — ver `validateCheckInDay`
+ * en `booking.service.ts` para la restricción de check-in.
  *
  * Por cada persona adicional a partir de la 3ª: +20 €/noche
  * Mínimo 1 persona, máximo 6 personas.
  */
-
-export const SUNDAY_CLOSED = true;
 
 export interface IPricingConfig {
   monThuPrice:    number;
@@ -41,10 +42,9 @@ const MAX_GUESTS  = 6;
 const BASE_GUESTS = 2;
 
 function basePriceByDay(dayOfWeek: number, config: IPricingConfig): number {
-  if (dayOfWeek === 0) return 0;           // domingo — cerrado
   if (dayOfWeek === 5) return config.friPrice;
   if (dayOfWeek === 6) return config.satPrice;
-  return config.monThuPrice;               // lunes–jueves
+  return config.monThuPrice;               // lunes–jueves y domingo
 }
 
 export function calculateNightPrice(
@@ -55,7 +55,7 @@ export function calculateNightPrice(
 ): number {
   const clamped  = Math.min(Math.max(guests, MIN_GUESTS), MAX_GUESTS);
   const base     = baseOverride ?? basePriceByDay(date.getDay(), config);
-  if (base === 0) return 0;  // día cerrado (domingo) — sin extra por personas
+  if (base === 0) return 0;  // override explícito a 0 € (ej. noche promocional) — sin extra por personas
   const extraPax = Math.max(0, clamped - BASE_GUESTS) * config.extraPerPerson;
   return base + extraPax;
 }

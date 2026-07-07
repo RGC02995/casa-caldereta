@@ -180,7 +180,7 @@ export class BookingCalendarComponent {
       if (!isPast && !isBooked && !isBlocked && pricingSettings) {
         if (dow === 5)      price = pricingSettings.friPrice;
         else if (dow === 6) price = pricingSettings.satPrice;
-        else if (dow !== 0) price = pricingSettings.monThuPrice;
+        else                price = pricingSettings.monThuPrice; // incluye domingo
       }
 
       days.push({

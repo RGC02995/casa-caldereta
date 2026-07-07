@@ -92,7 +92,7 @@ describe('BookingCalendarComponent', () => {
     const sunday = day(16);
     expect(sunday.date?.getDay()).toBe(0);
     expect(sunday.isDisabled).toBe(true);
-    expect(sunday.price).toBe(0);
+    expect(sunday.price).toBe(100); // domingo se factura igual que lunes-jueves
   });
 
   it('domingo SI es seleccionable como check-out cuando ya hay un check-in valido (viernes→domingo, 2 noches)', () => {
@@ -102,12 +102,12 @@ describe('BookingCalendarComponent', () => {
     expect(sunday.isDisabled).toBe(false);
   });
 
-  it('precios por dia: lun-jue=100, vie=150, sab=180, dom=0', () => {
+  it('precios por dia: lun-jue=100, vie=150, sab=180, dom=100 (igual que lun-jue)', () => {
     fixture.componentRef.setInput('pricingSettings', PRICING);
     expect(day(13).price).toBe(100); // jueves
     expect(day(14).price).toBe(150); // viernes
     expect(day(15).price).toBe(180); // sabado
-    expect(day(16).price).toBe(0);   // domingo
+    expect(day(16).price).toBe(100); // domingo
     expect(day(17).price).toBe(100); // lunes
   });
 

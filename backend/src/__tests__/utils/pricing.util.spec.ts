@@ -41,9 +41,9 @@ describe('calculateNightPrice — DEFAULT_CONFIG', () => {
     expect(calculateNightPrice(SAT, 2)).toBe(180);
   });
 
-  it('domingo → 0 € (cerrado) independientemente de personas', () => {
-    expect(calculateNightPrice(SUN, 2)).toBe(0);
-    expect(calculateNightPrice(SUN, 6)).toBe(0);
+  it('domingo → igual que lunes-jueves (100 € / 180 € con 6 personas), no es día cerrado', () => {
+    expect(calculateNightPrice(SUN, 2)).toBe(100);
+    expect(calculateNightPrice(SUN, 6)).toBe(180);
   });
 
   it('1 persona → solo precio base, sin extra de personas', () => {
@@ -68,8 +68,8 @@ describe('calculateNightPrice — config personalizada', () => {
     expect(calculateNightPrice(SAT, 2, CUSTOM)).toBe(300);
   });
 
-  it('domingo → 0 € independientemente del config', () => {
-    expect(calculateNightPrice(SUN, 2, CUSTOM)).toBe(0);
+  it('domingo → igual que lunes-jueves con config personalizada', () => {
+    expect(calculateNightPrice(SUN, 2, CUSTOM)).toBe(200);
   });
 
   it('lunes 4 personas → 200 + 2×30 = 260 €', () => {
@@ -106,6 +106,14 @@ describe('calculateStayTotal', () => {
   it('deposit + remaining === subtotal siempre', () => {
     const result = calculateStayTotal(FRI, SUN, 3);
     expect(result.deposit + result.remaining).toBe(result.subtotal);
+  });
+
+  it('3 noches vie–lun con domingo intermedio: domingo se cobra como lunes, no gratis', () => {
+    const MON_NEXT = new Date(2025, 0, 13); // lunes siguiente
+    const result = calculateStayTotal(FRI, MON_NEXT, 2);
+    expect(result.nights).toBe(3);
+    expect(result.pricePerNight).toEqual([150, 180, 100]);
+    expect(result.subtotal).toBe(430);
   });
 });
 
