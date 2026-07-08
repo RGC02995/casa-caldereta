@@ -297,6 +297,28 @@ Skill usada: `/barrido-señales` (`.claude/commands/barrido-señales.md`)
 
 ---
 
+### Mejora formulario admin de rutas — puntos ricos, enlaces, galería ✅ COMPLETADO (2026-07-08)
+Objetivo: el formulario de creación/edición de rutas del admin solo permitía nombre+descripción por punto de interés; se amplió a petición del usuario.
+
+- [x] **Puntos de interés** — ahora editables: latitud/longitud (inputs numéricos opcionales, validados en rango), enlace propio (`linkUrl`, ej. ficha de Google Maps/Wikipedia), imagen propia (subida a Cloudinary con preview, igual patrón que la portada)
+- [x] **Reordenar puntos** — botones ↑/↓ en cada fila (deshabilitados en los extremos), sin llamada a backend hasta el submit normal
+- [x] **Enlace externo de la ruta** — `externalLinkLabel` + `externalLinkUrl` (ej. "Ver en Wikiloc"), validado como URL `http(s)://`
+- [x] **Galería de imágenes de la ruta** — subida múltiple + borrado individual inmediato desde el propio formulario admin; **de momento solo gestionable en el admin, no se muestra aún en la web pública** (decisión explícita del usuario, "para luego")
+- [x] **Backend** — modelo `IRoute.images` pasó de `string[]` a `{url, publicId}[]` (necesario para poder borrar de Cloudinary sin ambigüedad); 3 endpoints nuevos: `POST /routes/:id/points/:index/image`, `POST /routes/:id/images`, `DELETE /routes/:id/images/:publicId`
+- [x] **Merge inteligente en `routeService.update()`** — al guardar el array completo de puntos (edición de texto), empareja cada punto nuevo con el existente **por `imageUrl`** (no por índice) para preservar `imagePublicId` aunque se reordenen/añadan/quiten puntos; detecta y borra de Cloudinary los `imagePublicId` huérfanos
+- [x] **`routeService.delete()` ahora limpia Cloudinary** (portada + galería + puntos) — antes de este trabajo no borraba nada al eliminar una ruta, quedaba basura huérfana
+- [x] **Fix bug dormido** — el formulario descartaba silenciosamente `imageUrl`/`lat`/`lng` de los puntos en cada guardado (hidratación y submit solo mapeaban `{name, description}`); inofensivo hasta ahora porque nada asignaba esas imágenes, se volvió crítico al añadir la subida de imagen por punto
+- [x] **Tests nuevos backend** — `route.service.spec.ts` (7, merge de `imagePublicId` por `imageUrl` incl. reorder/eliminación/huérfanos) + `route.routes.spec.ts` (20, integración HTTP con Cloudinary mockeado) — no existía ningún test de `Route` antes de esto. 178/178 tests backend en verde, 68/68 frontend, `ng build` sin errores
+- [x] **Verificado end-to-end con Playwright** contra un MongoDB local efímero (mongodb-memory-server) — sin tocar Atlas ni Cloudinary reales: crear ruta con puntos+lat/lng+enlaces, reordenar, guardar, recargar en modo edición y confirmar que todo persiste correctamente en el orden nuevo
+- [x] Commit `838c52f` — pusheado a `main`
+- [x] **Fix follow-up (mismo día)** — el enlace externo de la ruta y el enlace de cada punto se guardaban bien pero **no se pintaban en la página pública** `route-detail-page` (se implementó backend+admin pero se olvidó la vista pública). Corregido: enlace externo visible bajo "Sobre esta ruta", enlace de punto ("Más información") visible en su tarjeta si tiene uno. Commit `820f769` — pusheado a `main`
+
+**Pendiente para retomar (no es un bug, es alcance diferido a propósito):**
+- [ ] La **galería de imágenes** (`route.images`) y el **lat/lng de los puntos** siguen sin mostrarse en `route-detail-page` (página pública) — solo el enlace se corrigió. Si se quiere mostrar la galería (ej. carrusel bajo la portada) o un mapa con las coordenadas, hay que diseñarlo e implementarlo.
+- [ ] Verificar visualmente en producción (tras el deploy automático de Vercel del commit `820f769`) que el enlace externo se ve bien en un móvil real, no solo en el build local.
+
+---
+
 ## Datos legales
 - **Municipio:** Aielo de Rugat, Valencia, Comunitat Valenciana
 - **Licencia turística:** CV-VUT0058371-V ✅
@@ -409,6 +431,8 @@ Objetivo: comprobar funcionamiento y seguridad del calendario (disponibilidad, c
 3. ~~Fichero `admin-gallery-grid.component.html` con sintaxis Angular inválida~~ ✅ arreglado (2026-07-06): `let $index = $index` redeclaraba la variable implícita del `@for` (Angular ya la expone sin declararla) — quitada la redeclaración, `ng build` y `ng test` (68/68) en verde
 
 ## Pendientes / Preguntas abiertas
+- [ ] **Mostrar galería de imágenes y lat/lng de puntos en `route-detail-page`** (ver sección "Mejora formulario admin de rutas" arriba, 2026-07-08) — ya se pueden gestionar desde el admin pero la página pública de la ruta todavía no las pinta (alcance diferido a propósito, "para luego")
+- [ ] **Verificar en producción tras deploy de Vercel** que el enlace externo de ruta/punto (`820f769`, 2026-07-08) se ve bien en móvil real
 - [x] **Fix: formulario pre-llegada + segundo pago en reservas last-minute** — `checkinService.handleWebhookPostConfirmation(booking)` llamado desde el webhook de Stripe tras confirmar el depósito. Comprueba centinelas y envía inmediatamente: (1) recordatorio segundo pago si `daysUntilCheckin <= 7` y no pagado ni avisado; (2) formulario RD 933/2021 si `daysUntilCheckin <= 3` y no enviado. Los crons siguen cubriendo el caso normal (check-in > 7 días).
 - [ ] **Exportar XML SES.HOSPEDERÍA** — Botón "Exportar XML" en el panel de viajeros (admin reservas). Necesita esquema XML oficial del Ministerio del Interior antes de implementar. Pendiente de documentación técnica del portal SES.HOSPEDERÍA.
 - [x] **Resend — Click Tracking desactivado** ✅ (2026-07-04) en resend.com → Domains → `casa-caldereta.com` → Configuration → Enable tracking metrics. Resuelve el problema de los links `awstrack.me` bloqueados por uBO en el email de pre-llegada.
@@ -467,3 +491,5 @@ Objetivo: comprobar funcionamiento y seguridad del calendario (disponibilidad, c
 | feat: check-in/out + registro RD 933/2021 | Backend: token SHA-256 + cron emails + 9 endpoints. Admin: sección Hoy, botones checkin, panel viajeros, configuración horarios |
 | docs: dominio casa-caldereta.com comprado — estado DNS y pendientes Lunes | Namecheap comprado, DNS Vercel configurado, Railway + Resend + código pendiente |
 | feat: sincronización de calendario iCal con Airbnb/Booking.com | Gap seguridad cerrado, BlockedPeriodModel con origen, ical-sync.service.ts (cron 15min), GET /calendar.ics, admin con URL de exportación |
+| feat: enriquecer formulario admin de rutas — puntos con lat/lng/enlace/imagen, enlace externo, galería y reordenar (`838c52f`) | images:string[]→{url,publicId}[], 3 endpoints nuevos, merge imagePublicId por imageUrl, delete() limpia Cloudinary, fix bug dormido, 27 tests nuevos |
+| fix: mostrar enlace externo de ruta y de puntos en la página pública (`820f769`) | route-detail-page no pintaba externalLinkUrl/linkUrl aunque ya se guardaban desde el admin |
