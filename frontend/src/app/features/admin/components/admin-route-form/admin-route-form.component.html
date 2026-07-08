@@ -101,6 +101,30 @@
         />
       </div>
 
+      <div class="admin-routes__field">
+        <label class="admin-routes__label" for="route-external-link-label">Enlace externo — etiqueta</label>
+        <input
+          class="admin-routes__input"
+          id="route-external-link-label"
+          type="text"
+          placeholder="Ej: Ver en Wikiloc"
+          [value]="externalLinkLabel()"
+          (input)="externalLinkLabel.set($any($event.target).value)"
+        />
+      </div>
+
+      <div class="admin-routes__field">
+        <label class="admin-routes__label" for="route-external-link-url">Enlace externo — URL</label>
+        <input
+          class="admin-routes__input"
+          id="route-external-link-url"
+          type="url"
+          placeholder="https://www.wikiloc.com/..."
+          [value]="externalLinkUrl()"
+          (input)="externalLinkUrl.set($any($event.target).value)"
+        />
+      </div>
+
       <div class="admin-routes__field admin-routes__field--full">
         <span class="admin-routes__label">Imagen de portada</span>
         <div class="admin-routes__cover-picker">
@@ -156,34 +180,156 @@
 
       @for (point of formData().points; track $index) {
         <div class="admin-routes__point-row">
-          <div class="admin-routes__point-fields">
-            <input
-              class="admin-routes__input"
-              type="text"
-              placeholder="Nombre del punto"
-              [attr.aria-label]="'Nombre del punto ' + ($index + 1)"
-              [value]="point.name"
-              (input)="updatePointField($index, 'name', $any($event.target).value)"
-            />
-            <input
-              class="admin-routes__input"
-              type="text"
-              placeholder="Descripción del punto"
-              [attr.aria-label]="'Descripción del punto ' + ($index + 1)"
-              [value]="point.description"
-              (input)="updatePointField($index, 'description', $any($event.target).value)"
-            />
+
+          <div class="admin-routes__point-main">
+            <div class="admin-routes__point-fields">
+              <input
+                class="admin-routes__input"
+                type="text"
+                placeholder="Nombre del punto"
+                [attr.aria-label]="'Nombre del punto ' + ($index + 1)"
+                [value]="point.name"
+                (input)="updatePointField($index, 'name', $any($event.target).value)"
+              />
+              <input
+                class="admin-routes__input"
+                type="text"
+                placeholder="Descripción del punto"
+                [attr.aria-label]="'Descripción del punto ' + ($index + 1)"
+                [value]="point.description"
+                (input)="updatePointField($index, 'description', $any($event.target).value)"
+              />
+            </div>
+
+            <div class="admin-routes__point-fields admin-routes__point-fields--meta">
+              <input
+                class="admin-routes__input"
+                type="number"
+                step="any"
+                placeholder="Latitud (opcional)"
+                [attr.aria-label]="'Latitud del punto ' + ($index + 1)"
+                [value]="point.lat ?? ''"
+                (input)="updatePointField($index, 'lat', $any($event.target).value === '' ? null : +$any($event.target).value)"
+              />
+              <input
+                class="admin-routes__input"
+                type="number"
+                step="any"
+                placeholder="Longitud (opcional)"
+                [attr.aria-label]="'Longitud del punto ' + ($index + 1)"
+                [value]="point.lng ?? ''"
+                (input)="updatePointField($index, 'lng', $any($event.target).value === '' ? null : +$any($event.target).value)"
+              />
+              <input
+                class="admin-routes__input"
+                type="url"
+                placeholder="Enlace (opcional)"
+                [attr.aria-label]="'Enlace del punto ' + ($index + 1)"
+                [value]="point.linkUrl"
+                (input)="updatePointField($index, 'linkUrl', $any($event.target).value)"
+              />
+            </div>
+
+            <div class="admin-routes__point-image-picker">
+              @if (pointImagePreviews()[$index]) {
+                <img
+                  class="admin-routes__point-image-preview"
+                  [src]="pointImagePreviews()[$index]"
+                  [attr.alt]="'Vista previa imagen del punto ' + ($index + 1)"
+                />
+              }
+              <label class="admin-routes__cover-label" [attr.for]="'route-point-file-' + $index">
+                {{ pointImagePreviews()[$index] ? 'Cambiar imagen' : 'Añadir imagen' }}
+              </label>
+              <input
+                class="admin-routes__cover-input"
+                [id]="'route-point-file-' + $index"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                (change)="onPointImageSelected($index, $event)"
+              />
+            </div>
           </div>
-          <button
-            class="admin-routes__remove-point-btn"
-            type="button"
-            [attr.aria-label]="'Eliminar punto ' + ($index + 1)"
-            (click)="removePoint($index)"
-          >
-            ✕
-          </button>
+
+          <div class="admin-routes__point-actions">
+            <button
+              class="admin-routes__reorder-btn"
+              type="button"
+              [disabled]="$index === 0"
+              [attr.aria-label]="'Subir punto ' + ($index + 1)"
+              (click)="movePointUp($index)"
+            >
+              ↑
+            </button>
+            <button
+              class="admin-routes__reorder-btn"
+              type="button"
+              [disabled]="$index === formData().points.length - 1"
+              [attr.aria-label]="'Bajar punto ' + ($index + 1)"
+              (click)="movePointDown($index)"
+            >
+              ↓
+            </button>
+            <button
+              class="admin-routes__remove-point-btn"
+              type="button"
+              [attr.aria-label]="'Eliminar punto ' + ($index + 1)"
+              (click)="removePoint($index)"
+            >
+              ✕
+            </button>
+          </div>
+
         </div>
       }
+    </div>
+
+    <div class="admin-routes__gallery-section">
+      <div class="admin-routes__points-header">
+        <h3 class="admin-routes__points-title">Galería de imágenes</h3>
+        <label class="admin-routes__add-point-btn" for="route-gallery-file">
+          + Añadir imágenes
+        </label>
+        <input
+          class="admin-routes__cover-input"
+          id="route-gallery-file"
+          type="file"
+          multiple
+          accept="image/jpeg,image/png,image/webp"
+          (change)="onGalleryFilesSelected($event)"
+        />
+      </div>
+
+      @if (galleryPreviews().length === 0 && galleryImageFiles().length === 0) {
+        <p class="admin-routes__points-empty">Sin imágenes de galería todavía.</p>
+      }
+
+      <div class="admin-routes__gallery-grid">
+        @for (image of galleryPreviews(); track image.publicId) {
+          <div class="admin-routes__gallery-item">
+            <img class="admin-routes__gallery-image" [src]="image.url" alt="Imagen de galería de la ruta" />
+            <button
+              class="admin-routes__gallery-remove-btn"
+              type="button"
+              (click)="onGalleryImageDeleteClick(image.publicId)"
+            >
+              Eliminar
+            </button>
+          </div>
+        }
+        @for (previewUrl of galleryPendingPreviews(); track $index) {
+          <div class="admin-routes__gallery-item admin-routes__gallery-item--pending">
+            <img class="admin-routes__gallery-image" [src]="previewUrl" alt="Imagen de galería pendiente de subir" />
+            <button
+              class="admin-routes__gallery-remove-btn"
+              type="button"
+              (click)="removePendingGalleryFile($index)"
+            >
+              Quitar
+            </button>
+          </div>
+        }
+      </div>
     </div>
 
     @if (validationError()) {

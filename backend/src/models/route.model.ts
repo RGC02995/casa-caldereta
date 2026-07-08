@@ -4,11 +4,18 @@ export type RouteDifficulty = 'easy' | 'moderate' | 'hard';
 export type RouteType       = 'hiking' | 'cycling' | 'driving' | 'walking';
 
 export interface IRoutePoint {
-  name:        string;
-  description: string;
-  imageUrl?:   string;
-  lat?:        number;
-  lng?:        number;
+  name:           string;
+  description:    string;
+  imageUrl?:      string;
+  imagePublicId?: string;
+  lat?:           number;
+  lng?:           number;
+  linkUrl?:       string;
+}
+
+export interface IRouteImage {
+  url:      string;
+  publicId: string;
 }
 
 export interface IRouteDocument extends Document {
@@ -21,8 +28,10 @@ export interface IRouteDocument extends Document {
   type:               RouteType;
   coverImageUrl:      string;
   coverImagePublicId: string;
-  images:             string[];
+  images:             IRouteImage[];
   points:             IRoutePoint[];
+  externalLinkLabel:  string;
+  externalLinkUrl:    string;
   isPublished:        boolean;
   order:              number;
   createdAt:          Date;
@@ -31,11 +40,21 @@ export interface IRouteDocument extends Document {
 
 const routePointSchema = new Schema<IRoutePoint>(
   {
-    name:        { type: String, required: true, trim: true, maxlength: 100 },
-    description: { type: String, required: true, trim: true, maxlength: 500 },
-    imageUrl:    { type: String, trim: true },
-    lat:         { type: Number },
-    lng:         { type: Number },
+    name:          { type: String, required: true, trim: true, maxlength: 100 },
+    description:   { type: String, required: true, trim: true, maxlength: 500 },
+    imageUrl:      { type: String, trim: true },
+    imagePublicId: { type: String, trim: true },
+    lat:           { type: Number },
+    lng:           { type: Number },
+    linkUrl:       { type: String, trim: true, maxlength: 500 },
+  },
+  { _id: false },
+);
+
+const routeImageSchema = new Schema<IRouteImage>(
+  {
+    url:      { type: String, required: true, trim: true },
+    publicId: { type: String, required: true, trim: true },
   },
   { _id: false },
 );
@@ -90,12 +109,24 @@ const routeSchema = new Schema<IRouteDocument>(
       trim:    true,
     },
     images: {
-      type:    [String],
+      type:    [routeImageSchema],
       default: [],
     },
     points: {
       type:    [routePointSchema],
       default: [],
+    },
+    externalLinkLabel: {
+      type:      String,
+      default:   '',
+      trim:      true,
+      maxlength: 100,
+    },
+    externalLinkUrl: {
+      type:      String,
+      default:   '',
+      trim:      true,
+      maxlength: 500,
     },
     isPublished: {
       type:    Boolean,

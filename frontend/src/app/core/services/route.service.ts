@@ -38,6 +38,22 @@ export class RouteService {
     return this.api.upload<IRoute>(`routes/${id}/cover-image`, formData);
   }
 
+  uploadPointImage(routeId: string, pointIndex: number, file: File): Observable<ApiResponse<IRoute>> {
+    const formData = new FormData();
+    formData.append('image', file);
+    return this.api.upload<IRoute>(`routes/${routeId}/points/${pointIndex}/image`, formData);
+  }
+
+  uploadGalleryImage(routeId: string, file: File): Observable<ApiResponse<IRoute>> {
+    const formData = new FormData();
+    formData.append('image', file);
+    return this.api.upload<IRoute>(`routes/${routeId}/images`, formData);
+  }
+
+  deleteGalleryImage(routeId: string, publicId: string): Observable<ApiResponse<IRoute>> {
+    return this.api.delete<IRoute>(`routes/${routeId}/images/${encodeURIComponent(publicId)}`);
+  }
+
   delete(id: string): Observable<ApiResponse<void>> {
     return this.api.delete<void>(`routes/${id}`);
   }

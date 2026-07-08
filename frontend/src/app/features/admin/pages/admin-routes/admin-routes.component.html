@@ -15,11 +15,13 @@
 
   @if (formMode() !== 'hidden') {
     <admin-route-form
+      #routeForm
       [mode]="formMode() === 'edit' ? 'edit' : 'create'"
       [initialRoute]="editingRoute()"
       [isSubmitting]="isSubmitting()"
       (formSubmit)="onFormSubmit($event)"
       (formCancel)="closeForm()"
+      (galleryImageDelete)="onGalleryImageDelete($event)"
     />
   }
 

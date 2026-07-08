@@ -1,6 +1,6 @@
-import { Component, computed, inject, signal, DestroyRef } from '@angular/core';
+import { Component, computed, inject, signal, viewChild, DestroyRef } from '@angular/core';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { BehaviorSubject, switchMap, concatMap, of } from 'rxjs';
+import { BehaviorSubject, Observable, switchMap, concatMap, from, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { RouteService } from '../../../../core/services/route.service';
 import { IRoute } from '../../../../core/models/route.model';
@@ -18,6 +18,7 @@ type FormMode = 'hidden' | 'create' | 'edit';
 export class AdminRoutesComponent {
   private readonly routeService = inject(RouteService);
   private readonly destroyRef   = inject(DestroyRef);
+  private readonly routeFormRef = viewChild<AdminRouteFormComponent>('routeForm');
 
   readonly loadError    = signal('');
   readonly actionError  = signal('');
@@ -78,14 +79,43 @@ export class AdminRoutesComponent {
     saveRequest.pipe(
       concatMap(response => {
         const routeId = currentFormMode === 'create' ? response.data.id : currentRoute!.id;
-        return event.coverImageFile
-          ? this.routeService.uploadCoverImage(routeId, event.coverImageFile).pipe(
+        const uploads: Observable<unknown>[] = [];
+
+        if (event.coverImageFile) {
+          uploads.push(
+            this.routeService.uploadCoverImage(routeId, event.coverImageFile).pipe(
               catchError(() => {
                 this.actionError.set('Ruta guardada, pero la imagen de portada no se pudo subir.');
                 return of(null);
               }),
-            )
-          : of(null);
+            ),
+          );
+        }
+
+        event.pointImageFiles.forEach((file, index) => {
+          if (!file) return;
+          uploads.push(
+            this.routeService.uploadPointImage(routeId, index, file).pipe(
+              catchError(() => {
+                this.actionError.set('Ruta guardada, pero alguna imagen de punto no se pudo subir.');
+                return of(null);
+              }),
+            ),
+          );
+        });
+
+        event.galleryImageFiles.forEach(file => {
+          uploads.push(
+            this.routeService.uploadGalleryImage(routeId, file).pipe(
+              catchError(() => {
+                this.actionError.set('Ruta guardada, pero alguna imagen de galería no se pudo subir.');
+                return of(null);
+              }),
+            ),
+          );
+        });
+
+        return uploads.length ? from(uploads).pipe(concatMap(upload => upload)) : of(null);
       }),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe({
@@ -99,6 +129,22 @@ export class AdminRoutesComponent {
         this.isSubmitting.set(false);
       },
     });
+  }
+
+  onGalleryImageDelete(publicId: string): void {
+    const route = this.editingRoute();
+    if (!route) return;
+
+    this.routeService.deleteGalleryImage(route.id, publicId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.routeFormRef()?.removeGalleryPreviewLocally(publicId);
+        },
+        error: () => {
+          this.actionError.set('No se pudo eliminar la imagen de la galería.');
+        },
+      });
   }
 
   onTogglePublished(route: IRoute): void {
