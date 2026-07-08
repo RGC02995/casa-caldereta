@@ -242,6 +242,34 @@
   margin: 0;
 }
 
+.route-detail__external-link {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-3 $space-5;
+  border: 1px solid $color-neutral-300;
+  border-radius: $border-radius-full;
+  color: $color-primary;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  text-decoration: none;
+  transition: border-color $transition-fast, background-color $transition-fast;
+
+  svg {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    border-color: $color-primary;
+    background-color: rgba($color-primary, 0.05);
+  }
+
+  &:focus-visible { @include focus-visible; }
+}
+
 // ── POINTS TIMELINE ───────────────────────────────────────────────────────────
 
 .route-detail__points {
@@ -323,6 +351,18 @@
   object-fit: cover;
   border-radius: $border-radius-md;
   margin-top: $space-3;
+}
+
+.route-detail__point-link {
+  align-self: flex-start;
+  color: $color-primary;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  text-decoration: none;
+  margin-top: $space-1;
+
+  &:hover { text-decoration: underline; }
+  &:focus-visible { @include focus-visible; }
 }
 
 // ── CTA ───────────────────────────────────────────────────────────────────────
