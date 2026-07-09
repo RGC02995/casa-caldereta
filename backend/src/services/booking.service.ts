@@ -400,7 +400,7 @@ class BookingService {
 
   // ─── Reembolso (propietario) ─────────────────────────────────────────────────
 
-  async refund(id: string): Promise<IBookingDocument> {
+  async refund(id: string, amountEuros: number): Promise<IBookingDocument> {
     const booking = await BookingModel.findById(id).lean<IBookingDocument>();
 
     if (!booking) {
@@ -413,12 +413,38 @@ class BookingService {
       throw Object.assign(new Error('Esta reserva no tiene pago de Stripe asociado'), { code: 'NO_PAYMENT' });
     }
 
-    // Reembolsar el depósito inicial
-    await stripe.refunds.create({ payment_intent: booking.stripePaymentIntentId });
+    const depositCents   = Math.round(booking.depositAmount * 100);
+    const remainingCents = booking.remainingPaidAt ? Math.round(booking.remainingAmount * 100) : 0;
+    const maxRefundCents = depositCents + remainingCents;
+    const amountCents    = Math.round(amountEuros * 100);
 
-    // Si el pago restante también fue cobrado vía Stripe, reembolsarlo también
-    if (booking.stripeRemainingPaymentIntentId) {
-      await stripe.refunds.create({ payment_intent: booking.stripeRemainingPaymentIntentId });
+    if (!Number.isFinite(amountCents) || amountCents <= 0 || amountCents > maxRefundCents) {
+      throw Object.assign(
+        new Error(`El importe debe estar entre 0,01 € y ${(maxRefundCents / 100).toFixed(2)} €`),
+        { code: 'VALIDATION' },
+      );
+    }
+
+    let remainingToRefund = amountCents;
+    let depositRefunded   = false;
+
+    try {
+      // Reembolsar primero contra el depósito, y el resto (si queda) contra el segundo pago
+      const fromDeposit = Math.min(remainingToRefund, depositCents);
+      if (fromDeposit > 0) {
+        await stripe.refunds.create({ payment_intent: booking.stripePaymentIntentId, amount: fromDeposit });
+        depositRefunded = true;
+        remainingToRefund -= fromDeposit;
+      }
+
+      if (remainingToRefund > 0 && booking.stripeRemainingPaymentIntentId) {
+        await stripe.refunds.create({ payment_intent: booking.stripeRemainingPaymentIntentId, amount: remainingToRefund });
+      }
+    } catch (err) {
+      const detail = depositRefunded
+        ? 'El depósito ya se reembolsó correctamente, pero falló el reembolso del resto. Revisa Stripe antes de reintentar.'
+        : 'No se pudo procesar el reembolso en Stripe.';
+      throw Object.assign(new Error(detail), { code: 'REFUND_FAILED', cause: err });
     }
 
     const updated = await BookingModel.findByIdAndUpdate(

@@ -19,7 +19,7 @@ type StatusFilter = 'all' | BookingStatus;
 
 const STATUS_CONFIRMATIONS: Partial<Record<BookingStatus, string>> = {
   confirmed: '¿Confirmar esta reserva?',
-  cancelled: 'Esta acción no se puede deshacer. ¿Cancelar la reserva de forma definitiva?',
+  cancelled: 'Esta acción no se puede deshacer. ¿Cancelar la reserva de forma definitiva? No se procesará ningún reembolso.',
   completed: 'Esta acción no se puede deshacer. ¿Marcar la reserva como completada?',
 };
 
@@ -94,12 +94,30 @@ export class AdminBookingsComponent {
 
   onRefundRequested(event: IBookingRefundEvent): void {
     if (this.processingId()) return;
-    if (!confirm(`${event.guestName}\n\n¿Reembolsar el pago y cancelar la reserva? Esta acción no se puede deshacer.`)) return;
+
+    const booking = this.allBookings().find(b => b.id === event.bookingId);
+    if (!booking) return;
+
+    const maxRefundable = booking.depositAmount + (booking.remainingPaidAt ? booking.remainingAmount : 0);
+
+    const input = prompt(
+      `${event.guestName}\n\nImporte a reembolsar (máx. ${maxRefundable.toFixed(2)} €):`,
+      maxRefundable.toFixed(2),
+    );
+    if (input === null) return;
+
+    const amount = Number(input.trim().replace(',', '.'));
+    if (!Number.isFinite(amount) || amount <= 0 || amount > maxRefundable) {
+      alert(`Importe no válido. Debe estar entre 0,01 € y ${maxRefundable.toFixed(2)} €.`);
+      return;
+    }
+
+    if (!confirm(`${event.guestName}\n\n¿Reembolsar ${amount.toFixed(2)} € y cancelar la reserva? Esta acción no se puede deshacer.`)) return;
 
     this.processingId.set(event.bookingId);
     this.actionError.set('');
 
-    this.bookingService.refundBooking(event.bookingId)
+    this.bookingService.refundBooking(event.bookingId, amount)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {

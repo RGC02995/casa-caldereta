@@ -33,7 +33,7 @@ interface IStatusTransition {
 const STATUS_TRANSITIONS: Record<BookingStatus, IStatusTransition[]> = {
   pending_payment: [],
   pending:         [],
-  confirmed:       [{ label: 'Completar', status: 'completed' }],
+  confirmed:       [{ label: 'Completar', status: 'completed' }, { label: 'Cancelar', status: 'cancelled' }],
   cancelled:       [],
   completed:       [],
 };

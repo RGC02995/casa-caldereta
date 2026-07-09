@@ -43,8 +43,8 @@ export class BookingService {
     return this.api.post<ICheckoutSessionResult>('bookings/checkout', data);
   }
 
-  refundBooking(id: string): Observable<ApiResponse<IBooking>> {
-    return this.api.post<IBooking>(`bookings/${id}/refund`, {});
+  refundBooking(id: string, amount: number): Observable<ApiResponse<IBooking>> {
+    return this.api.post<IBooking>(`bookings/${id}/refund`, { amount });
   }
 
   createRemainingPaymentSession(id: string): Observable<ApiResponse<{ sessionUrl: string; remainingAmount: number }>> {

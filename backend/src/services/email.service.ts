@@ -19,6 +19,10 @@ interface IStatusTemplateData extends ITemplateData {
   readonly newStatus: 'confirmed' | 'cancelled';
 }
 
+interface IRefundTemplateData extends ITemplateData {
+  readonly amount: number;
+}
+
 interface IPreArrivalTemplateData extends ITemplateData {
   readonly formUrl:      string;
   readonly checkInTime:  string;
@@ -218,14 +222,21 @@ function ownerPaymentReceivedHtml(data: ITemplateData, label: string = 'Dep&#243
   );
 }
 
-function guestRefundCancellationHtml(data: ITemplateData): string {
-  const { booking } = data;
+function guestRefundCancellationHtml(data: IRefundTemplateData): string {
+  const { booking, amount } = data;
+  const isFullRefund = Math.round(amount * 100) === Math.round(booking.totalPrice * 100);
+  const amountFmt    = amount.toFixed(2);
+
+  const refundText = isFullRefund
+    ? `y el importe de <strong>${amountFmt}&nbsp;&euro;</strong> que abonaste ha sido reembolsado &#237;ntegramente.`
+    : `Se ha procesado un reembolso de <strong>${amountFmt}&nbsp;&euro;</strong> sobre los ${booking.totalPrice.toFixed(2)}&nbsp;&euro; abonados.`;
+
   return emailWrapper(
     'Reserva cancelada y reembolso procesado',
     `<h2 style="margin:0 0 16px;font-size:20px;font-weight:400;color:#2C2C2C;">Reserva cancelada</h2>
     <p style="margin:0 0 20px;font-size:14px;color:#555;font-family:Arial,sans-serif;line-height:1.7;">
       Hola, <strong>${escapeHtml(booking.guestName)}</strong>. Tu reserva en <strong>Casa Caldereta</strong> ha sido cancelada
-      y el importe abonado ha sido reembolsado &#237;ntegramente. El reembolso puede tardar entre 5 y 10 d&#237;as h&#225;biles
+      ${refundText} El reembolso puede tardar entre 5 y 10 d&#237;as h&#225;biles
       en aparecer en tu estado de cuenta.
     </p>
     ${detailsTable(data)}
@@ -615,17 +626,21 @@ class EmailService {
     });
   }
 
-  async sendGuestRefundCancellation(booking: IBookingDocument): Promise<void> {
+  async sendGuestRefundCancellation(booking: IBookingDocument, amount: number): Promise<void> {
     if (!this.client) return;
 
-    const checkIn  = formatDate(booking.checkIn);
-    const checkOut = formatDate(booking.checkOut);
+    const checkIn      = formatDate(booking.checkIn);
+    const checkOut      = formatDate(booking.checkOut);
+    const isFullRefund = Math.round(amount * 100) === Math.round(booking.totalPrice * 100);
+    const amountText   = isFullRefund
+      ? `el importe de ${amount.toFixed(2)} € ha sido reembolsado íntegramente`
+      : `se ha reembolsado ${amount.toFixed(2)} € de los ${booking.totalPrice.toFixed(2)} € abonados`;
 
     await this.send({
       to:      booking.guestEmail,
       subject: 'Reserva cancelada y reembolso procesado — Casa Caldereta',
-      html:    guestRefundCancellationHtml({ booking, checkIn, checkOut }),
-      text:    `Hola ${booking.guestName}, tu reserva del ${checkIn} al ${checkOut} ha sido cancelada y el importe de ${booking.totalPrice} € ha sido reembolsado. El reembolso puede tardar entre 5 y 10 días hábiles.`,
+      html:    guestRefundCancellationHtml({ booking, checkIn, checkOut, amount }),
+      text:    `Hola ${booking.guestName}, tu reserva del ${checkIn} al ${checkOut} ha sido cancelada y ${amountText}. El reembolso puede tardar entre 5 y 10 días hábiles.`,
     });
   }
 

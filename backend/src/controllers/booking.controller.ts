@@ -295,17 +295,25 @@ export async function refundBookingHandler(req: Request<{ id: string }>, res: Re
     return;
   }
 
+  const { amount } = req.body as { amount?: unknown };
+  if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
+    res.status(400).json({ success: false, message: 'El importe del reembolso no es válido.' });
+    return;
+  }
+
   try {
-    const booking = await bookingService.refund(req.params.id);
+    const booking = await bookingService.refund(req.params.id, amount);
     res.status(200).json({ success: true, data: booking, message: 'Reembolso procesado y reserva cancelada' });
 
-    void emailService.sendGuestRefundCancellation(booking);
+    void emailService.sendGuestRefundCancellation(booking, amount);
   } catch (error) {
     if (error instanceof Error) {
       const code = (error as { code?: string }).code;
       if (code === 'NOT_FOUND')      { res.status(404).json({ success: false, message: error.message }); return; }
       if (code === 'INVALID_STATUS') { res.status(422).json({ success: false, message: error.message }); return; }
       if (code === 'NO_PAYMENT')     { res.status(422).json({ success: false, message: error.message }); return; }
+      if (code === 'VALIDATION')     { res.status(400).json({ success: false, message: error.message }); return; }
+      if (code === 'REFUND_FAILED')  { res.status(502).json({ success: false, message: error.message }); return; }
     }
     res.status(500).json({ success: false, message: 'Error al procesar el reembolso' });
   }

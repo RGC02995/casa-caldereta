@@ -123,11 +123,11 @@
                   <button
                     class="admin-bookings__action-btn admin-bookings__action-btn--refund"
                     type="button"
-                    [attr.aria-label]="'Reembolsar y cancelar reserva de ' + booking.guestName"
+                    [attr.aria-label]="'Reembolsar reserva de ' + booking.guestName"
                     [disabled]="processingId() !== null"
                     (click)="onRefundRequested(booking.id, booking.guestName)"
                   >
-                    Reembolsar y cancelar
+                    Reembolsar
                   </button>
                 }
                 <button
