@@ -1,6 +1,10 @@
 @use '../../../../styles/variables' as *;
 @use '../../../../styles/mixins' as *;
 
+// La animación de entrada vive en &__container (no en el <dialog> en sí), para que
+// el transform de centrado del propio <dialog> nunca dependa de que una animación
+// llegue a ejecutarse (con "reducir movimiento" del sistema, la duración se acorta
+// a 0.01ms y algunos motores no llegan a aplicar el fotograma final).
 @keyframes modal-enter {
   from {
     opacity: 0;
@@ -20,12 +24,15 @@
     display: none;
   }
 
-  // El reset global (`* { margin: 0; }`) anula el `margin: auto` con el que el
-  // navegador centra de forma nativa un <dialog> abierto con showModal() —
-  // hay que reponer el centrado explícitamente.
+  // Centrado explícito, estático, permanente (no depende de ninguna animación):
+  // top/left 50% + transform en vez de inset:0 + margin:auto, porque en Safari real
+  // ese segundo truco calcula height:0 para un <dialog> cuyo contenido es display:flex,
+  // dejándolo invisible aunque el backdrop sí se muestre.
   position: fixed;
-  inset: 0;
-  margin: auto;
+  top: 50%;
+  left: 50%;
+  margin: 0;
+  transform: translate(-50%, -50%);
 
   padding: 0;
   border: none;
@@ -36,7 +43,6 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  animation: modal-enter $transition-normal ease forwards;
 
   &::backdrop {
     background-color: rgba($color-black, 0.55);
@@ -53,6 +59,7 @@
     flex: 1;
     min-height: 0;
     overflow: hidden;
+    animation: modal-enter $transition-normal ease forwards;
   }
 
   &__header {
