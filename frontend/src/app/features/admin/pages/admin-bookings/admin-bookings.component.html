@@ -132,9 +132,20 @@
           >
             {{ copySuccess() ? 'Copiado' : 'Copiar para SES.HOSPEDERÍA' }}
           </button>
+          <button
+            class="admin-bookings__travelers-copy"
+            type="button"
+            (click)="downloadTravelersXml()"
+          >
+            Descargar XML
+          </button>
           <p class="admin-bookings__travelers-hint">
             Copia los datos al portapapeles para introducirlos en el portal de registro del Ministerio del Interior.
+            El XML es un borrador con todos los datos del parte de viajeros: revísalo antes de subirlo, ya que aún no se ha contrastado contra el esquema oficial de SES.HOSPEDAJES.
           </p>
+          @if (xmlDownloadError()) {
+            <p class="admin-bookings__travelers-error" role="alert">{{ xmlDownloadError() }}</p>
+          }
         </div>
       }
     </section>

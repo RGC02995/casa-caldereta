@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { isValidObjectId } from 'mongoose';
 import { checkinService, ITravelerInput } from '../services/checkin.service';
+import { BookingModel, IBookingDocument } from '../models/booking.model';
+import { generateSesHospedajesXml } from '../utils/ses-hospedajes-xml.util';
 
 // ─── Público ───────────────────────────────────────────────────────────────────
 
@@ -151,6 +153,33 @@ export async function getTravelersHandler(req: Request, res: Response): Promise<
     res.status(200).json({ success: true, data: travelers });
   } catch (err) {
     console.error('[checkin] getTravelersHandler:', err instanceof Error ? err.message : String(err));
+    res.status(500).json({ success: false, message: 'Error interno del servidor.' });
+  }
+}
+
+// GET /checkin/:bookingId/travelers/xml — descargar parte de viajeros en XML (borrador SES.HOSPEDAJES)
+export async function getTravelersXmlHandler(req: Request, res: Response): Promise<void> {
+  const { bookingId } = req.params as { bookingId: string };
+  if (!isValidObjectId(bookingId)) {
+    res.status(400).json({ success: false, message: 'ID no válido.' });
+    return;
+  }
+  try {
+    const booking = await BookingModel.findById(bookingId).lean<IBookingDocument>();
+    if (!booking) {
+      res.status(404).json({ success: false, message: 'Reserva no encontrada.' });
+      return;
+    }
+
+    const travelers = await checkinService.getTravelers(bookingId);
+    const xml = generateSesHospedajesXml(booking, travelers);
+
+    res.status(200);
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="parte-viajeros-${bookingId}.xml"`);
+    res.send(xml);
+  } catch (err) {
+    console.error('[checkin] getTravelersXmlHandler:', err instanceof Error ? err.message : String(err));
     res.status(500).json({ success: false, message: 'Error interno del servidor.' });
   }
 }

@@ -37,6 +37,10 @@ export class CheckinService {
     return this.api.get<ITravelerDocument[]>(`checkin/${bookingId}/travelers`);
   }
 
+  getTravelersXml(bookingId: string): Observable<Blob> {
+    return this.api.getBlob(`checkin/${bookingId}/travelers/xml`);
+  }
+
   getSettings(): Observable<ApiResponse<ICheckinSettings>> {
     return this.api.get<ICheckinSettings>('checkin/settings');
   }

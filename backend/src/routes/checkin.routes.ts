@@ -7,6 +7,7 @@ import {
   recordCheckInHandler,
   recordCheckOutHandler,
   getTravelersHandler,
+  getTravelersXmlHandler,
   getCheckinSettingsHandler,
   updateCheckinSettingsHandler,
 } from '../controllers/checkin.controller';
@@ -37,5 +38,6 @@ checkinRouter.patch('/:bookingId/check-out', requireAuth, recordCheckOutHandler)
 
 // Admin — ver datos de viajeros registrados
 checkinRouter.get('/:bookingId/travelers', requireAuth, getTravelersHandler);
+checkinRouter.get('/:bookingId/travelers/xml', requireAuth, getTravelersXmlHandler);
 
 export default checkinRouter;

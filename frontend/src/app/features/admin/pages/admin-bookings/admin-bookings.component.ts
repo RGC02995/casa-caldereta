@@ -64,6 +64,7 @@ export class AdminBookingsComponent {
   readonly travelersLoading   = signal(false);
   readonly travelersError     = signal('');
   readonly copySuccess        = signal(false);
+  readonly xmlDownloadError   = signal('');
 
   private readonly refresh$ = new BehaviorSubject<void>(undefined);
 
@@ -340,5 +341,28 @@ export class AdminBookingsComponent {
     timer(2000)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.copySuccess.set(false));
+  }
+
+  downloadTravelersXml(): void {
+    const bookingId = this.travelersBookingId();
+    if (!bookingId) return;
+
+    this.xmlDownloadError.set('');
+
+    this.checkinService.getTravelersXml(bookingId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (blob) => {
+          const url = URL.createObjectURL(blob);
+          const anchor = document.createElement('a');
+          anchor.href = url;
+          anchor.download = `parte-viajeros-${bookingId}.xml`;
+          anchor.click();
+          URL.revokeObjectURL(url);
+        },
+        error: () => {
+          this.xmlDownloadError.set('No se pudo generar el XML. Inténtalo de nuevo.');
+        },
+      });
   }
 }
