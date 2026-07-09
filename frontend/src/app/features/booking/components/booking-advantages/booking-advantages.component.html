@@ -1,12 +1,17 @@
-<section class="booking-advantages">
+<div class="booking-advantages">
   <div class="booking-advantages__inner">
-    <svg class="booking-advantages__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.169.659 1.591l9.581 9.581c.699.699 1.83.699 2.528 0l7.409-7.409a1.789 1.789 0 0 0 0-2.528L13.16 3.66A2.25 2.25 0 0 0 11.318 3H9.568Z" />
-      <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 7.5h.008v.008H7.5V7.5Z" />
-    </svg>
-    <div class="booking-advantages__text">
-      <p class="booking-advantages__title">{{ 'booking.advantages.title' | translate }}</p>
-      <p class="booking-advantages__body">{{ 'booking.advantages.text' | translate }}</p>
+    <div class="booking-advantages__card" scrollReveal [revealFrom]="'scale'">
+      <div class="booking-advantages__badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.169.659 1.591l9.581 9.581c.699.699 1.83.699 2.528 0l7.409-7.409a1.789 1.789 0 0 0 0-2.528L13.16 3.66A2.25 2.25 0 0 0 11.318 3H9.568Z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 7.5h.008v.008H7.5V7.5Z" />
+        </svg>
+      </div>
+      <div class="booking-advantages__content">
+        <p class="booking-advantages__label">{{ 'booking.advantages.label' | translate }}</p>
+        <p class="booking-advantages__title">{{ 'booking.advantages.title' | translate }}</p>
+        <p class="booking-advantages__text">{{ 'booking.advantages.text' | translate }}</p>
+      </div>
     </div>
   </div>
-</section>
+</div>

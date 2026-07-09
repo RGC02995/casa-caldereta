@@ -111,6 +111,7 @@
     "heroTitle": "Reservar",
     "heroSubtitle": "Selecciona tus fechas y envíanos tu solicitud",
     "advantages": {
+      "label": "Ventaja exclusiva",
       "title": "Mejor precio garantizado",
       "text": "Reserva directamente con nosotros y consigue el mejor precio: sin comisiones de intermediarios."
     },

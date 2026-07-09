@@ -111,6 +111,7 @@
     "heroTitle": "Book",
     "heroSubtitle": "Select your dates and send us your request",
     "advantages": {
+      "label": "Exclusive perk",
       "title": "Best price guaranteed",
       "text": "Book directly with us and get the best price: no middleman commissions."
     },
