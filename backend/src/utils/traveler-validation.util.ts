@@ -1,9 +1,12 @@
 const DNI_CONTROL_LETTERS = 'TRWAGMYFPDXBNJZSQVHLCKE';
 const DNI_REGEX           = /^(\d{8})([A-Za-z])$/;
 
-// Valida formato + letra de control (detecta typos reales, no solo el patrón)
+// Valida formato + letra de control (detecta typos reales, no solo el patrón).
+// Admite el DNI escrito con espacios o guion (p.ej. "12345678-Z" o "12345678 Z"),
+// formatos habituales en el propio documento pero que antes se rechazaban.
 export function isValidDni(value: string): boolean {
-  const match = DNI_REGEX.exec(value.trim());
+  const normalized = value.trim().replace(/[\s-]/g, '');
+  const match = DNI_REGEX.exec(normalized);
   if (!match) return false;
 
   const [, digits, letter] = match;

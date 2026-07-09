@@ -216,7 +216,8 @@ export class CheckinFormComponent {
   private readonly DNI_REGEX           = /^(\d{8})([A-Za-z])$/;
 
   private isValidDni(value: string): boolean {
-    const match = this.DNI_REGEX.exec(value.trim());
+    const normalized = value.trim().replace(/[\s-]/g, '');
+    const match = this.DNI_REGEX.exec(normalized);
     if (!match) return false;
 
     const [, digits, letter] = match;

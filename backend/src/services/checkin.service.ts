@@ -152,8 +152,12 @@ class CheckinService {
       if (fechaNacimiento > new Date()) {
         throw Object.assign(new Error(`${prefix}: la fecha de nacimiento no puede ser una fecha futura`), { code: 'VALIDATION' });
       }
-      if (traveler.tipoDocumento === 'DNI' && !isValidDni(traveler.numDocumento)) {
-        throw Object.assign(new Error(`${prefix}: el formato del DNI no es válido`), { code: 'VALIDATION' });
+      if (traveler.tipoDocumento === 'DNI') {
+        if (!isValidDni(traveler.numDocumento)) {
+          throw Object.assign(new Error(`${prefix}: el formato del DNI no es válido`), { code: 'VALIDATION' });
+        }
+        // Normalizado sin espacios/guion antes de guardar — el formulario admite "12345678-Z"
+        traveler.numDocumento = traveler.numDocumento.trim().replace(/[\s-]/g, '');
       }
       if (!isValidContact(traveler.contacto)) {
         throw Object.assign(new Error(`${prefix}: el teléfono o correo electrónico no tiene un formato válido`), { code: 'VALIDATION' });
