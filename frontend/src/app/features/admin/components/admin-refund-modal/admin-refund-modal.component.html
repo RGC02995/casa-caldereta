@@ -1,0 +1,53 @@
+<modal [isOpen]="isOpen()" title="Reembolsar reserva" size="sm" (closed)="onCancel()">
+
+  @switch (step()) {
+
+    @case ('amount') {
+      <p class="admin-refund-modal__intro">
+        Reserva de <strong>{{ guestName() }}</strong>. Importe máximo reembolsable: <strong>{{ maxRefundable().toFixed(2) }} €</strong>.
+      </p>
+
+      <div class="admin-refund-modal__field">
+        <label class="admin-refund-modal__label" for="refund-amount">Importe a reembolsar (€)</label>
+        <input
+          id="refund-amount"
+          class="admin-refund-modal__input"
+          type="text"
+          inputmode="decimal"
+          [value]="amountInputValue()"
+          (input)="onAmountInput($event)"
+        />
+      </div>
+
+      @if (validationError()) {
+        <p class="admin-refund-modal__error" role="alert">{{ validationError() }}</p>
+      }
+    }
+
+    @case ('confirm') {
+      <p class="admin-refund-modal__message">
+        ¿Reembolsar <strong>{{ confirmedAmount().toFixed(2) }} €</strong> a <strong>{{ guestName() }}</strong> y cancelar la reserva? Esta acción no se puede deshacer.
+      </p>
+    }
+
+  }
+
+  @switch (step()) {
+
+    @case ('amount') {
+      <div modal-footer class="admin-refund-modal__footer">
+        <button type="button" class="admin-refund-modal__btn admin-refund-modal__btn--cancel" (click)="onCancel()">Cancelar</button>
+        <button type="button" class="admin-refund-modal__btn admin-refund-modal__btn--confirm" (click)="onContinue()">Continuar</button>
+      </div>
+    }
+
+    @case ('confirm') {
+      <div modal-footer class="admin-refund-modal__footer">
+        <button type="button" class="admin-refund-modal__btn admin-refund-modal__btn--cancel" (click)="onBack()">Volver</button>
+        <button type="button" class="admin-refund-modal__btn admin-refund-modal__btn--danger" (click)="onConfirm()">Confirmar reembolso</button>
+      </div>
+    }
+
+  }
+
+</modal>

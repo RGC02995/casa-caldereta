@@ -16,4 +16,12 @@
     (deleteRequested)="onDeleteRequested($event)"
   />
 
+  <confirm-modal
+    [isOpen]="pendingConfirm() !== null"
+    [message]="pendingConfirm()?.message ?? ''"
+    [danger]="true"
+    (confirmed)="onConfirmModalConfirmed()"
+    (cancelled)="onConfirmModalCancelled()"
+  />
+
 </div>

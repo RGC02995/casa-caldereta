@@ -13,6 +13,13 @@
 }
 
 .modal {
+  // El encapsulamiento de vistas de Angular añade un atributo al selector de clase,
+  // dándole más especificidad que la regla nativa `dialog:not([open])` del navegador
+  // (que por defecto oculta el <dialog>) — sin esto, el modal quedaría siempre visible.
+  &:not([open]) {
+    display: none;
+  }
+
   padding: 0;
   border: none;
   border-radius: $border-radius-lg;

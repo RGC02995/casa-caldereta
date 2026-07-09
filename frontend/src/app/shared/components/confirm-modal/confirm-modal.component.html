@@ -1,0 +1,17 @@
+<modal [isOpen]="isOpen()" [title]="title()" size="sm" (closed)="onCancel()">
+  <p class="confirm-modal__message">{{ message() }}</p>
+
+  <div modal-footer class="confirm-modal__footer">
+    <button
+      type="button"
+      class="confirm-modal__btn confirm-modal__btn--cancel"
+      (click)="onCancel()"
+    >{{ cancelLabel() }}</button>
+    <button
+      type="button"
+      class="confirm-modal__btn confirm-modal__btn--confirm"
+      [class.confirm-modal__btn--danger]="danger()"
+      (click)="onConfirm()"
+    >{{ confirmLabel() }}</button>
+  </div>
+</modal>

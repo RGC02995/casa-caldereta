@@ -6,12 +6,18 @@ import { RouteService } from '../../../../core/services/route.service';
 import { IRoute } from '../../../../core/models/route.model';
 import { AdminRouteFormComponent, IRouteFormSubmitEvent } from '../../components/admin-route-form/admin-route-form.component';
 import { AdminRouteListComponent } from '../../components/admin-route-list/admin-route-list.component';
+import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal.component';
 
 type FormMode = 'hidden' | 'create' | 'edit';
 
+interface IPendingConfirm {
+  readonly message: string;
+  readonly action:  () => void;
+}
+
 @Component({
   selector:    'admin-routes',
-  imports:     [AdminRouteFormComponent, AdminRouteListComponent],
+  imports:     [AdminRouteFormComponent, AdminRouteListComponent, ConfirmModalComponent],
   templateUrl: './admin-routes.component.html',
   styleUrl:    './admin-routes.component.scss',
 })
@@ -19,6 +25,8 @@ export class AdminRoutesComponent {
   private readonly routeService = inject(RouteService);
   private readonly destroyRef   = inject(DestroyRef);
   private readonly routeFormRef = viewChild<AdminRouteFormComponent>('routeForm');
+
+  readonly pendingConfirm = signal<IPendingConfirm | null>(null);
 
   readonly loadError    = signal('');
   readonly actionError  = signal('');
@@ -168,8 +176,14 @@ export class AdminRoutesComponent {
 
   onDeleteRoute(route: IRoute): void {
     if (this.processingId()) return;
-    if (!confirm(`¿Eliminar la ruta "${route.title}"? Esta acción no se puede deshacer.`)) return;
 
+    this.pendingConfirm.set({
+      message: `¿Eliminar la ruta "${route.title}"? Esta acción no se puede deshacer.`,
+      action:  () => this.executeDeleteRoute(route),
+    });
+  }
+
+  private executeDeleteRoute(route: IRoute): void {
     this.processingId.set(route.id);
     this.actionError.set('');
 
@@ -185,5 +199,15 @@ export class AdminRoutesComponent {
         this.processingId.set(null);
       },
     });
+  }
+
+  onConfirmModalConfirmed(): void {
+    const action = this.pendingConfirm()?.action;
+    this.pendingConfirm.set(null);
+    action?.();
+  }
+
+  onConfirmModalCancelled(): void {
+    this.pendingConfirm.set(null);
   }
 }

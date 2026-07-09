@@ -9,18 +9,26 @@ import {
   AdminGalleryGridComponent,
   IPhotoDeleteEvent,
 } from '../../components/admin-gallery-grid/admin-gallery-grid.component';
+import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal.component';
 
 type CategoryFilter = 'all' | PhotoCategory;
 
+interface IPendingConfirm {
+  readonly message: string;
+  readonly action:  () => void;
+}
+
 @Component({
   selector:    'admin-gallery',
-  imports:     [AdminGalleryUploadComponent, AdminGalleryGridComponent],
+  imports:     [AdminGalleryUploadComponent, AdminGalleryGridComponent, ConfirmModalComponent],
   templateUrl: './admin-gallery.component.html',
   styleUrl:    './admin-gallery.component.scss',
 })
 export class AdminGalleryComponent {
   private readonly photoService = inject(PhotoService);
   private readonly destroyRef   = inject(DestroyRef);
+
+  readonly pendingConfirm = signal<IPendingConfirm | null>(null);
 
   readonly loadError    = signal('');
   readonly deleteError  = signal('');
@@ -55,8 +63,14 @@ export class AdminGalleryComponent {
 
   onDeleteRequested(event: IPhotoDeleteEvent): void {
     if (this.processingId()) return;
-    if (!confirm(`"${event.photoAlt}"\n\n¿Eliminar esta foto? Se borrará de Cloudinary y no se puede recuperar.`)) return;
 
+    this.pendingConfirm.set({
+      message: `"${event.photoAlt}"\n\n¿Eliminar esta foto? Se borrará de Cloudinary y no se puede recuperar.`,
+      action:  () => this.executeDelete(event),
+    });
+  }
+
+  private executeDelete(event: IPhotoDeleteEvent): void {
     this.processingId.set(event.photoId);
     this.deleteError.set('');
 
@@ -72,5 +86,15 @@ export class AdminGalleryComponent {
         this.processingId.set(null);
       },
     });
+  }
+
+  onConfirmModalConfirmed(): void {
+    const action = this.pendingConfirm()?.action;
+    this.pendingConfirm.set(null);
+    action?.();
+  }
+
+  onConfirmModalCancelled(): void {
+    this.pendingConfirm.set(null);
   }
 }

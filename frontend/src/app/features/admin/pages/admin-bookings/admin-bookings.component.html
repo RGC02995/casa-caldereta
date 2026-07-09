@@ -140,4 +140,20 @@
     </section>
   }
 
+  <confirm-modal
+    [isOpen]="pendingConfirm() !== null"
+    [message]="pendingConfirm()?.message ?? ''"
+    [danger]="pendingConfirm()?.danger ?? false"
+    (confirmed)="onConfirmModalConfirmed()"
+    (cancelled)="onConfirmModalCancelled()"
+  />
+
+  <admin-refund-modal
+    [isOpen]="refundModalOpen()"
+    [guestName]="refundGuestName()"
+    [maxRefundable]="refundMaxAmount()"
+    (confirmed)="onRefundConfirmed($event)"
+    (cancelled)="closeRefundModal()"
+  />
+
 </div>

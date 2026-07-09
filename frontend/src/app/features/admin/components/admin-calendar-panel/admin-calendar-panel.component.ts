@@ -7,10 +7,16 @@ import { BlockedPeriodService } from '../../../../core/services/blocked-period.s
 import { IPricingRule } from '../../../../core/models/pricing-rule.model';
 import { IBlockedPeriod } from '../../../../core/models/blocked-period.model';
 import { AdminPricingBaseComponent } from '../admin-pricing-base/admin-pricing-base.component';
+import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal.component';
+
+interface IPendingConfirm {
+  readonly message: string;
+  readonly action:  () => void;
+}
 
 @Component({
   selector:    'admin-calendar-panel',
-  imports:     [DatePipe, CurrencyPipe, AdminPricingBaseComponent],
+  imports:     [DatePipe, CurrencyPipe, AdminPricingBaseComponent, ConfirmModalComponent],
   templateUrl: './admin-calendar-panel.component.html',
   styleUrl:    './admin-calendar-panel.component.scss',
 })
@@ -18,6 +24,8 @@ export class AdminCalendarPanelComponent {
   private readonly pricingService = inject(PricingRuleService);
   private readonly blockedService = inject(BlockedPeriodService);
   private readonly destroyRef     = inject(DestroyRef);
+
+  readonly pendingConfirm = signal<IPendingConfirm | null>(null);
 
   readonly pricingRules   = input<IPricingRule[]>([]);
   readonly blockedPeriods = input<IBlockedPeriod[]>([]);
@@ -112,8 +120,14 @@ export class AdminCalendarPanelComponent {
 
   deleteRule(rule: IPricingRule): void {
     if (this.processingId()) return;
-    if (!confirm(`${rule.label}\n\n¿Eliminar esta regla de precio? Esta acción no se puede deshacer.`)) return;
 
+    this.pendingConfirm.set({
+      message: `${rule.label}\n\n¿Eliminar esta regla de precio? Esta acción no se puede deshacer.`,
+      action:  () => this.executeDeleteRule(rule),
+    });
+  }
+
+  private executeDeleteRule(rule: IPricingRule): void {
     this.processingId.set(rule.id);
     this.pricingError.set('');
 
@@ -161,8 +175,14 @@ export class AdminCalendarPanelComponent {
     if (this.processingId()) return;
     const startFormatted = period.startDate.slice(0, 10).split('-').reverse().join('/');
     const endFormatted   = period.endDate.slice(0, 10).split('-').reverse().join('/');
-    if (!confirm(`${startFormatted} – ${endFormatted}\n\n¿Eliminar este bloqueo? Las fechas volverán a estar disponibles.`)) return;
 
+    this.pendingConfirm.set({
+      message: `${startFormatted} – ${endFormatted}\n\n¿Eliminar este bloqueo? Las fechas volverán a estar disponibles.`,
+      action:  () => this.executeDeleteBlockedPeriod(period),
+    });
+  }
+
+  private executeDeleteBlockedPeriod(period: IBlockedPeriod): void {
     this.processingId.set(period.id);
     this.blockedError.set('');
 
@@ -178,6 +198,16 @@ export class AdminCalendarPanelComponent {
         this.processingId.set(null);
       },
     });
+  }
+
+  onConfirmModalConfirmed(): void {
+    const action = this.pendingConfirm()?.action;
+    this.pendingConfirm.set(null);
+    action?.();
+  }
+
+  onConfirmModalCancelled(): void {
+    this.pendingConfirm.set(null);
   }
 
   private resetPriceForm(): void {

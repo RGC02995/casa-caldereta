@@ -14,8 +14,16 @@ import {
   IBookingRefundEvent,
   IBookingCheckInEvent,
 } from '../../components/admin-booking-list/admin-booking-list.component';
+import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal.component';
+import { AdminRefundModalComponent, IRefundConfirmedEvent } from '../../components/admin-refund-modal/admin-refund-modal.component';
 
 type StatusFilter = 'all' | BookingStatus;
+
+interface IPendingConfirm {
+  readonly message: string;
+  readonly danger:  boolean;
+  readonly action:  () => void;
+}
 
 const STATUS_CONFIRMATIONS: Partial<Record<BookingStatus, string>> = {
   confirmed: '¿Confirmar esta reserva?',
@@ -25,7 +33,7 @@ const STATUS_CONFIRMATIONS: Partial<Record<BookingStatus, string>> = {
 
 @Component({
   selector:    'admin-bookings',
-  imports:     [AdminBookingListComponent, DatePipe],
+  imports:     [AdminBookingListComponent, DatePipe, ConfirmModalComponent, AdminRefundModalComponent],
   templateUrl: './admin-bookings.component.html',
   styleUrl:    './admin-bookings.component.scss',
 })
@@ -39,6 +47,15 @@ export class AdminBookingsComponent {
   readonly activeFilter = signal<StatusFilter>('all');
   readonly processingId = signal<string | null>(null);
   readonly legendOpen   = signal(false);
+
+  // Modal de confirmación genérico
+  readonly pendingConfirm = signal<IPendingConfirm | null>(null);
+
+  // Modal de reembolso
+  readonly refundModalOpen = signal(false);
+  readonly refundBookingId = signal<string | null>(null);
+  readonly refundGuestName = signal('');
+  readonly refundMaxAmount = signal(0);
 
   // Panel de viajeros
   readonly travelersBookingId = signal<string | null>(null);
@@ -73,8 +90,19 @@ export class AdminBookingsComponent {
     if (this.processingId()) return;
 
     const confirmMessage = STATUS_CONFIRMATIONS[event.newStatus];
-    if (confirmMessage && !confirm(`${event.guestName}\n\n${confirmMessage}`)) return;
+    if (confirmMessage) {
+      this.pendingConfirm.set({
+        message: `${event.guestName}\n\n${confirmMessage}`,
+        danger:  event.newStatus === 'cancelled',
+        action:  () => this.executeStatusChange(event),
+      });
+      return;
+    }
 
+    this.executeStatusChange(event);
+  }
+
+  private executeStatusChange(event: IBookingStatusChangeEvent): void {
     this.processingId.set(event.bookingId);
     this.actionError.set('');
 
@@ -100,24 +128,21 @@ export class AdminBookingsComponent {
 
     const maxRefundable = booking.depositAmount + (booking.remainingPaidAt ? booking.remainingAmount : 0);
 
-    const input = prompt(
-      `${event.guestName}\n\nImporte a reembolsar (máx. ${maxRefundable.toFixed(2)} €):`,
-      maxRefundable.toFixed(2),
-    );
-    if (input === null) return;
+    this.refundBookingId.set(event.bookingId);
+    this.refundGuestName.set(event.guestName);
+    this.refundMaxAmount.set(maxRefundable);
+    this.refundModalOpen.set(true);
+  }
 
-    const amount = Number(input.trim().replace(',', '.'));
-    if (!Number.isFinite(amount) || amount <= 0 || amount > maxRefundable) {
-      alert(`Importe no válido. Debe estar entre 0,01 € y ${maxRefundable.toFixed(2)} €.`);
-      return;
-    }
+  onRefundConfirmed(event: IRefundConfirmedEvent): void {
+    const bookingId = this.refundBookingId();
+    this.refundModalOpen.set(false);
+    if (!bookingId) return;
 
-    if (!confirm(`${event.guestName}\n\n¿Reembolsar ${amount.toFixed(2)} € y cancelar la reserva? Esta acción no se puede deshacer.`)) return;
-
-    this.processingId.set(event.bookingId);
+    this.processingId.set(bookingId);
     this.actionError.set('');
 
-    this.bookingService.refundBooking(event.bookingId, amount)
+    this.bookingService.refundBooking(bookingId, event.amount)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -131,10 +156,21 @@ export class AdminBookingsComponent {
       });
   }
 
+  closeRefundModal(): void {
+    this.refundModalOpen.set(false);
+  }
+
   onDeleteRequested(event: IBookingDeleteEvent): void {
     if (this.processingId()) return;
-    if (!confirm(`${event.guestName}\n\n¿Eliminar esta reserva? Esta acción no se puede deshacer.`)) return;
 
+    this.pendingConfirm.set({
+      message: `${event.guestName}\n\n¿Eliminar esta reserva? Esta acción no se puede deshacer.`,
+      danger:  true,
+      action:  () => this.executeDelete(event),
+    });
+  }
+
+  private executeDelete(event: IBookingDeleteEvent): void {
     this.processingId.set(event.bookingId);
     this.actionError.set('');
 
@@ -156,8 +192,15 @@ export class AdminBookingsComponent {
 
   onSendFormRequested(event: IBookingCheckInEvent): void {
     if (this.processingId()) return;
-    if (!confirm(`${event.guestName}\n\n¿Enviar el email de pre-llegada con el enlace al formulario de registro de viajeros?`)) return;
 
+    this.pendingConfirm.set({
+      message: `${event.guestName}\n\n¿Enviar el email de pre-llegada con el enlace al formulario de registro de viajeros?`,
+      danger:  false,
+      action:  () => this.executeSendForm(event),
+    });
+  }
+
+  private executeSendForm(event: IBookingCheckInEvent): void {
     this.processingId.set(event.bookingId);
     this.actionError.set('');
 
@@ -177,8 +220,15 @@ export class AdminBookingsComponent {
 
   onCheckInRequested(event: IBookingCheckInEvent): void {
     if (this.processingId()) return;
-    if (!confirm(`${event.guestName}\n\n¿Registrar la entrada? Se registrará con la hora actual.`)) return;
 
+    this.pendingConfirm.set({
+      message: `${event.guestName}\n\n¿Registrar la entrada? Se registrará con la hora actual.`,
+      danger:  false,
+      action:  () => this.executeCheckIn(event),
+    });
+  }
+
+  private executeCheckIn(event: IBookingCheckInEvent): void {
     this.processingId.set(event.bookingId);
     this.actionError.set('');
 
@@ -198,8 +248,15 @@ export class AdminBookingsComponent {
 
   onCheckOutRequested(event: IBookingCheckInEvent): void {
     if (this.processingId()) return;
-    if (!confirm(`${event.guestName}\n\n¿Registrar la salida? La reserva quedará marcada como completada.`)) return;
 
+    this.pendingConfirm.set({
+      message: `${event.guestName}\n\n¿Registrar la salida? La reserva quedará marcada como completada.`,
+      danger:  false,
+      action:  () => this.executeCheckOut(event),
+    });
+  }
+
+  private executeCheckOut(event: IBookingCheckInEvent): void {
     this.processingId.set(event.bookingId);
     this.actionError.set('');
 
@@ -215,6 +272,16 @@ export class AdminBookingsComponent {
           this.processingId.set(null);
         },
       });
+  }
+
+  onConfirmModalConfirmed(): void {
+    const action = this.pendingConfirm()?.action;
+    this.pendingConfirm.set(null);
+    action?.();
+  }
+
+  onConfirmModalCancelled(): void {
+    this.pendingConfirm.set(null);
   }
 
   // ── Panel de viajeros ─────────────────────────────────────────────────────────

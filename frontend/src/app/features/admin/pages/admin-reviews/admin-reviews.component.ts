@@ -5,18 +5,26 @@ import { BehaviorSubject, switchMap, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { ReviewService } from '../../../../core/services/review.service';
 import { IReview } from '../../../../core/models/review.model';
+import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal.component';
 
 type ReviewFilter = 'all' | 'pending' | 'approved';
 
+interface IPendingConfirm {
+  readonly message: string;
+  readonly action:  () => void;
+}
+
 @Component({
   selector: 'admin-reviews',
-  imports: [DatePipe],
+  imports: [DatePipe, ConfirmModalComponent],
   templateUrl: './admin-reviews.component.html',
   styleUrl: './admin-reviews.component.scss',
 })
 export class AdminReviewsComponent {
   private readonly reviewService = inject(ReviewService);
   private readonly destroyRef    = inject(DestroyRef);
+
+  readonly pendingConfirm = signal<IPendingConfirm | null>(null);
 
   readonly loadError    = signal('');
   readonly actionError  = signal('');
@@ -74,8 +82,14 @@ export class AdminReviewsComponent {
 
   deleteReview(reviewId: string, author: string): void {
     if (this.processingId()) return;
-    if (!confirm(`${author}\n\n¿Eliminar esta reseña? Esta acción no se puede deshacer.`)) return;
 
+    this.pendingConfirm.set({
+      message: `${author}\n\n¿Eliminar esta reseña? Esta acción no se puede deshacer.`,
+      action:  () => this.executeDelete(reviewId),
+    });
+  }
+
+  private executeDelete(reviewId: string): void {
     this.processingId.set(reviewId);
     this.actionError.set('');
 
@@ -91,5 +105,15 @@ export class AdminReviewsComponent {
         this.processingId.set(null);
       },
     });
+  }
+
+  onConfirmModalConfirmed(): void {
+    const action = this.pendingConfirm()?.action;
+    this.pendingConfirm.set(null);
+    action?.();
+  }
+
+  onConfirmModalCancelled(): void {
+    this.pendingConfirm.set(null);
   }
 }
