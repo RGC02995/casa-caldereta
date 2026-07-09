@@ -1,10 +1,11 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { SeoService } from '../../../../core/services/seo.service';
+import { PrivacyContentComponent } from '../../components/privacy-content/privacy-content.component';
 
 @Component({
   selector: 'privacy-page',
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, PrivacyContentComponent],
   templateUrl: './privacy-page.component.html',
   styleUrl: './privacy-page.component.scss',
 })

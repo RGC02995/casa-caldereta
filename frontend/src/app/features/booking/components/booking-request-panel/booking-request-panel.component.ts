@@ -1,12 +1,14 @@
 import { Component, computed, inject, input, output, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { format } from 'date-fns';
 import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 import { DateFormatPipe } from '../../../../shared/pipes/date-format.pipe';
 import { BookingService } from '../../../../core/services/booking.service';
 import { IPriceEstimate } from '../../../../core/models/booking.model';
+import { ModalComponent } from '../../../../shared/components/modal/modal.component';
+import { PrivacyContentComponent } from '../../../legal/components/privacy-content/privacy-content.component';
+import { TermsContentComponent } from '../../../legal/components/terms-content/terms-content.component';
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
 const PHONE_REGEX = /^\+?[\d\s\-]{6,20}$/;
@@ -17,7 +19,7 @@ const EMPTY_ESTIMATE: IPriceEstimate = {
 
 @Component({
   selector: 'booking-request-panel',
-  imports: [RouterLink, TranslatePipe, DateFormatPipe],
+  imports: [TranslatePipe, DateFormatPipe, ModalComponent, PrivacyContentComponent, TermsContentComponent],
   templateUrl: './booking-request-panel.component.html',
   styleUrl: './booking-request-panel.component.scss',
 })
@@ -36,6 +38,9 @@ export class BookingRequestPanelComponent {
 
   readonly isSubmitting = signal(false);
   readonly submitError  = signal('');
+
+  readonly isPrivacyModalOpen = signal(false);
+  readonly isTermsModalOpen   = signal(false);
 
   readonly nameValue           = signal('');
   readonly emailValue          = signal('');

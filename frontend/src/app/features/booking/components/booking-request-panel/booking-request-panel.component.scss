@@ -229,6 +229,15 @@
     text-decoration: underline;
 
     &:hover { color: $color-secondary-dark; }
+
+    &--btn {
+      @include button-reset;
+      display: inline;
+      cursor: pointer;
+      font: inherit;
+
+      &:focus-visible { @include focus-visible; }
+    }
   }
 
   &__submit {

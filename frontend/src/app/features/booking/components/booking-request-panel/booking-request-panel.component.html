@@ -144,9 +144,13 @@
         />
         <span>
           {{ 'booking.form.privacyText' | translate }}
-          <a routerLink="/legal/privacidad" class="booking-form__link">
+          <button
+            type="button"
+            class="booking-form__link booking-form__link--btn"
+            (click)="isPrivacyModalOpen.set(true)"
+          >
             {{ 'booking.form.privacyLink' | translate }}
-          </a>
+          </button>
         </span>
       </label>
       @if (privacyError()) {
@@ -164,7 +168,11 @@
         />
         <span>
           He leído y acepto la
-          <a routerLink="/legal/terminos" class="booking-form__link">política de cancelación</a>:
+          <button
+            type="button"
+            class="booking-form__link booking-form__link--btn"
+            (click)="isTermsModalOpen.set(true)"
+          >política de cancelación</button>:
           reembolso completo si cancelo con más de 7 días de antelación; sin reembolso si cancelo con 7 días o menos.
         </span>
       </label>
@@ -199,5 +207,23 @@
     }
 
   </form>
+
+  <modal
+    [isOpen]="isPrivacyModalOpen()"
+    title="Política de Privacidad"
+    size="lg"
+    (closed)="isPrivacyModalOpen.set(false)"
+  >
+    <privacy-content />
+  </modal>
+
+  <modal
+    [isOpen]="isTermsModalOpen()"
+    title="Política de cancelación"
+    size="lg"
+    (closed)="isTermsModalOpen.set(false)"
+  >
+    <terms-content />
+  </modal>
 
 </div>

@@ -1,10 +1,11 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { SeoService } from '../../../../core/services/seo.service';
+import { TermsContentComponent } from '../../components/terms-content/terms-content.component';
 
 @Component({
   selector: 'terms-page',
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, TermsContentComponent],
   templateUrl: './terms-page.component.html',
   styleUrl: './terms-page.component.scss',
 })
