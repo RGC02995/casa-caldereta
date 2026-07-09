@@ -237,8 +237,8 @@ export class AdminBookingsComponent {
       lines.push(`Apellido 2: ${traveler.apellido2}`);
       lines.push(`Nombre: ${traveler.nombre}`);
       lines.push(`Fecha nacimiento: ${new Date(traveler.fechaNacimiento).toLocaleDateString('es-ES')}`);
-      lines.push(`Sexo: ${traveler.sexo}`);
-      lines.push(`Parentesco: ${traveler.parentesco}`);
+      lines.push(`Sexo: ${traveler.sexo ?? 'No indicado'}`);
+      lines.push(`Parentesco: ${traveler.parentesco ?? 'No indicado'}`);
       lines.push(`Tipo documento: ${traveler.tipoDocumento}`);
       lines.push(`Nº documento: ${traveler.numDocumento}`);
       lines.push(`Nº soporte: ${traveler.numSoporte}`);

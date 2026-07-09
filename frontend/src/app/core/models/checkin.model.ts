@@ -35,9 +35,9 @@ export interface ITravelerDocument {
   readonly apellido1:           string;
   readonly apellido2:           string;
   readonly nombre:              string;
-  readonly sexo:                Sexo;
+  readonly sexo?:               Sexo;
   readonly fechaNacimiento:     string;
-  readonly parentesco:          string;
+  readonly parentesco?:         string;
   readonly pais:                string;
   readonly paisResidencia:      string;
   readonly ciudadResidencia:    string;
@@ -65,9 +65,9 @@ export interface ITravelerInput {
   apellido1:           string;
   apellido2:           string;
   nombre:              string;
-  sexo:                Sexo;
+  sexo?:               Sexo | undefined;
   fechaNacimiento:     string;
-  parentesco:          string;
+  parentesco?:         string | undefined;
   pais:                string;
   paisResidencia:      string;
   ciudadResidencia:    string;

@@ -32,9 +32,9 @@ interface ICheckinTraveler {
   readonly apellido1:           string;
   readonly apellido2:           string;
   readonly nombre:              string;
-  readonly sexo:                string;
+  readonly sexo?:               string;
   readonly fechaNacimiento:     string;
-  readonly parentesco:          string;
+  readonly parentesco?:         string;
   readonly pais:                string;
   readonly paisResidencia:      string;
   readonly ciudadResidencia:    string;
@@ -436,10 +436,10 @@ function ownerCheckinFormSubmittedHtml(booking: IBookingDocument, travelers: ICh
     </tr>
     <tr style="background:${bg};">
       ${tdLabel('N&#186; soporte')}${td(escapeHtml(t.numSoporte))}
-      ${tdLabel('Sexo')}${td(escapeHtml(t.sexo === 'H' ? 'Hombre' : 'Mujer'))}
+      ${tdLabel('Sexo')}${td(escapeHtml(t.sexo === 'H' ? 'Hombre' : t.sexo === 'M' ? 'Mujer' : 'No indicado'))}
     </tr>
     <tr style="background:${bg};">
-      ${tdLabel('Parentesco')}${td(escapeHtml(t.parentesco))}
+      ${tdLabel('Parentesco')}${td(escapeHtml(t.parentesco ?? 'No indicado'))}
       ${tdLabel('Nacionalidad')}${td(escapeHtml(t.pais))}
     </tr>
     <tr style="background:${bg};">

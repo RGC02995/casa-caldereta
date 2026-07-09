@@ -3,11 +3,12 @@ import { BookingModel, IBookingDocument } from '../models/booking.model';
 import { CheckinSettingsModel, ICheckinSettingsDocument } from '../models/checkin-settings.model';
 import { TravelerDocumentModel, ITravelerDocumentDoc } from '../models/traveler-document.model';
 import { withId } from '../utils/mongoose.util';
+import { isValidDni, isValidContact } from '../utils/traveler-validation.util';
 import { emailService } from './email.service';
 import { bookingService } from './booking.service';
 import { env } from '../config/environment';
 
-const DAYS_BEFORE_CHECKIN         = 3;
+const DAYS_BEFORE_CHECKIN         = 2;
 const DAYS_BEFORE_REMAINING_PAYMENT = 7;
 
 export interface ICheckinFormInfo {
@@ -28,9 +29,9 @@ export interface ITravelerInput {
   apellido1:           string;
   apellido2:           string;
   nombre:              string;
-  sexo:                string;
+  sexo?:               string;
   fechaNacimiento:     string;
-  parentesco:          string;
+  parentesco?:         string;
   pais:                string;
   paisResidencia:      string;
   ciudadResidencia:    string;
@@ -140,6 +141,25 @@ class CheckinService {
       throw Object.assign(new Error('El número de viajeros supera los declarados en la reserva'), { code: 'VALIDATION' });
     }
 
+    for (let i = 0; i < travelers.length; i++) {
+      const traveler        = travelers[i]!;
+      const prefix          = `Viajero ${i + 1}`;
+      const fechaNacimiento = new Date(traveler.fechaNacimiento);
+
+      if (Number.isNaN(fechaNacimiento.getTime())) {
+        throw Object.assign(new Error(`${prefix}: la fecha de nacimiento no es válida`), { code: 'VALIDATION' });
+      }
+      if (fechaNacimiento > new Date()) {
+        throw Object.assign(new Error(`${prefix}: la fecha de nacimiento no puede ser una fecha futura`), { code: 'VALIDATION' });
+      }
+      if (traveler.tipoDocumento === 'DNI' && !isValidDni(traveler.numDocumento)) {
+        throw Object.assign(new Error(`${prefix}: el formato del DNI no es válido`), { code: 'VALIDATION' });
+      }
+      if (!isValidContact(traveler.contacto)) {
+        throw Object.assign(new Error(`${prefix}: el teléfono o correo electrónico no tiene un formato válido`), { code: 'VALIDATION' });
+      }
+    }
+
     const travelerDocs = travelers.map(travelerInput => ({
       bookingId:           booking._id,
       tipoDocumento:       travelerInput.tipoDocumento,
@@ -148,9 +168,9 @@ class CheckinService {
       apellido1:           travelerInput.apellido1,
       apellido2:           travelerInput.apellido2,
       nombre:              travelerInput.nombre,
-      sexo:                travelerInput.sexo,
+      sexo:                travelerInput.sexo?.trim() || undefined,
       fechaNacimiento:     new Date(travelerInput.fechaNacimiento),
-      parentesco:          travelerInput.parentesco,
+      parentesco:          travelerInput.parentesco?.trim() || undefined,
       pais:                travelerInput.pais,
       paisResidencia:      travelerInput.paisResidencia,
       ciudadResidencia:    travelerInput.ciudadResidencia,
@@ -291,7 +311,7 @@ class CheckinService {
       }
     }
 
-    // Formulario viajeros: check-in dentro de 3 días, aún no enviado
+    // Formulario viajeros: check-in dentro de 2 días, aún no enviado
     if (daysUntilCheckin <= DAYS_BEFORE_CHECKIN && !booking.preArrivalEmailSentAt) {
       try {
         await this.generateAndSendFormToken(String(booking._id));
@@ -343,7 +363,7 @@ class CheckinService {
   // La query busca TODAS las reservas confirmadas con check-in dentro de los
   // próximos 7 días (no solo exactamente en 7 días). Esto cubre reservas
   // de última hora confirmadas después de que el cron normal ya pasó.
-  // Si el check-in está además a ≤ 3 días y el formulario no se envió,
+  // Si el check-in está además a ≤ 2 días y el formulario no se envió,
   // lo envía también en el mismo ciclo.
 
   async sendScheduledRemainingPaymentEmails(): Promise<void> {
@@ -370,7 +390,7 @@ class CheckinService {
 
         console.info(`[payment-cron] Email pago restante enviado a ${booking.guestEmail}`);
 
-        // Si el check-in está a ≤ 3 días y el formulario de viajeros no se ha enviado,
+        // Si el check-in está a ≤ 2 días y el formulario de viajeros no se ha enviado,
         // enviarlo ahora (reserva last-minute, el cron de pre-llegada no lo alcanzará).
         const msPerDay         = 1000 * 60 * 60 * 24;
         const daysUntilCheckin = Math.floor((new Date(booking.checkIn).getTime() - now.getTime()) / msPerDay);

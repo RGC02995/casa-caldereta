@@ -11,9 +11,9 @@ export interface ITravelerDocumentDoc extends Document {
   apellido1:            string;
   apellido2:            string;
   nombre:               string;
-  sexo:                 Sexo;
+  sexo?:                Sexo;
   fechaNacimiento:      Date;
-  parentesco:           string;
+  parentesco?:          string;
   pais:                 string;       // nacionalidad
   paisResidencia:       string;
   ciudadResidencia:     string;
@@ -56,12 +56,18 @@ const travelerDocumentSchema = new Schema<ITravelerDocumentDoc>(
     apellido2: { type: String, required: true, trim: true, maxlength: 80 },
     nombre:    { type: String, required: true, trim: true, maxlength: 80 },
     sexo: {
-      type:     String,
-      enum:     ['H', 'M'] as Sexo[],
-      required: true,
+      type: String,
+      enum: ['H', 'M'] as Sexo[],
     },
-    fechaNacimiento:     { type: Date,   required: true },
-    parentesco:          { type: String, required: true, trim: true, maxlength: 60 },
+    fechaNacimiento: {
+      type:     Date,
+      required: true,
+      validate: {
+        validator: (value: Date) => value <= new Date(),
+        message:   'La fecha de nacimiento no puede ser una fecha futura.',
+      },
+    },
+    parentesco:          { type: String, trim: true, maxlength: 60 },
     pais:                { type: String, required: true, trim: true, maxlength: 60 },
     paisResidencia:      { type: String, required: true, trim: true, maxlength: 60 },
     ciudadResidencia:    { type: String, required: true, trim: true, maxlength: 100 },

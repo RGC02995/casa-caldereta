@@ -166,13 +166,14 @@
                     [id]="'fechaNacimiento-' + i"
                     type="date"
                     [value]="traveler.fechaNacimiento"
+                    [max]="today"
                     (change)="updateField(i, 'fechaNacimiento', $event)"
                   />
                 </div>
 
                 <div class="checkin-form__field">
                   <label class="checkin-form__label" [for]="'sexo-' + i">
-                    Sexo <span class="checkin-form__required" aria-hidden="true">*</span>
+                    Sexo (opcional)
                   </label>
                   <select
                     class="checkin-form__select"
@@ -188,7 +189,7 @@
 
                 <div class="checkin-form__field">
                   <label class="checkin-form__label" [for]="'parentesco-' + i">
-                    Parentesco <span class="checkin-form__required" aria-hidden="true">*</span>
+                    Parentesco (opcional)
                   </label>
                   <select
                     class="checkin-form__select"

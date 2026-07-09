@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { CheckinService } from '../../../core/services/checkin.service';
 import { ICheckinFormInfo, ITravelerInput, TipoDocumento, Sexo } from '../../../core/models/checkin.model';
+import { EMAIL_REGEX } from '../../../shared/validators/email.validator';
 
 type FormState = 'loading' | 'invalid' | 'already-submitted' | 'form' | 'success';
 
@@ -71,6 +72,8 @@ export class CheckinFormComponent {
     'Otro familiar',
     'Acompañante',
   ];
+
+  readonly today: string = new Date().toISOString().split('T')[0]!;
 
   readonly state       = signal<FormState>('loading');
   readonly formInfo    = signal<ICheckinFormInfo | null>(null);
@@ -145,9 +148,9 @@ export class CheckinFormComponent {
       apellido1:           travelerData.apellido1.trim(),
       apellido2:           travelerData.apellido2.trim(),
       nombre:              travelerData.nombre.trim(),
-      sexo:                travelerData.sexo as Sexo,
+      sexo:                travelerData.sexo ? (travelerData.sexo as Sexo) : undefined,
       fechaNacimiento:     travelerData.fechaNacimiento,
-      parentesco:          travelerData.parentesco.trim(),
+      parentesco:          travelerData.parentesco.trim() || undefined,
       pais:                travelerData.pais.trim(),
       paisResidencia:      travelerData.paisResidencia.trim(),
       ciudadResidencia:    travelerData.ciudadResidencia.trim(),
@@ -187,19 +190,51 @@ export class CheckinFormComponent {
       if (!traveler.apellido2.trim())           return `${prefix}: el campo "Segundo apellido" es obligatorio.`;
       if (!traveler.nombre.trim())              return `${prefix}: el campo "Nombre" es obligatorio.`;
       if (!traveler.fechaNacimiento)            return `${prefix}: el campo "Fecha de nacimiento" es obligatorio.`;
-      if (!traveler.parentesco.trim())          return `${prefix}: el campo "Parentesco" es obligatorio.`;
+      if (new Date(traveler.fechaNacimiento) > new Date()) {
+        return `${prefix}: la fecha de nacimiento no puede ser una fecha futura.`;
+      }
       if (!traveler.tipoDocumento)              return `${prefix}: el campo "Tipo de documento" es obligatorio.`;
       if (!traveler.numDocumento.trim())        return `${prefix}: el campo "Nº de documento" es obligatorio.`;
+      if (traveler.tipoDocumento === 'DNI' && !this.isValidDni(traveler.numDocumento)) {
+        return `${prefix}: el formato del DNI no es válido.`;
+      }
       if (!traveler.numSoporte.trim())          return `${prefix}: el campo "Nº de soporte" es obligatorio.`;
-      if (!traveler.sexo)                       return `${prefix}: el campo "Sexo" es obligatorio.`;
       if (!traveler.pais.trim())                return `${prefix}: el campo "Nacionalidad" es obligatorio.`;
       if (!traveler.paisResidencia.trim())      return `${prefix}: el campo "País de residencia" es obligatorio.`;
       if (!traveler.ciudadResidencia.trim())    return `${prefix}: el campo "Ciudad de residencia" es obligatorio.`;
       if (!traveler.direccionResidencia.trim()) return `${prefix}: el campo "Dirección de residencia" es obligatorio.`;
       if (!traveler.codigoPostal.trim())        return `${prefix}: el campo "Código postal" es obligatorio.`;
       if (!traveler.contacto.trim())            return `${prefix}: el campo "Teléfono o correo" es obligatorio.`;
+      if (!this.isValidContact(traveler.contacto)) {
+        return `${prefix}: el teléfono o correo electrónico no tiene un formato válido.`;
+      }
     }
     return null;
+  }
+
+  private readonly DNI_CONTROL_LETTERS = 'TRWAGMYFPDXBNJZSQVHLCKE';
+  private readonly DNI_REGEX           = /^(\d{8})([A-Za-z])$/;
+
+  private isValidDni(value: string): boolean {
+    const match = this.DNI_REGEX.exec(value.trim());
+    if (!match) return false;
+
+    const [, digits, letter] = match;
+    const expectedLetter = this.DNI_CONTROL_LETTERS[Number(digits) % 23];
+    return letter!.toUpperCase() === expectedLetter;
+  }
+
+  private readonly PHONE_REGEX = /^\+?\d{9,15}$/;
+
+  private isValidPhone(value: string): boolean {
+    const cleaned = value.replace(/[\s\-()]/g, '');
+    return this.PHONE_REGEX.test(cleaned);
+  }
+
+  private isValidContact(value: string): boolean {
+    const trimmed = value.trim();
+    if (trimmed.includes('@')) return EMAIL_REGEX.test(trimmed);
+    return this.isValidPhone(trimmed);
   }
 
   private formatDate(dateStr: string): string {
