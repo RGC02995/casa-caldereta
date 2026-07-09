@@ -110,6 +110,10 @@
     "heroLabel": "Casa Caldereta",
     "heroTitle": "Book",
     "heroSubtitle": "Select your dates and send us your request",
+    "advantages": {
+      "title": "Best price guaranteed",
+      "text": "Book directly with us and get the best price: no middleman commissions."
+    },
     "cal": {
       "prevMonth": "Previous month",
       "nextMonth": "Next month",

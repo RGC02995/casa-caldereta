@@ -11,6 +11,7 @@ import { IBlockedPeriodAvailability } from '../../../../core/models/blocked-peri
 import { IPricingSettings } from '../../../../core/models/pricing-settings.model';
 import { SeoService } from '../../../../core/services/seo.service';
 import { BookingHeroComponent } from '../../components/booking-hero/booking-hero.component';
+import { BookingAdvantagesComponent } from '../../components/booking-advantages/booking-advantages.component';
 import { BookingCalendarComponent } from '../../components/booking-calendar/booking-calendar.component';
 import { BookingRequestPanelComponent } from '../../components/booking-request-panel/booking-request-panel.component';
 
@@ -20,7 +21,7 @@ const EMPTY_ESTIMATE: IPriceEstimate = {
 
 @Component({
   selector:    'booking-page',
-  imports:     [BookingHeroComponent, BookingCalendarComponent, BookingRequestPanelComponent],
+  imports:     [BookingHeroComponent, BookingAdvantagesComponent, BookingCalendarComponent, BookingRequestPanelComponent],
   templateUrl: './booking-page.component.html',
   styleUrl:    './booking-page.component.scss',
 })
