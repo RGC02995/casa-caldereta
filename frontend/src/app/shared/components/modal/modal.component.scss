@@ -20,6 +20,13 @@
     display: none;
   }
 
+  // El reset global (`* { margin: 0; }`) anula el `margin: auto` con el que el
+  // navegador centra de forma nativa un <dialog> abierto con showModal() —
+  // hay que reponer el centrado explícitamente.
+  position: fixed;
+  inset: 0;
+  margin: auto;
+
   padding: 0;
   border: none;
   border-radius: $border-radius-lg;
