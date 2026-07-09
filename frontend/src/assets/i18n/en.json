@@ -185,7 +185,8 @@
     "navTitle": "Navigation",
     "legalTitle": "Legal",
     "contactTitle": "Contact",
-    "location": "Aielo de Rugat, Valencia",
+    "addressLine": "Carrer de Baix, 3, 46842 Aielo de Rugat (Valencia, Spain)",
+    "phone": "+34 677 87 62 19",
     "rightsReserved": "All rights reserved.",
     "licenseLabel": "Tourist licence"
   },

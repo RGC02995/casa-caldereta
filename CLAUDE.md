@@ -430,6 +430,30 @@ Objetivo: comprobar funcionamiento y seguridad del calendario (disponibilidad, c
 - [x] **Pago de prueba real confirmado** (2026-07-07) — Stripe test mode, tarjeta 4242, redirigió correctamente a `https://casa-caldereta.com/reservar/pago-exitoso` (no al Vercel antiguo). `FRONTEND_URL` funcionando en producción.
 3. ~~Fichero `admin-gallery-grid.component.html` con sintaxis Angular inválida~~ ✅ arreglado (2026-07-06): `let $index = $index` redeclaraba la variable implícita del `@for` (Angular ya la expone sin declararla) — quitada la redeclaración, `ng build` y `ng test` (68/68) en verde
 
+### Check-in + separar reembolso/cancelar + modales propios en el admin ✅ COMPLETADO (2026-07-09)
+
+- [x] **Check-in — ajustes al formulario de viajeros** (commit `63cce91`):
+  - Formulario pre-llegada pasa de enviarse 3 días antes del check-in a **2 días antes** (`DAYS_BEFORE_CHECKIN` en `checkin.service.ts`, único punto de cambio — afecta cron 09:00, webhook post-Stripe y caso last-minute)
+  - **Sexo** y **parentesco** dejan de ser obligatorios — normalización `''→undefined` en backend para no romper el enum de `sexo` en Mongoose; email al propietario y "Copiar para SES.HOSPEDERÍA" ya no muestran "undefined" si faltan
+  - **Fecha de nacimiento** no puede ser futura — validado en modelo (red de seguridad), service (mensaje claro 400) y frontend (`validateTravelers` + atributo `max` nativo)
+  - **Validación de DNI** (formato + checksum de letra real, solo si `tipoDocumento === 'DNI'`) y de **teléfono/email** en el campo `contacto` — nuevo `backend/src/utils/traveler-validation.util.ts`, misma lógica replicada en el frontend para feedback inmediato
+
+- [x] **Separar "Reembolsar y cancelar" en dos acciones** (commit `632d831`):
+  - **"Reembolsar"** — el admin introduce el importe (parcial o total, prellenado con el máximo), reparte el reembolso entre el Payment Intent del depósito y el del resto si aplica; si falla a medias, error `REFUND_FAILED` (502) explícito en vez de un mensaje críptico de Stripe
+  - **"Cancelar"** (nuevo botón) — cancela sin tocar Stripe, reutilizando `updateStatus(id, 'cancelled')` ya existente; ahora disponible también para reservas manuales (antes solo tenían "Eliminar")
+  - Email al huésped distingue reembolso total vs. parcial con el importe real
+
+- [x] **Sustituir `confirm()`/`prompt()`/`alert()` nativos por modales propios en todo el admin** (commit `1c614d1`):
+  - Nuevo `ConfirmModalComponent` (`shared/components/confirm-modal/`) — modal de confirmación genérico (mensaje + Confirmar/Cancelar), primer consumidor real de `ModalComponent` (existía desde Fase 2 pero no lo usaba nadie)
+  - Nuevo `AdminRefundModalComponent` (`features/admin/components/admin-refund-modal/`) — reembolso en 2 pasos (importe → confirmación con el importe exacto)
+  - Aplicado en: reservas (6 acciones), calendario (2), rutas, galería, reseñas
+  - **Bugs de `ModalComponent` encontrados y corregidos al ponerlo en uso por primera vez** (commits `6b7dd1f` + `0544fca`):
+    - `display` siempre visible — el encapsulamiento de vistas de Angular le daba a `.modal { display:flex }` más especificidad que la regla nativa `dialog:not([open]) { display:none }`
+    - Centrado roto de forma distinta según motor — `inset:0 + margin:auto` (el truco estándar de MDN) funciona en Chrome pero en **Safari real** calcula `height:0` para un `<dialog>` con contenido `display:flex` (confirmado con diagnóstico en la consola del propio Safari del usuario, no reproducible con Playwright ni con su motor "webkit"). Arreglado con `top/left:50% + transform: translate(-50%,-50%)`, y la animación de entrada separada a `&__container` para que el centrado no dependa de que la animación llegue a ejecutarse (con "reducir movimiento" del sistema, la duración se acorta a 0.01ms)
+    - Cualquier `<dialog>` nuevo debe replicar estos 3 arreglos si no reutiliza `ModalComponent`
+
+---
+
 ## Pendientes / Preguntas abiertas
 - [ ] **Mostrar galería de imágenes y lat/lng de puntos en `route-detail-page`** (ver sección "Mejora formulario admin de rutas" arriba, 2026-07-08) — ya se pueden gestionar desde el admin pero la página pública de la ruta todavía no las pinta (alcance diferido a propósito, "para luego")
 - [ ] **Verificar en producción tras deploy de Vercel** que el enlace externo de ruta/punto (`820f769`, 2026-07-08) se ve bien en móvil real
@@ -493,3 +517,8 @@ Objetivo: comprobar funcionamiento y seguridad del calendario (disponibilidad, c
 | feat: sincronización de calendario iCal con Airbnb/Booking.com | Gap seguridad cerrado, BlockedPeriodModel con origen, ical-sync.service.ts (cron 15min), GET /calendar.ics, admin con URL de exportación |
 | feat: enriquecer formulario admin de rutas — puntos con lat/lng/enlace/imagen, enlace externo, galería y reordenar (`838c52f`) | images:string[]→{url,publicId}[], 3 endpoints nuevos, merge imagePublicId por imageUrl, delete() limpia Cloudinary, fix bug dormido, 27 tests nuevos |
 | fix: mostrar enlace externo de ruta y de puntos en la página pública (`820f769`) | route-detail-page no pintaba externalLinkUrl/linkUrl aunque ya se guardaban desde el admin |
+| feat: ajustar formulario de check-in — 2 días antes, sexo/parentesco opcionales, validación DNI/teléfono/email (`63cce91`) | DAYS_BEFORE_CHECKIN 3→2, sexo/parentesco opcionales, fecha nacimiento no futura, DNI con checksum + contacto email/teléfono |
+| feat: separar reembolsar y cancelar en dos acciones (`632d831`) | Botón "Reembolsar" con importe elegido + confirmación, botón "Cancelar" nuevo (sin tocar Stripe), email distingue reembolso total/parcial |
+| feat: sustituir confirm()/prompt()/alert() nativos por modales propios en el admin (`1c614d1`) | ConfirmModalComponent + AdminRefundModalComponent, aplicado en reservas/calendario/rutas/galería/reseñas |
+| fix: centrar correctamente el modal (`6b7dd1f`) | display siempre visible por especificidad de Angular + centrado roto por el reset global |
+| fix: el modal seguía sin verse en Safari real (`0544fca`) | inset:0+margin:auto da height:0 en Safari con contenido flex — centrado con top/left 50%+transform, animación desacoplada del centrado |

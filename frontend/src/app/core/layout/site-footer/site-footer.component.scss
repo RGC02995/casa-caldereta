@@ -137,6 +137,15 @@
     color: rgba($color-white, 0.6);
   }
 
+  &__address-link {
+    text-decoration: none;
+    transition: color $transition-fast;
+    width: fit-content;
+
+    &:hover { color: $color-secondary; }
+    &:focus-visible { @include focus-visible; }
+  }
+
   // ── Barra inferior ────────────────────────────────────────────────────────────
   &__bottom {
     border-top: 1px solid rgba($color-white, 0.08);
