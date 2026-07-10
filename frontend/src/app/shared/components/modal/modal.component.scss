@@ -40,6 +40,13 @@
   box-shadow: $shadow-xl;
   background-color: $color-white;
   max-height: min(90dvh, 800px);
+  // Sin esto, la altura del <dialog> queda indefinida en Safari real (a diferencia de
+  // Chrome/Brave, que la resuelven por contenido): con position:fixed sacándolo del flujo
+  // y sin height propia, el hijo &__container (flex:1; min-height:0) no tiene de qué "crecer"
+  // y colapsa a 0px de alto — el modal queda invisible aunque display/opacity/transform sean
+  // correctos (confirmado con getComputedStyle en Safari real: height:0px en dialog y __container).
+  height: -webkit-fit-content;
+  height: fit-content;
   overflow: hidden;
   display: flex;
   flex-direction: column;
