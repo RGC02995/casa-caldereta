@@ -63,7 +63,11 @@
   &__container {
     display: flex;
     flex-direction: column;
-    flex: 1;
+    // flex-basis explícito en "auto" (no el "0%" implícito de "flex: 1"): con basis 0,
+    // este Safari real ignora el contenido al calcular el alto automático del <dialog>
+    // padre (min-height:0 solo no basta) y el modal colapsa a height:0 — confirmado
+    // probando en vivo sobre el elemento real (baseline 0px -> 330px con basis auto).
+    flex: 1 1 auto;
     min-height: 0;
     overflow: hidden;
     animation: modal-enter $transition-normal ease forwards;
