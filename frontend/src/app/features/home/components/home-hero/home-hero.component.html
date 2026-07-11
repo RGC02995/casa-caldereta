@@ -1,11 +1,11 @@
 <section class="home-hero">
   <div class="home-hero__text">
+    <p class="home-hero__subtitle">{{ 'home.hero.subtitle' | translate }}</p>
     <p class="home-hero__label">Aielo de Rugat, Valencia</p>
     <h1 class="home-hero__title">
       <span class="home-hero__title-line">Casa</span>
       <span class="home-hero__title-line home-hero__title-line--gold">Caldereta</span>
     </h1>
-    <p class="home-hero__subtitle">{{ 'home.hero.subtitle' | translate }}</p>
     <div class="home-hero__actions">
       <a routerLink="/reservar" class="home-hero__cta home-hero__cta--primary">
         {{ 'home.hero.cta' | translate }}
@@ -14,11 +14,6 @@
         {{ 'home.hero.ctaGallery' | translate }}
       </a>
     </div>
-    <ul class="home-hero__pills" aria-label="Características principales">
-      <li class="home-hero__pill">{{ 'home.hero.pills.guests'  | translate }}</li>
-      <li class="home-hero__pill">{{ 'home.hero.pills.jacuzzi' | translate }}</li>
-      <li class="home-hero__pill">{{ 'home.hero.pills.pets'    | translate }}</li>
-    </ul>
   </div>
   <div class="home-hero__media" aria-hidden="true">
     @if (heroPhoto()) {

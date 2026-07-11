@@ -11,15 +11,9 @@
       "title": "Casa Caldereta",
       "subtitle": "Tu refugio en la Vall d'Albaida, Aielo de Rugat",
       "cta": "Reservar ahora",
-      "ctaGallery": "Ver la casa",
-      "pills": {
-        "guests": "Hasta 6 personas",
-        "jacuzzi": "Jacuzzi privado",
-        "pets": "Mascotas bienvenidas"
-      }
+      "ctaGallery": "Ver la casa"
     },
     "highlights": {
-      "label": "La casa",
       "title": "Un lugar pensado para ti"
     },
     "amenities": {

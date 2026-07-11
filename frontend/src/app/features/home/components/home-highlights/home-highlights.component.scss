@@ -2,7 +2,7 @@
 @use '../../../../../styles/mixins' as *;
 
 .home-highlights {
-  background-color: $color-white;
+  background-color: rgba($color-neutral-100, 0.97);
   padding-block-end: 0;
 
   @include respond-to('md') {
@@ -21,15 +21,11 @@
     text-align: center;
   }
 
-  &__label {
-    @include label-text;
-    color: $color-accent;
-  }
-
   &__title {
     font-family: $font-family-heading;
     font-size: clamp(#{$font-size-2xl}, 4vw, #{$font-size-3xl});
     font-weight: $font-weight-light;
+    font-style: italic;
     color: $color-primary-dark;
     margin: 0;
     line-height: $line-height-tight;
@@ -121,7 +117,7 @@
     align-items: center;
     justify-content: center;
     padding: $space-10 $space-8;
-    background-color: $color-white;
+    background-color: rgba($color-neutral-100, 0.97);
 
     @include respond-to('md') {
       padding: $space-12 clamp(#{$space-8}, 4vw, #{$space-16});

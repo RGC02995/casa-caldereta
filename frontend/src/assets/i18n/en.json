@@ -11,15 +11,9 @@
       "title": "Casa Caldereta",
       "subtitle": "Your retreat in the heart of Valencia",
       "cta": "Book now",
-      "ctaGallery": "See the house",
-      "pills": {
-        "guests": "Up to 6 guests",
-        "jacuzzi": "Private jacuzzi",
-        "pets": "Pets welcome"
-      }
+      "ctaGallery": "See the house"
     },
     "highlights": {
-      "label": "The house",
       "title": "A place designed for you"
     },
     "amenities": {
