@@ -12,7 +12,9 @@
       "subtitle": "Tu refugio en la Vall d'Albaida, Aielo de Rugat",
       "cta": "Reservar ahora",
       "ctaGallery": "Ver la casa",
-      "note": "Disfruta completamente de una casa de pueblo sin zonas compartidas con capacidad de hasta seis personas y jacuzzi privado, SOLO para ti y tus acompañantes."
+      "noteBefore": "Disfruta completamente de una casa de pueblo sin zonas compartidas con capacidad de hasta seis personas y jacuzzi privado, ",
+      "noteHighlight": "SOLO",
+      "noteAfter": " para ti y tus acompañantes."
     },
     "highlights": {
       "title": "Un lugar pensado para ti"

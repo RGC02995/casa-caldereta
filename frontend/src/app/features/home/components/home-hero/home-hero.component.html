@@ -14,7 +14,14 @@
         {{ 'home.hero.ctaGallery' | translate }}
       </a>
     </div>
-    <p class="home-hero__note">{{ 'home.hero.note' | translate }}</p>
+    <p class="home-hero__note">
+      {{ 'home.hero.noteBefore' | translate
+      }}<em class="home-hero__note-highlight">{{ 'home.hero.noteHighlight' | translate }}</em
+      >{{ 'home.hero.noteAfter' | translate }}
+    </p>
+  </div>
+  <div class="home-hero__scroll-cue" aria-hidden="true">
+    <span class="home-hero__scroll-chevron"></span>
   </div>
   <div class="home-hero__media" aria-hidden="true">
     @if (heroPhoto()) {

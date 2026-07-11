@@ -3,7 +3,10 @@
 
 .home-hero {
   position: relative;
-  min-height: 100vh;
+  // Resta los 60px de padding-top que .app-main--with-header añade para
+  // no quedar bajo el header fijo — si no, el hero se pasa 60px del
+  // viewport y el contenido anclado al fondo (scroll-cue) queda oculto.
+  min-height: calc(100vh - 60px);
   display: grid;
   grid-template-columns: 1fr;
   background-color: $color-primary-dark;
@@ -38,7 +41,8 @@
 
   &__label {
     @include label-text;
-    color: rgba($color-accent, 0.75);
+    color: rgba($color-white, 0.65);
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
   }
 
   &__title {
@@ -71,28 +75,42 @@
 
   &__actions {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
     gap: $space-3;
     margin-top: $space-2;
+
+    @include respond-to('sm') {
+      flex-direction: row;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
   }
 
   &__note {
     font-family: 'Fraunces', Georgia, serif;
     font-variation-settings: 'opsz' 9, 'WONK' 1;
-    font-size: $font-size-base;
+    font-size: clamp(#{$font-size-base}, 4vw, 1.1rem);
     font-weight: 300;
     font-style: italic;
     color: rgba($color-white, 0.6);
     line-height: $line-height-relaxed;
     letter-spacing: 0.01em;
-    margin: $space-2 0 0;
+    margin: $space-4 0 0;
     max-width: 420px;
     text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+  }
+
+  &__note-highlight {
+    font-style: normal;
+    color: $color-secondary;
+    font-weight: $font-weight-medium;
   }
 
   &__cta {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     padding: $space-4 $space-8;
     font-family: $font-family-body;
     font-size: $font-size-xs;
@@ -119,6 +137,27 @@
 
       &:hover { border-color: rgba($color-white, 0.7); background-color: rgba($color-white, 0.06); }
     }
+  }
+
+  &__scroll-cue {
+    position: absolute;
+    left: 50%;
+    bottom: $space-6;
+    transform: translateX(-50%);
+    z-index: 2;
+
+    @include respond-to('lg') {
+      display: none;
+    }
+  }
+
+  &__scroll-chevron {
+    display: block;
+    width: 14px;
+    height: 14px;
+    border-right: 2px solid rgba($color-white, 0.55);
+    border-bottom: 2px solid rgba($color-white, 0.55);
+    transform: rotate(45deg);
   }
 
   &__media {
@@ -171,6 +210,11 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes heroScrollBounce {
+  0%, 100% { transform: rotate(45deg) translate(0, 0); opacity: 0.4; }
+  50%      { transform: rotate(45deg) translate(4px, 4px); opacity: 0.9; }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .home-hero__label    { animation: heroFadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.1s  both; }
   .home-hero__title    { animation: heroFadeUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both; }
@@ -178,4 +222,6 @@
   .home-hero__actions  { animation: heroFadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.6s  both; }
   .home-hero__note     { animation: heroFadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.75s both; }
   .home-hero__media    { animation: heroFadeUp 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0s    both; }
+  .home-hero__scroll-cue      { animation: heroFadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.9s both; }
+  .home-hero__scroll-chevron  { animation: heroScrollBounce 1.8s ease-in-out infinite; }
 }
