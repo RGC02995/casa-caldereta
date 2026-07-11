@@ -19,7 +19,7 @@
     z-index: 2;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     gap: $space-5;
     padding: $space-20 $space-6 $space-16;
 
@@ -28,6 +28,7 @@
     }
 
     @include respond-to('lg') {
+      justify-content: center;
       padding-top: 120px;
       padding-bottom: $space-20;
       padding-left: max(calc((100vw - #{$container-max-width}) / 2 + #{$container-padding}), #{$container-padding});
@@ -65,6 +66,7 @@
     margin: 0;
     max-width: 400px;
     font-weight: $font-weight-light;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
   }
 
   &__actions {
@@ -85,6 +87,7 @@
     letter-spacing: 0.01em;
     margin: $space-2 0 0;
     max-width: 420px;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
   }
 
   &__cta {
@@ -132,7 +135,12 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(to right, $color-primary-dark 0%, rgba($color-primary-dark, 0.5) 60%, transparent 100%);
+      background: linear-gradient(
+        180deg,
+        rgba($color-primary-dark, 0.75) 0%,
+        rgba($color-primary-dark, 0.45) 45%,
+        rgba($color-primary-dark, 0.8) 100%
+      );
 
       @include respond-to('lg') {
         display: none;
