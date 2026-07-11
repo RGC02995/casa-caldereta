@@ -45,7 +45,7 @@
                 [attr.fetchpriority]="$index === 0 ? 'high' : null"
               />
               @if (heroPhotoId() === photo.id) {
-                <span class="admin-gallery__hero-badge">Imagen del hero</span>
+                <span class="admin-gallery__hero-badge">Principal</span>
               }
             </div>
 
@@ -59,11 +59,11 @@
                   <button
                     class="admin-gallery__hero-btn"
                     type="button"
-                    [attr.aria-label]="'Usar como imagen del hero: ' + photo.alt"
+                    [attr.aria-label]="'Establecer como imagen principal: ' + photo.alt"
                     [disabled]="processingId() !== null"
                     (click)="setHeroRequested.emit(photo.id)"
                   >
-                    Usar como hero
+                    Establecer principal
                   </button>
                 }
                 <button
