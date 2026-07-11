@@ -4,9 +4,11 @@ import { map, catchError, of } from 'rxjs';
 import { PhotoService } from '../../../../core/services/photo.service';
 import { RouteService } from '../../../../core/services/route.service';
 import { ReviewService } from '../../../../core/services/review.service';
+import { SiteSettingsService } from '../../../../core/services/site-settings.service';
 import { IPhoto } from '../../../../core/models/photo.model';
 import { IRoute } from '../../../../core/models/route.model';
 import { IReview } from '../../../../core/models/review.model';
+import { ISiteSettings } from '../../../../core/models/site-settings.model';
 import { SeoService } from '../../../../core/services/seo.service';
 import { HomeHeroComponent } from '../../components/home-hero/home-hero.component';
 import { HomeHighlightsComponent } from '../../components/home-highlights/home-highlights.component';
@@ -35,10 +37,11 @@ import { HomeBookingCtaComponent } from '../../components/home-booking-cta/home-
   styleUrl: './home-page.component.scss',
 })
 export class HomePageComponent {
-  private readonly photoService  = inject(PhotoService);
-  private readonly routeService  = inject(RouteService);
-  private readonly reviewService = inject(ReviewService);
-  private readonly seoService    = inject(SeoService);
+  private readonly photoService        = inject(PhotoService);
+  private readonly routeService        = inject(RouteService);
+  private readonly reviewService       = inject(ReviewService);
+  private readonly siteSettingsService = inject(SiteSettingsService);
+  private readonly seoService          = inject(SeoService);
 
   private readonly _photos = toSignal(
     this.photoService.getAll().pipe(
@@ -46,6 +49,14 @@ export class HomePageComponent {
       catchError(() => of([] as IPhoto[])),
     ),
     { initialValue: [] as IPhoto[] },
+  );
+
+  private readonly _siteSettings = toSignal(
+    this.siteSettingsService.get().pipe(
+      map(response => response.data),
+      catchError(() => of({ heroPhotoId: null } as ISiteSettings)),
+    ),
+    { initialValue: { heroPhotoId: null } as ISiteSettings },
   );
 
   private readonly _routes = toSignal(
@@ -64,7 +75,11 @@ export class HomePageComponent {
     { initialValue: [] as IReview[] },
   );
 
-  readonly heroPhoto     = computed(() => this._photos()[0] ?? null);
+  readonly heroPhoto = computed(() => {
+    const photos      = this._photos();
+    const heroPhotoId = this._siteSettings().heroPhotoId;
+    return photos.find(photo => photo.id === heroPhotoId) ?? photos[0] ?? null;
+  });
   readonly previewPhotos = computed(() => this._photos().slice(0, 4));
   readonly previewRoutes = computed(() => this._routes().slice(0, 3));
   readonly reviews       = this._reviews;

@@ -9,6 +9,7 @@ import reviewRouter          from './review.routes';
 import checkinRouter         from './checkin.routes';
 import pricingSettingsRouter from './pricing-settings.routes';
 import icalExportRouter      from './ical-export.routes';
+import siteSettingsRouter    from './site-settings.routes';
 
 const apiRouter = Router();
 
@@ -26,5 +27,6 @@ apiRouter.use('/reviews',          reviewRouter);
 apiRouter.use('/checkin',          checkinRouter);
 apiRouter.use('/pricing-settings', pricingSettingsRouter);
 apiRouter.use('/calendar-export-url', icalExportRouter);
+apiRouter.use('/site-settings',    siteSettingsRouter);
 
 export default apiRouter;

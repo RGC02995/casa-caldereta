@@ -30,9 +30,12 @@ export class AdminGalleryGridComponent {
   readonly activeFilter = input<CategoryFilter>('all');
   readonly loadError    = input('');
   readonly deleteError  = input('');
+  readonly heroError    = input('');
+  readonly heroPhotoId  = input<string | null>(null);
 
-  readonly filterChanged   = output<CategoryFilter>();
-  readonly deleteRequested = output<IPhotoDeleteEvent>();
+  readonly filterChanged    = output<CategoryFilter>();
+  readonly deleteRequested  = output<IPhotoDeleteEvent>();
+  readonly setHeroRequested = output<string>();
 
   readonly filters: { label: string; value: CategoryFilter }[] = [
     { label: 'Todas',      value: 'all'        },

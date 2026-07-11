@@ -9,6 +9,10 @@
       <p class="admin-gallery__action-error" role="alert">{{ deleteError() }}</p>
     }
 
+    @if (heroError()) {
+      <p class="admin-gallery__action-error" role="alert">{{ heroError() }}</p>
+    }
+
     <div class="admin-gallery__filters" role="group" aria-label="Filtrar fotos por categoría">
       @for (filterOption of filters; track filterOption.value) {
         <button
@@ -40,6 +44,9 @@
                 [attr.loading]="$index < 4 ? 'eager' : 'lazy'"
                 [attr.fetchpriority]="$index === 0 ? 'high' : null"
               />
+              @if (heroPhotoId() === photo.id) {
+                <span class="admin-gallery__hero-badge">Imagen del hero</span>
+              }
             </div>
 
             <div class="admin-gallery__item-footer">
@@ -47,15 +54,28 @@
                 <span class="admin-gallery__item-category">{{ getCategoryLabel(photo.category) }}</span>
                 <span class="admin-gallery__item-alt" [title]="photo.alt">{{ photo.alt }}</span>
               </div>
-              <button
-                class="admin-gallery__delete-btn"
-                type="button"
-                [attr.aria-label]="'Eliminar foto: ' + photo.alt"
-                [disabled]="processingId() !== null"
-                (click)="deleteRequested.emit({ photoId: photo.id, photoAlt: photo.alt })"
-              >
-                Eliminar
-              </button>
+              <div class="admin-gallery__item-actions">
+                @if (heroPhotoId() !== photo.id) {
+                  <button
+                    class="admin-gallery__hero-btn"
+                    type="button"
+                    [attr.aria-label]="'Usar como imagen del hero: ' + photo.alt"
+                    [disabled]="processingId() !== null"
+                    (click)="setHeroRequested.emit(photo.id)"
+                  >
+                    Usar como hero
+                  </button>
+                }
+                <button
+                  class="admin-gallery__delete-btn"
+                  type="button"
+                  [attr.aria-label]="'Eliminar foto: ' + photo.alt"
+                  [disabled]="processingId() !== null"
+                  (click)="deleteRequested.emit({ photoId: photo.id, photoAlt: photo.alt })"
+                >
+                  Eliminar
+                </button>
+              </div>
             </div>
 
           </div>

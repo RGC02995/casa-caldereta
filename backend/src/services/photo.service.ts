@@ -2,6 +2,7 @@ import { UploadApiResponse } from 'cloudinary';
 import { cloudinary } from '../config/cloudinary';
 import { PhotoModel, PhotoCategory, IPhotoDocument } from '../models/photo.model';
 import { withId } from '../utils/mongoose.util';
+import { siteSettingsService } from './site-settings.service';
 
 export interface IUploadPhotoData {
   buffer:   Buffer;
@@ -70,6 +71,7 @@ class PhotoService {
     if (!photo) return false;
 
     await cloudinary.uploader.destroy(photo.publicId);
+    await siteSettingsService.clearHeroPhotoIfMatches(id);
     return true;
   }
 }

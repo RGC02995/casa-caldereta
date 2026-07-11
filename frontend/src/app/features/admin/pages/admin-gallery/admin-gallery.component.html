@@ -12,8 +12,11 @@
     [activeFilter]="activeFilter()"
     [loadError]="loadError()"
     [deleteError]="deleteError()"
+    [heroError]="heroError()"
+    [heroPhotoId]="heroPhotoId()"
     (filterChanged)="activeFilter.set($event)"
     (deleteRequested)="onDeleteRequested($event)"
+    (setHeroRequested)="onSetHeroRequested($event)"
   />
 
   <confirm-modal
