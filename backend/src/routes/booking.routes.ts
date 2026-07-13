@@ -10,6 +10,7 @@ import {
   deleteBookingHandler,
   createCheckoutSessionHandler,
   createRemainingPaymentSessionHandler,
+  cancelPendingPaymentHandler,
   refundBookingHandler,
   getInvoiceHandler,
 } from '../controllers/booking.controller';
@@ -24,6 +25,8 @@ bookingRouter.get('/upcoming',     requireAuth, getUpcomingBookingsHandler);
 bookingRouter.get('/availability',    publicRateLimiter,   getAvailabilityHandler);
 bookingRouter.get('/price-estimate', publicRateLimiter,   getPriceEstimateHandler);
 bookingRouter.post('/checkout',    checkoutRateLimiter, createCheckoutSessionHandler);
+// Pública — el propio huésped cancela su pending_payment (aún no pagada) para empezar de nuevo
+bookingRouter.post('/:id/cancel-pending', checkoutRateLimiter, cancelPendingPaymentHandler);
 // Ruta pública — el token HMAC reemplaza la autenticación
 bookingRouter.get('/:id/invoice',  getInvoiceHandler);
 bookingRouter.get('/:id',          requireAuth, getBookingByIdHandler);

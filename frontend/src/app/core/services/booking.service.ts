@@ -43,6 +43,10 @@ export class BookingService {
     return this.api.post<ICheckoutSessionResult>('bookings/checkout', data);
   }
 
+  cancelPendingPayment(id: string): Observable<ApiResponse<void>> {
+    return this.api.post<void>(`bookings/${id}/cancel-pending`, {});
+  }
+
   refundBooking(id: string, amount: number): Observable<ApiResponse<IBooking>> {
     return this.api.post<IBooking>(`bookings/${id}/refund`, { amount });
   }

@@ -240,6 +240,24 @@ export async function createRemainingPaymentSessionHandler(req: Request<{ id: st
   }
 }
 
+export async function cancelPendingPaymentHandler(req: Request<{ id: string }>, res: Response): Promise<void> {
+  if (!isValidObjectId(req.params.id)) {
+    res.status(400).json({ success: false, message: 'ID no válido' });
+    return;
+  }
+
+  try {
+    const cancelled = await bookingService.cancelOwnPendingPayment(req.params.id);
+    if (!cancelled) {
+      res.status(404).json({ success: false, message: 'Reserva no encontrada o ya no está pendiente de pago' });
+      return;
+    }
+    res.status(200).json({ success: true, message: 'Reserva cancelada' });
+  } catch {
+    res.status(500).json({ success: false, message: 'Error al cancelar la reserva' });
+  }
+}
+
 export async function getInvoiceHandler(req: Request<{ id: string }>, res: Response): Promise<void> {
   const { id } = req.params;
   const { token, format } = req.query as { token?: string; format?: string };

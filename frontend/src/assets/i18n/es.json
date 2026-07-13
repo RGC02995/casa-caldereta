@@ -155,6 +155,11 @@
       "proceed": "Proceder al pago",
       "resumeNotice": "Tienes un pago en curso para estas fechas. Puedes continuar donde lo dejaste.",
       "resumeButton": "Continuar con el pago",
+      "cancelAndRestartButton": "Cancelar y empezar de nuevo",
+      "cancelModalTitle": "Cancelar reserva en curso",
+      "cancelModalMessage": "Se cancelará el pago pendiente y se borrará el formulario para que puedas empezar de nuevo. ¿Continuar?",
+      "cancelModalConfirm": "Sí, cancelar",
+      "cancelModalCancel": "No, volver",
       "errors": {
         "nameRequired": "El nombre es obligatorio (mínimo 2 caracteres)",
         "emailRequired": "El email es obligatorio",

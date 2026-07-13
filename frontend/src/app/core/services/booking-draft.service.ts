@@ -86,8 +86,8 @@ export class BookingDraftService {
 
   private persist(): void {
     const data: StoredDraft = {
-      checkIn:       this.checkIn()?.toISOString()  ?? null,
-      checkOut:      this.checkOut()?.toISOString() ?? null,
+      checkIn:       this.safeToISOString(this.checkIn()),
+      checkOut:      this.safeToISOString(this.checkOut()),
       guests:        this.guests(),
       guestName:     this.guestName(),
       guestEmail:    this.guestEmail(),
@@ -95,13 +95,20 @@ export class BookingDraftService {
       message:       this.message(),
       bookingId:     this.pendingBookingId(),
       sessionUrl:    this.pendingSessionUrl(),
-      holdExpiresAt: this.pendingHoldExpiresAt()?.toISOString() ?? null,
+      holdExpiresAt: this.safeToISOString(this.pendingHoldExpiresAt()),
     };
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch {
       // sessionStorage lleno o deshabilitado — degradación limpia, el flujo sigue funcionando.
     }
+  }
+
+  // Evita que una Date inválida (ej. holdExpiresAt ausente en una respuesta) tumbe el effect
+  // de persistencia — toISOString() lanza RangeError con una fecha inválida.
+  private safeToISOString(date: Date | null): string | null {
+    if (!date || isNaN(date.getTime())) return null;
+    return date.toISOString();
   }
 
   private restore(): void {

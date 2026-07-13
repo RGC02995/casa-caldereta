@@ -57,6 +57,46 @@ afterEach(async () => {
   sessionExpireMock.mockReset();
 });
 
+describe('cancelOwnPendingPayment()', () => {
+  it('borra la pending_payment y expira su sesión — devuelve true', async () => {
+    const booking = await seedBooking({
+      status: 'pending_payment', holdExpiresAt: IN_10_MIN(), stripeSessionId: 'cs_propia',
+    });
+
+    const result = await bookingService.cancelOwnPendingPayment(String(booking._id));
+
+    expect(result).toBe(true);
+    expect(await BookingModel.findById(booking._id)).toBeNull();
+    expect(sessionExpireMock).toHaveBeenCalledWith('cs_propia');
+  });
+
+  it('id inexistente → false, no lanza', async () => {
+    const result = await bookingService.cancelOwnPendingPayment(new mongoose.Types.ObjectId().toString());
+    expect(result).toBe(false);
+  });
+
+  it('reserva confirmed → false, NO la borra (solo toca pending_payment)', async () => {
+    const booking = await seedBooking({ status: 'confirmed' });
+
+    const result = await bookingService.cancelOwnPendingPayment(String(booking._id));
+
+    expect(result).toBe(false);
+    expect(await BookingModel.findById(booking._id)).not.toBeNull();
+  });
+
+  it('si expire() de Stripe falla, borra igualmente (best-effort)', async () => {
+    sessionExpireMock.mockRejectedValue(new Error('ya expirada'));
+    const booking = await seedBooking({
+      status: 'pending_payment', holdExpiresAt: IN_10_MIN(), stripeSessionId: 'cs_error',
+    });
+
+    const result = await bookingService.cancelOwnPendingPayment(String(booking._id));
+
+    expect(result).toBe(true);
+    expect(await BookingModel.findById(booking._id)).toBeNull();
+  });
+});
+
 describe('cleanupExpiredPendingPayments()', () => {
   it('borra las pending_payment con bloqueo caducado y expira su sesión de Stripe', async () => {
     const expired = await seedBooking({

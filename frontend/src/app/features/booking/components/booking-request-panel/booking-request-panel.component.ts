@@ -8,6 +8,7 @@ import { BookingService } from '../../../../core/services/booking.service';
 import { BookingDraftService } from '../../../../core/services/booking-draft.service';
 import { IPriceEstimate } from '../../../../core/models/booking.model';
 import { ModalComponent } from '../../../../shared/components/modal/modal.component';
+import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal.component';
 import { PrivacyContentComponent } from '../../../legal/components/privacy-content/privacy-content.component';
 import { TermsContentComponent } from '../../../legal/components/terms-content/terms-content.component';
 
@@ -20,7 +21,7 @@ const EMPTY_ESTIMATE: IPriceEstimate = {
 
 @Component({
   selector: 'booking-request-panel',
-  imports: [TranslatePipe, DateFormatPipe, ModalComponent, PrivacyContentComponent, TermsContentComponent],
+  imports: [TranslatePipe, DateFormatPipe, ModalComponent, ConfirmModalComponent, PrivacyContentComponent, TermsContentComponent],
   templateUrl: './booking-request-panel.component.html',
   styleUrl: './booking-request-panel.component.scss',
 })
@@ -70,6 +71,29 @@ export class BookingRequestPanelComponent {
   resumePayment(): void {
     const url = this.draft.pendingSessionUrl();
     if (url) window.location.assign(url);
+  }
+
+  readonly isCancelModalOpen = signal(false);
+  readonly isCancelling      = signal(false);
+
+  openCancelModal(): void {
+    this.isCancelModalOpen.set(true);
+  }
+
+  confirmCancelAndRestart(): void {
+    this.isCancelModalOpen.set(false);
+    const bookingId = this.draft.pendingBookingId();
+    if (!bookingId) { this.draft.clear(); return; }
+
+    this.isCancelling.set(true);
+    this.bookingService.cancelPendingPayment(bookingId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        // Se limpia el borrador completo tanto si el backend confirma como si falla
+        // (p.ej. ya caducó por el cron) — el objetivo del usuario es empezar de nuevo.
+        next:  () => { this.isCancelling.set(false); this.draft.clear(); },
+        error: () => { this.isCancelling.set(false); this.draft.clear(); },
+      });
   }
 
   readonly nameTouched          = signal(false);

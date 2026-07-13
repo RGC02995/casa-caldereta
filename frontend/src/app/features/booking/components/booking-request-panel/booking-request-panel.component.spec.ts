@@ -5,9 +5,11 @@ import { provideHttpClientTesting, HttpTestingController } from '@angular/common
 import { provideRouter } from '@angular/router';
 import { provideTranslateService } from '@ngx-translate/core';
 import { BookingRequestPanelComponent } from './booking-request-panel.component';
+import { BookingDraftService } from '../../../../core/services/booking-draft.service';
 import { environment } from '../../../../../environments/environment';
 
 const CHECKOUT_URL = `${environment.apiUrl}/bookings/checkout`;
+const CANCEL_URL   = (id: string) => `${environment.apiUrl}/bookings/${id}/cancel-pending`;
 const CHECK_IN  = new Date(2025, 6, 14); // lunes 14 jul
 const CHECK_OUT = new Date(2025, 6, 16); // miércoles 16 jul
 
@@ -25,6 +27,7 @@ describe('BookingRequestPanelComponent', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
+    sessionStorage.clear(); // BookingDraftService es singleton respaldado por sessionStorage real en jsdom
     TestBed.configureTestingModule({
       imports:   [BookingRequestPanelComponent],
       providers: [
@@ -78,6 +81,49 @@ describe('BookingRequestPanelComponent', () => {
     expect(req.request.method).toBe('POST');
     expect(req.request.body.guestName).toBe('Juan García');
     expect(req.request.body.guestEmail).toBe('juan@example.com');
-    req.flush({ success: true, data: { sessionUrl: 'https://checkout.stripe.com/test' } });
+    req.flush({
+      success: true,
+      data: {
+        sessionUrl:    'https://checkout.stripe.com/test',
+        bookingId:     'bk_1',
+        holdExpiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+      },
+    });
+  });
+
+  it('confirmCancelAndRestart(): llama a cancel-pending y vacía el borrador', () => {
+    const draft = TestBed.inject(BookingDraftService);
+    draft.rememberPendingPayment('bk_1', 'https://checkout.stripe.com/test', new Date(Date.now() + 5 * 60 * 1000));
+    draft.guestName.set('Juan García');
+
+    component.confirmCancelAndRestart();
+
+    const req = http.expectOne(CANCEL_URL('bk_1'));
+    expect(req.request.method).toBe('POST');
+    req.flush({ success: true });
+
+    expect(draft.guestName()).toBe('');
+    expect(draft.pendingSessionUrl()).toBeNull();
+  });
+
+  it('confirmCancelAndRestart(): si el backend falla, igualmente vacía el borrador', () => {
+    const draft = TestBed.inject(BookingDraftService);
+    draft.rememberPendingPayment('bk_1', 'https://checkout.stripe.com/test', new Date(Date.now() + 5 * 60 * 1000));
+
+    component.confirmCancelAndRestart();
+
+    const req = http.expectOne(CANCEL_URL('bk_1'));
+    req.flush({ success: false, message: 'ya no está pendiente' }, { status: 404, statusText: 'Not Found' });
+
+    expect(draft.pendingSessionUrl()).toBeNull();
+  });
+
+  it('sin bookingId en el borrador → vacía el borrador sin llamar al backend', () => {
+    const draft = TestBed.inject(BookingDraftService);
+
+    component.confirmCancelAndRestart();
+
+    http.expectNone((r) => r.url.includes('cancel-pending'));
+    expect(draft.guestName()).toBe('');
   });
 });

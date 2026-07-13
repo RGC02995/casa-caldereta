@@ -50,8 +50,27 @@
       <button type="button" class="booking-resume__btn" (click)="resumePayment()">
         {{ 'booking.form.resumeButton' | translate }}
       </button>
+      <button
+        type="button"
+        class="booking-resume__btn booking-resume__btn--secondary"
+        [disabled]="isCancelling()"
+        (click)="openCancelModal()"
+      >
+        {{ 'booking.form.cancelAndRestartButton' | translate }}
+      </button>
     </div>
   }
+
+  <confirm-modal
+    [isOpen]="isCancelModalOpen()"
+    [title]="'booking.form.cancelModalTitle' | translate"
+    [message]="'booking.form.cancelModalMessage' | translate"
+    [confirmLabel]="'booking.form.cancelModalConfirm' | translate"
+    [cancelLabel]="'booking.form.cancelModalCancel' | translate"
+    [danger]="true"
+    (confirmed)="confirmCancelAndRestart()"
+    (cancelled)="isCancelModalOpen.set(false)"
+  />
 
   <!-- Formulario de solicitud de reserva -->
   <form

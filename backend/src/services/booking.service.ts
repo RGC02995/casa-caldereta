@@ -209,6 +209,25 @@ class BookingService {
     return result !== null;
   }
 
+  // Público — el propio huésped cancela su reserva pending_payment (aún no pagada) para
+  // liberar la fecha y poder empezar de cero. Solo toca pending_payment: nunca borra pending,
+  // confirmed, cancelled ni completed. Bajo riesgo: requiere el ObjectId exacto (no adivinable)
+  // y solo afecta a un pago aún no confirmado.
+  async cancelOwnPendingPayment(id: string): Promise<boolean> {
+    const booking = await BookingModel.findOne({ _id: id, status: 'pending_payment' }).lean<IBookingDocument>();
+    if (!booking) return false;
+
+    if (booking.stripeSessionId) {
+      try {
+        await stripe.checkout.sessions.expire(booking.stripeSessionId);
+      } catch {
+        // Sesión ya expirada/completada — best-effort.
+      }
+    }
+    await BookingModel.findByIdAndDelete(id);
+    return true;
+  }
+
   // Llamado por el cron: borra las reservas pending_payment cuyo bloqueo de 10 min ya expiró
   // y cierra su sesión de Stripe (best-effort) para que no puedan pagarse tras liberar la fecha.
   async cleanupExpiredPendingPayments(): Promise<number> {

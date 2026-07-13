@@ -300,6 +300,15 @@
 
     &:hover { background-color: $color-primary; }
     &:focus-visible { @include focus-visible; }
+
+    &--secondary {
+      background-color: transparent;
+      color: $color-primary-dark;
+      border: 1px solid rgba($color-primary-dark, 0.3);
+
+      &:hover { background-color: rgba($color-primary-dark, 0.06); }
+      &:disabled { opacity: 0.5; cursor: default; }
+    }
   }
 }
 

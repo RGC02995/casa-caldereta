@@ -155,6 +155,11 @@
       "proceed":            "Proceed to payment",
       "resumeNotice":       "You have a payment in progress for these dates. You can pick up where you left off.",
       "resumeButton":       "Continue with payment",
+      "cancelAndRestartButton": "Cancel and start over",
+      "cancelModalTitle":       "Cancel booking in progress",
+      "cancelModalMessage":     "This will cancel the pending payment and clear the form so you can start over. Continue?",
+      "cancelModalConfirm":     "Yes, cancel",
+      "cancelModalCancel":      "No, go back",
       "errors": {
         "nameRequired":    "Name is required (minimum 2 characters)",
         "emailRequired":   "Email is required",
