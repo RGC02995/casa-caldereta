@@ -463,6 +463,34 @@ El arreglo de `6b7dd1f`/`0544fca` no fue suficiente: en Safari real (Mac **e** i
 
 ---
 
+### Rediseño home — hero y sección "highlights" ✅ COMPLETADO (2026-07-11)
+Serie de ajustes visuales/UX sobre la home a petición del usuario, iterando en vivo con capturas Playwright contra fotos reales de producción (vía API pública) para verificar contraste antes de dar por bueno cada cambio.
+
+- [x] **Hero — pills eliminadas** (`4ac375e`) — quitadas las 3 tarjetas "Hasta 6 personas / Jacuzzi privado / Mascotas bienvenidas" (HTML+SCSS+i18n es/en), sin reemplazo por entonces
+- [x] **Hero — reordenado y color** (`4ac375e`) — subtítulo "Tu refugio en la Vall d'Albaida..." pasa a ir primero (antes iba tras el título) y cambia a color dorado `$color-secondary`, igual que "Caldereta" en el título grande
+- [x] **Highlights — label "LA CASA" eliminado** (`4ac375e`) — queda solo el título "Un lugar pensado para ti"; clave i18n `home.highlights.label` retirada de es/en (no se usaba en ningún otro sitio)
+- [x] **Highlights — fondo de sección y de cards** (`4ac375e`) — de `$color-white` a `rgba($color-neutral-100, 0.97)`, el mismo color que el fondo del navbar (`site-header.component.scss`)
+- [x] **Título highlights en cursiva** (`4ac375e`) — `font-style: italic` en `&__title`, manteniendo la fuente `$font-family-heading` (decisión explícita del usuario: cursiva sí, cambio de fuente no)
+- [x] **Footer — WhatsApp e Instagram eliminados** (`d882c73`) — quitado el `<nav aria-label="Redes sociales">` completo de `site-footer`; sin tocar i18n (textos hardcodeados)
+- [x] **Home activities — texto de cards en cursiva** (`d882c73`) — `&__card-text` (Senderismo/Mountain Bike) en `font-style: italic`, manteniendo la fuente de cuerpo (mismo criterio que el título de highlights: solo cursiva, no cambio de fuente)
+- [x] **Hero — nueva nota bajo los botones** (`f4f53fa`) — párrafo "Disfruta completamente de una casa de pueblo..." (claves `home.hero.note`→después partida, ver abajo), estilo "elegante" reutilizando el patrón ya validado en el sitio (`Fraunces` cursiva peso 300, igual que `home-highlights__quote`/`home-activities__manifesto`) tras probar primero un estilo sans-serif simple que el usuario pidió mejorar
+- [x] **Hero — centrado vertical en móvil** (`f4f53fa`) — `justify-content: flex-end` → `center` en el breakpoint base (antes el bloque de texto quedaba anclado abajo del todo en un hero `100vh`)
+- [x] **Fix legibilidad hero móvil** (`f2ebddf`) — el `::after` de `&__media` usaba un degradado horizontal (izq→dcha) pensado solo para el split de escritorio; en móvil (foto a pantalla completa) no cubría bien las zonas donde cae el texto. Sustituido por un degradado **vertical** (`180deg`, más oscuro arriba/abajo) más robusto ante cualquier foto subida por el propietario. Además: `justify-content` vuelve a `flex-start` (más arriba, a petición del usuario) y `text-shadow` de refuerzo en `&__subtitle`/`&__note`. Verificado con Playwright contra una foto real de producción (bañera/jacuzzi, fondo claro) comparando degradado viejo vs nuevo antes de aplicar
+- [x] **Ajustes finos hero móvil** (`b6e78ed`):
+  - Botones "Reservar ahora"/"Ver la casa" de tamaño distinto (se ajustaban al contenido, "RESERVAR AHORA" partido en 2 líneas) → en móvil pasan a apilarse a ancho completo (`flex-direction: column`, `justify-content:center` en `&__cta`); desde `sm` (576px) vuelven a fila como antes
+  - Label "AIELO DE RUGAT, VALENCIA" casi ilegible (verde `$color-accent` sobre overlay verde oscuro) → blanco `rgba($color-white,0.65)` + `text-shadow`
+  - Nota del hero: clave i18n única partida en 3 (`noteBefore`/`noteHighlight`/`noteAfter`) para poder resaltar solo la palabra "SOLO"/"ONLY" en dorado (`&__note-highlight`, sin cursiva, mismo patrón que `&__em` en highlights/activities); tamaño y `margin-top` del párrafo aumentados
+  - **Bug encontrado de paso**: `.home-hero` con `min-height:100vh` se pasaba 60px del viewport real porque `<main class="app-main--with-header">` (`app.scss`) añade `padding-top:60px` para no quedar bajo el header fijo — cualquier contenido anclado al fondo del hero quedaba oculto sin hacer scroll. Fix: `min-height: calc(100vh - 60px)`
+  - Añadido un indicador de scroll (chevron animado) para rellenar el hueco inferior — **revertido en el siguiente commit** a petición del usuario ("no tiene ningún sentido")
+- [x] **Chevron eliminado + colores de highlights corregidos** (`db2cc03`):
+  - Quitado `&__scroll-cue`/`&__scroll-chevron`, su `@keyframes` y las entradas de animación; se mantiene el fix de `min-height` (sigue siendo correcto independientemente del chevron)
+  - **Vuelta atrás**: el color verde navbar (`$color-neutral-600`) se había aplicado por error al título de highlights en vez de al texto de las cards — título vuelto a `$color-primary-dark` (como estaba), color verde aplicado a `&__quote` en su lugar
+  - Texto de las cards de highlights con más presencia: tamaño subido (`clamp($font-size-lg, 1.8vw, $font-size-2xl)`, antes `$font-size-base`→`$font-size-xl`) manteniendo el peso ligero original (300) — se probó peso medio (500) primero a petición del usuario, revertido a 300 en la iteración siguiente
+
+**Método de verificación usado en toda la serie**: sin backend local conectado (el placeholder no sirve para juzgar contraste), se montaron pruebas aisladas descargando fotos reales desde `https://api.casa-caldereta.com/api/v1/photos` y renderizando el hero con Playwright a distintos anchos (390px, 1280-1440px desktop) para comparar antes/después antes de dar cualquier cambio de contraste por bueno.
+
+---
+
 ## Pendientes / Preguntas abiertas
 - [ ] **Mostrar galería de imágenes y lat/lng de puntos en `route-detail-page`** (ver sección "Mejora formulario admin de rutas" arriba, 2026-07-08) — ya se pueden gestionar desde el admin pero la página pública de la ruta todavía no las pinta (alcance diferido a propósito, "para luego")
 - [ ] **Verificar en producción tras deploy de Vercel** que el enlace externo de ruta/punto (`820f769`, 2026-07-08) se ve bien en móvil real
@@ -533,3 +561,9 @@ El arreglo de `6b7dd1f`/`0544fca` no fue suficiente: en Safari real (Mac **e** i
 | fix: el modal seguía sin verse en Safari real (`0544fca`) | inset:0+margin:auto da height:0 en Safari con contenido flex — centrado con top/left 50%+transform, animación desacoplada del centrado |
 | fix: altura indefinida del dialog en Safari real (`d9779b2`, insuficiente) | height:fit-content en .modal — desplegado y verificado, pero el usuario confirmó que seguía en height:0px |
 | fix: el modal seguía colapsando a height:0 en Safari real (`62a027b`) | Causa real: flex:1 (basis 0%) en .modal__container hacía que Safari ignorase el contenido al calcular el alto automático del dialog — flex:1 1 auto lo soluciona. Confirmado en vivo antes de aplicarlo, y por el usuario en producción tras el deploy |
+| style: rediseñar hero y sección highlights de la home (`4ac375e`) | Pills eliminadas, subtítulo reordenado arriba en dorado, label "LA CASA" quitado, título en cursiva, fondo de sección/cards igualado al navbar |
+| style: quitar redes sociales del footer y cursiva en tarjetas de actividades (`d882c73`) | WhatsApp/Instagram eliminados del footer, texto de cards Senderismo/Mountain Bike en cursiva |
+| feat: añadir texto descriptivo al hero y mejorar layout móvil (`f4f53fa`) | Nueva nota bajo los botones (Fraunces cursiva), bloque de texto centrado verticalmente en móvil |
+| fix: mejorar legibilidad del hero en móvil (`f2ebddf`) | Degradado horizontal (pensado para desktop) sustituido por uno vertical robusto ante cualquier foto; texto subido, text-shadow de refuerzo |
+| fix: mejoras UX/UI del hero en móvil — botones, label, nota y hueco vacío (`b6e78ed`) | Botones a ancho completo en móvil, label ilegible corregido, palabra "SOLO" resaltada, fix de min-height por offset del header fijo |
+| style: quitar chevron del hero y mejorar texto de las cards de highlights (`db2cc03`) | Chevron de scroll revertido (sin valor real), colores de highlights corregidos (título como estaba, verde navbar al texto de las cards), tamaño de texto aumentado |

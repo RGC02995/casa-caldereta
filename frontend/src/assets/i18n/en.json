@@ -153,6 +153,8 @@
       "submitting":         "Preparing payment...",
       "selectDates":        "Select dates first",
       "proceed":            "Proceed to payment",
+      "resumeNotice":       "You have a payment in progress for these dates. You can pick up where you left off.",
+      "resumeButton":       "Continue with payment",
       "errors": {
         "nameRequired":    "Name is required (minimum 2 characters)",
         "emailRequired":   "Email is required",

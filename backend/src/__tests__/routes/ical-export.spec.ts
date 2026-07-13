@@ -110,9 +110,9 @@ describe('GET /calendar.ics — exportacion iCal publica', () => {
     expect(res.text).toContain('DTEND;VALUE=DATE:20260813');
   });
 
-  it('pending_payment con sesion viva incluida; caducada y cancelled excluidas', async () => {
-    await seedBooking({ status: 'pending_payment', stripeSessionExpiresAt: IN_10_MIN() });
-    await seedBooking({ status: 'pending_payment', stripeSessionExpiresAt: AGO_10_MIN(), checkIn: new Date('2026-08-17'), checkOut: new Date('2026-08-19') });
+  it('pending_payment con bloqueo vivo incluida; caducada y cancelled excluidas', async () => {
+    await seedBooking({ status: 'pending_payment', holdExpiresAt: IN_10_MIN() });
+    await seedBooking({ status: 'pending_payment', holdExpiresAt: AGO_10_MIN(), checkIn: new Date('2026-08-17'), checkOut: new Date('2026-08-19') });
     await seedBooking({ status: 'cancelled', checkIn: new Date('2026-08-24'), checkOut: new Date('2026-08-26') });
     const res = await getCalendar();
     expect(countVevents(res.text)).toBe(1);

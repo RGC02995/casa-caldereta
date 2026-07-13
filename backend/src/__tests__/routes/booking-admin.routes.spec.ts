@@ -116,10 +116,10 @@ describe('POST /api/v1/bookings — reserva manual del admin', () => {
     expect(res.status).toBe(400);
   });
 
-  it('con token y solape con pending_payment de sesion viva → 409', async () => {
+  it('con token y solape con pending_payment de bloqueo vivo → 409', async () => {
     await seedBooking({
       status: 'pending_payment',
-      stripeSessionExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      holdExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
     });
     const res = await request(app)
       .post('/api/v1/bookings')
@@ -128,10 +128,10 @@ describe('POST /api/v1/bookings — reserva manual del admin', () => {
     expect(res.status).toBe(409);
   });
 
-  it('con token y pending_payment de sesion ya caducada → 201 (no bloquea)', async () => {
+  it('con token y pending_payment de bloqueo ya caducado → 201 (no bloquea)', async () => {
     await seedBooking({
       status: 'pending_payment',
-      stripeSessionExpiresAt: new Date(Date.now() - 10 * 60 * 1000),
+      holdExpiresAt: new Date(Date.now() - 10 * 60 * 1000),
     });
     const res = await request(app)
       .post('/api/v1/bookings')

@@ -83,14 +83,14 @@ describe('GET /api/v1/bookings/availability', () => {
     expect(res.body.data).toHaveLength(2);
   });
 
-  it('incluye pending_payment con sesion Stripe viva', async () => {
-    await seedBooking({ status: 'pending_payment', stripeSessionExpiresAt: IN_10_MIN() });
+  it('incluye pending_payment con bloqueo (10 min) vivo', async () => {
+    await seedBooking({ status: 'pending_payment', holdExpiresAt: IN_10_MIN() });
     const res = await request(app).get('/api/v1/bookings/availability').set('X-Forwarded-For', nextIp());
     expect(res.body.data).toHaveLength(1);
   });
 
-  it('excluye pending_payment con sesion caducada', async () => {
-    await seedBooking({ status: 'pending_payment', stripeSessionExpiresAt: AGO_10_MIN() });
+  it('excluye pending_payment con bloqueo (10 min) caducado', async () => {
+    await seedBooking({ status: 'pending_payment', holdExpiresAt: AGO_10_MIN() });
     const res = await request(app).get('/api/v1/bookings/availability').set('X-Forwarded-For', nextIp());
     expect(res.body.data).toHaveLength(0);
   });

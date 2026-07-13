@@ -267,6 +267,42 @@
   }
 }
 
+.booking-resume {
+  background-color: rgba($color-secondary, 0.12);
+  border: 1px solid rgba($color-secondary, 0.4);
+  border-radius: $border-radius-lg;
+  padding: $space-5;
+  @include flex-column;
+  gap: $space-4;
+
+  &__text {
+    margin: 0;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-primary-dark;
+  }
+
+  &__btn {
+    @include button-reset;
+    width: 100%;
+    padding: $space-4;
+    background-color: $color-secondary;
+    color: $color-white;
+    border-radius: $border-radius-sm;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    letter-spacing: $letter-spacing-wider;
+    text-transform: uppercase;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color $transition-fast;
+
+    &:hover { background-color: $color-primary; }
+    &:focus-visible { @include focus-visible; }
+  }
+}
+
 .booking-success {
   background-color: $color-white;
   border-radius: $border-radius-lg;

@@ -12,6 +12,7 @@ vi.mock('../../config/stripe', () => ({
     checkout: {
       sessions: {
         create: vi.fn(),
+        expire: vi.fn(),
       },
     },
   },
@@ -152,16 +153,33 @@ describe('POST /api/v1/bookings/checkout — conflictos de fechas (409)', () => 
     expect(res.status).toBe(201);
   });
 
-  it('pending_payment con sesion Stripe viva → 409 (fechas retenidas durante el pago)', async () => {
-    await seedBooking({ status: 'pending_payment', stripeSessionExpiresAt: IN_10_MIN() });
+  it('pending_payment de OTRO huésped con bloqueo vivo → 409 (fechas retenidas durante el pago)', async () => {
+    await seedBooking({ status: 'pending_payment', holdExpiresAt: IN_10_MIN() });
     const res = await postCheckout(checkoutBody());
     expect(res.status).toBe(409);
   });
 
-  it('pending_payment con sesion caducada → 201 (fechas liberadas)', async () => {
-    await seedBooking({ status: 'pending_payment', stripeSessionExpiresAt: AGO_10_MIN() });
+  it('pending_payment con bloqueo caducado → 201 (fechas liberadas)', async () => {
+    await seedBooking({ status: 'pending_payment', holdExpiresAt: AGO_10_MIN() });
     const res = await postCheckout(checkoutBody());
     expect(res.status).toBe(201);
+  });
+
+  it('reintento del MISMO huésped (mismo email + fechas) → 201, expira y borra su reserva anterior', async () => {
+    const previous = await seedBooking({
+      status:          'pending_payment',
+      guestEmail:      'juan@example.com',   // mismo email que checkoutBody()
+      holdExpiresAt:   IN_10_MIN(),
+      stripeSessionId: 'cs_test_previo',
+    });
+    const res = await postCheckout(checkoutBody());   // mismo email + mismas fechas
+    expect(res.status).toBe(201);
+    // La reserva anterior se borró y su sesión de Stripe se expiró.
+    expect(await BookingModel.findById(previous._id)).toBeNull();
+    expect(stripe.checkout.sessions.expire).toHaveBeenCalledWith('cs_test_previo');
+    // Solo queda la nueva pending_payment.
+    const pendings = await BookingModel.find({ status: 'pending_payment' });
+    expect(pendings).toHaveLength(1);
   });
 
   it('reserva cancelled no bloquea → 201', async () => {

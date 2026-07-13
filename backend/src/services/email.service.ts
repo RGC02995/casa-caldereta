@@ -644,6 +644,38 @@ class EmailService {
     });
   }
 
+  // Aviso al propietario cuando el webhook reembolsa automáticamente un pago que no se pudo
+  // confirmar (las fechas ya no estaban disponibles al llegar el pago tardío de Stripe).
+  async notifyOwnerAutoRefund(booking: IBookingDocument, amount: number, reason: string): Promise<void> {
+    if (!this.client || !env.ownerEmail) return;
+
+    const checkIn  = formatDate(booking.checkIn);
+    const checkOut = formatDate(booking.checkOut);
+
+    await this.send({
+      to:      env.ownerEmail,
+      subject: `Pago reembolsado automáticamente — ${booking.guestName} · ${checkIn}`,
+      html:    [
+        '<p>Un pago llegó tarde y las fechas ya no estaban disponibles, así que se ha',
+        ' cancelado la reserva y reembolsado el importe automáticamente.</p>',
+        `<p><strong>Motivo:</strong> ${reason}</p>`,
+        '<ul>',
+        `<li>Huésped: ${booking.guestName} (${booking.guestEmail} · ${booking.guestPhone})</li>`,
+        `<li>Entrada: ${checkIn} · Salida: ${checkOut}</li>`,
+        `<li>Reembolsado: ${amount.toFixed(2)} €</li>`,
+        '</ul>',
+        '<p>Verifica el reembolso en el panel de Stripe.</p>',
+      ].join(''),
+      text:    [
+        'Pago reembolsado automáticamente (fechas no disponibles al confirmar).',
+        `Motivo: ${reason}`,
+        `Huésped: ${booking.guestName} (${booking.guestEmail} · ${booking.guestPhone})`,
+        `Entrada: ${checkIn} · Salida: ${checkOut}`,
+        `Reembolsado: ${amount.toFixed(2)} €`,
+      ].join('\n'),
+    });
+  }
+
   async sendGuestStatusUpdate(booking: IBookingDocument, newStatus: BookingStatus): Promise<void> {
     if (!this.client) return;
     if (newStatus !== 'confirmed' && newStatus !== 'cancelled') return;

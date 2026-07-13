@@ -24,6 +24,7 @@ export interface ICheckoutSessionResult {
   totalPrice:      number;
   depositAmount:   number;
   remainingAmount: number;
+  holdExpiresAt:   string;   // ISO — cuándo se libera la fecha (10 min); el front lo usa para "reanudar pago"
 }
 
 export interface IRemainingPaymentSessionResult {
@@ -55,7 +56,15 @@ export interface IPriceEstimate {
   pricePerNight:   number[];
 }
 
-const SESSION_TTL_SECONDS = 1800; // 30 minutos
+const SESSION_TTL_SECONDS = 1800; // 30 min — mínimo que Stripe exige para expires_at de la sesión
+const HOLD_TTL_SECONDS    = 600;  // 10 min — bloqueo interno de la fecha (libera antes que Stripe)
+
+// Resultado de intentar confirmar el depósito desde el webhook de Stripe.
+export type DepositConfirmResult =
+  | { outcome: 'confirmed';         booking: IBookingDocument }
+  | { outcome: 'already_confirmed'; booking: IBookingDocument }
+  | { outcome: 'not_found' }
+  | { outcome: 'conflict';          booking: IBookingDocument };
 
 class BookingService {
   async getAll(): Promise<IBookingDocument[]> {
@@ -83,7 +92,7 @@ class BookingService {
       {
         $or: [
           { status: { $in: ['pending', 'confirmed'] } },
-          { status: 'pending_payment', stripeSessionExpiresAt: { $gt: now } },
+          { status: 'pending_payment', holdExpiresAt: { $gt: now } },
         ],
       },
       { checkIn: 1, checkOut: 1, _id: 0 },
@@ -97,7 +106,7 @@ class BookingService {
       {
         $or: [
           { status: { $in: ['pending', 'confirmed'] } },
-          { status: 'pending_payment', stripeSessionExpiresAt: { $gt: now } },
+          { status: 'pending_payment', holdExpiresAt: { $gt: now } },
         ],
       },
       { checkIn: 1, checkOut: 1 },
@@ -141,7 +150,7 @@ class BookingService {
       BookingModel.findOne({
         $or: [
           { status: { $in: ['pending', 'confirmed'] } },
-          { status: 'pending_payment', stripeSessionExpiresAt: { $gt: now } },
+          { status: 'pending_payment', holdExpiresAt: { $gt: now } },
         ],
         checkIn:  { $lt: checkOut },
         checkOut: { $gt: checkIn },
@@ -200,18 +209,46 @@ class BookingService {
     return result !== null;
   }
 
+  // Llamado por el cron: borra las reservas pending_payment cuyo bloqueo de 10 min ya expiró
+  // y cierra su sesión de Stripe (best-effort) para que no puedan pagarse tras liberar la fecha.
+  async cleanupExpiredPendingPayments(): Promise<number> {
+    const now = new Date();
+    const expired = await BookingModel.find({
+      status:        'pending_payment',
+      holdExpiresAt: { $lt: now },
+    }).lean<IBookingDocument[]>();
+
+    for (const booking of expired) {
+      if (booking.stripeSessionId) {
+        try {
+          await stripe.checkout.sessions.expire(booking.stripeSessionId);
+        } catch {
+          // La sesión pudo expirar o completarse ya en Stripe — best-effort, seguimos.
+        }
+      }
+      await BookingModel.findByIdAndDelete(booking._id);
+    }
+
+    return expired.length;
+  }
+
   // ─── Stripe — depósito inicial (50 %) ────────────────────────────────────────
 
   async createCheckoutSession(data: ICreateBookingData): Promise<ICheckoutSessionResult> {
     const { checkIn, checkOut } = this.parseDates(data.checkIn, data.checkOut);
     this.validateCheckInDay(checkIn);
 
+    // Reintento del mismo usuario: si ya tiene un pending_payment vivo para EXACTAMENTE estas
+    // fechas (volvió atrás desde Stripe), se expira y borra antes de crear el nuevo — así su
+    // propia reserva fantasma no le bloquea con un 409.
+    await this.releaseOwnPendingPayment(data.guestEmail, checkIn, checkOut);
+
     const now = new Date();
     const [conflict, blockedConflict] = await Promise.all([
       BookingModel.findOne({
         $or: [
           { status: { $in: ['pending', 'confirmed'] } },
-          { status: 'pending_payment', stripeSessionExpiresAt: { $gt: now } },
+          { status: 'pending_payment', holdExpiresAt: { $gt: now } },
         ],
         checkIn:  { $lt: checkOut },
         checkOut: { $gt: checkIn },
@@ -229,6 +266,7 @@ class BookingService {
     ]);
     const stay = calculateStayTotal(checkIn, checkOut, data.guests, config, rules);
     const stripeSessionExpiresAt = new Date(Date.now() + SESSION_TTL_SECONDS * 1000);
+    const holdExpiresAt          = new Date(Date.now() + HOLD_TTL_SECONDS * 1000);
 
     const checkInFormatted  = new Date(checkIn).toLocaleDateString('es-ES');
     const checkOutFormatted = new Date(checkOut).toLocaleDateString('es-ES');
@@ -276,6 +314,7 @@ class BookingService {
       status:                'pending_payment',
       stripeSessionId:       session.id,
       stripeSessionExpiresAt,
+      holdExpiresAt,
     };
     if (data.notes) bookingData['notes'] = data.notes;
 
@@ -298,17 +337,46 @@ class BookingService {
       totalPrice:      stay.subtotal,
       depositAmount:   stay.deposit,
       remainingAmount: stay.remaining,
+      holdExpiresAt:   holdExpiresAt.toISOString(),
     };
   }
 
-  // Llamado desde el webhook — idempotente
-  async confirmFromStripe(
+  // Llamado desde el webhook — idempotente y defensivo.
+  // Como la fecha se libera a los 10 min pero la sesión de Stripe vive 30 min, un pago tardío
+  // podría llegar cuando la fecha ya la ocupó otra reserva (o la reserva fantasma fue borrada).
+  // En esos casos NO se confirma: el controlador reembolsará el importe recién cobrado.
+  async confirmDepositPayment(
     stripeSessionId: string,
     paymentIntentId: string,
-  ): Promise<IBookingDocument | null> {
+  ): Promise<DepositConfirmResult> {
     const booking = await BookingModel.findOne({ stripeSessionId });
-    if (!booking) return null;
-    if (booking.status === 'confirmed') return withId(booking.toObject() as IBookingDocument);
+    if (!booking) return { outcome: 'not_found' };
+    if (booking.status === 'confirmed') {
+      return { outcome: 'already_confirmed', booking: withId(booking.toObject() as IBookingDocument) };
+    }
+
+    const now = new Date();
+    const [conflict, blockedConflict] = await Promise.all([
+      BookingModel.findOne({
+        _id: { $ne: booking._id },
+        $or: [
+          { status: { $in: ['pending', 'confirmed'] } },
+          { status: 'pending_payment', holdExpiresAt: { $gt: now } },
+        ],
+        checkIn:  { $lt: booking.checkOut },
+        checkOut: { $gt: booking.checkIn },
+      }),
+      this.hasBlockedConflict(booking.checkIn, booking.checkOut),
+    ]);
+
+    if (conflict || blockedConflict) {
+      const cancelled = await BookingModel.findByIdAndUpdate(
+        booking._id,
+        { status: 'cancelled', stripePaymentIntentId: paymentIntentId },
+        { returnDocument: 'after', runValidators: true },
+      ).lean<IBookingDocument>();
+      return { outcome: 'conflict', booking: withId(cancelled!) };
+    }
 
     const doc = await BookingModel.findByIdAndUpdate(
       booking._id,
@@ -316,7 +384,7 @@ class BookingService {
       { returnDocument: 'after', runValidators: true },
     ).lean<IBookingDocument>();
 
-    return doc ? withId(doc) : null;
+    return { outcome: 'confirmed', booking: withId(doc!) };
   }
 
   // ─── Stripe — segundo pago (50 % restante) ───────────────────────────────────
@@ -494,7 +562,7 @@ class BookingService {
         _id: { $lt: savedId },
         $or: [
           { status: { $in: ['pending', 'confirmed'] } },
-          { status: 'pending_payment', stripeSessionExpiresAt: { $gt: now } },
+          { status: 'pending_payment', holdExpiresAt: { $gt: now } },
         ],
         checkIn:  { $lt: checkOut },
         checkOut: { $gt: checkIn },
@@ -502,6 +570,31 @@ class BookingService {
       this.hasBlockedConflict(checkIn, checkOut),
     ]);
     return conflict !== null || blockedConflict;
+  }
+
+  // Expira y borra la(s) reserva(s) pending_payment vivas del mismo huésped para EXACTAMENTE
+  // estas fechas, para que un reintento (volver atrás desde Stripe) no choque con su propia
+  // reserva anterior. No toca reservas de otros huéspedes ni de otras fechas.
+  private async releaseOwnPendingPayment(guestEmail: string, checkIn: Date, checkOut: Date): Promise<void> {
+    const now = new Date();
+    const own = await BookingModel.find({
+      status:        'pending_payment',
+      guestEmail:    guestEmail.trim().toLowerCase(),
+      checkIn,
+      checkOut,
+      holdExpiresAt: { $gt: now },
+    }).lean<IBookingDocument[]>();
+
+    for (const booking of own) {
+      if (booking.stripeSessionId) {
+        try {
+          await stripe.checkout.sessions.expire(booking.stripeSessionId);
+        } catch {
+          // Sesión ya expirada/completada — best-effort.
+        }
+      }
+      await BookingModel.findByIdAndDelete(booking._id);
+    }
   }
 
   private async hasBlockedConflict(checkIn: Date, checkOut: Date): Promise<boolean> {

@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { map, catchError } from 'rxjs/operators';
 import { BehaviorSubject, combineLatest, of, switchMap } from 'rxjs';
 import { BookingService } from '../../../../core/services/booking.service';
+import { BookingDraftService } from '../../../../core/services/booking-draft.service';
 import { BlockedPeriodService } from '../../../../core/services/blocked-period.service';
 import { PricingSettingsService } from '../../../../core/services/pricing-settings.service';
 import { IBookingAvailability, IPriceEstimate } from '../../../../core/models/booking.model';
@@ -29,11 +30,13 @@ export class BookingPageComponent {
   private readonly bookingService      = inject(BookingService);
   private readonly blockedService      = inject(BlockedPeriodService);
   private readonly pricingSettingsService = inject(PricingSettingsService);
+  private readonly draft               = inject(BookingDraftService);
 
   readonly loadError = signal('');
-  readonly checkIn   = signal<Date | null>(null);
-  readonly checkOut  = signal<Date | null>(null);
-  readonly guests    = signal(2);
+  // Fechas y personas viven en el borrador (sobreviven al ida-y-vuelta de Stripe y al "atrás").
+  readonly checkIn   = this.draft.checkIn;
+  readonly checkOut  = this.draft.checkOut;
+  readonly guests    = this.draft.guests;
 
   private readonly refresh$ = new BehaviorSubject<void>(undefined);
 
@@ -103,6 +106,7 @@ export class BookingPageComponent {
   onConflict(): void {
     this.checkIn.set(null);
     this.checkOut.set(null);
+    this.draft.clearPendingPayment();
     this.refresh$.next();
   }
 }

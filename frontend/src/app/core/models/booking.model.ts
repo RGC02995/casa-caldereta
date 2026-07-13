@@ -41,6 +41,7 @@ export interface ICheckoutSessionResult {
   readonly totalPrice:      number;
   readonly depositAmount:   number;
   readonly remainingAmount: number;
+  readonly holdExpiresAt:   string;   // ISO — cuándo se libera la fecha (bloqueo de 10 min)
 }
 
 export interface IPriceEstimate {

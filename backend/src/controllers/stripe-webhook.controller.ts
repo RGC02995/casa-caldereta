@@ -64,19 +64,50 @@ export async function stripeWebhookHandler(req: Request, res: Response): Promise
       return;
     }
 
-    // Pago inicial (depósito) — confirmar reserva
-    const booking = await bookingService.confirmFromStripe(session.id, paymentIntentId);
+    // Pago inicial (depósito) — confirmar reserva (defensivo ante pagos tardíos)
+    const result = await bookingService.confirmDepositPayment(session.id, paymentIntentId);
 
-    if (!booking) {
-      console.warn(`[stripe-webhook] Sesión sin reserva asociada: ${session.id}`);
+    if (result.outcome === 'not_found') {
+      // La reserva ya no existe (bloqueo de 10 min expirado + limpieza, o reintento del propio
+      // usuario). El dinero se cobró igualmente → reembolso defensivo. Es un caso casi imposible
+      // porque la limpieza expira la sesión de Stripe antes de borrar la reserva.
+      console.warn(`[stripe-webhook] Depósito sin reserva asociada — reembolsando: ${session.id}`);
+      if (paymentIntentId) {
+        try {
+          await stripe.refunds.create({ payment_intent: paymentIntentId });
+        } catch (refundErr) {
+          console.error('[stripe-webhook] Falló el reembolso defensivo (sin reserva):', refundErr);
+        }
+      }
       res.status(200).json({ received: true });
       return;
     }
 
-    const invoiceUrl = buildInvoiceUrl(String(booking._id));
-    void emailService.notifyOwnerPaymentReceived(booking);
-    void emailService.sendGuestPaymentConfirmed(booking, invoiceUrl);
-    void checkinService.handleWebhookPostConfirmation(booking);
+    if (result.outcome === 'conflict') {
+      // Las fechas se ocuparon por otra reserva entre liberar (10 min) y este pago tardío.
+      // La reserva ya quedó marcada 'cancelled' en el servicio → reembolsar el depósito cobrado.
+      const booking      = result.booking;
+      const refundAmount = booking.depositAmount;
+      try {
+        await stripe.refunds.create({ payment_intent: paymentIntentId });
+        void emailService.sendGuestRefundCancellation(booking, refundAmount);
+        void emailService.notifyOwnerAutoRefund(booking, refundAmount, 'Las fechas ya estaban ocupadas al confirmarse el pago.');
+      } catch (refundErr) {
+        console.error('[stripe-webhook] Falló el reembolso defensivo (conflicto):', refundErr);
+        void emailService.notifyOwnerAutoRefund(booking, refundAmount, 'CONFLICTO DE FECHAS — el reembolso automático falló, revísalo en Stripe manualmente.');
+      }
+      res.status(200).json({ received: true });
+      return;
+    }
+
+    // Reserva confirmada — enviar avisos solo en la confirmación real (no en reintentos idempotentes)
+    const booking = result.booking;
+    if (result.outcome === 'confirmed') {
+      const invoiceUrl = buildInvoiceUrl(String(booking._id));
+      void emailService.notifyOwnerPaymentReceived(booking);
+      void emailService.sendGuestPaymentConfirmed(booking, invoiceUrl);
+      void checkinService.handleWebhookPostConfirmation(booking);
+    }
 
     res.status(200).json({ received: true });
   } catch (err) {

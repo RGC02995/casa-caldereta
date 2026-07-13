@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 import { DateFormatPipe } from '../../../../shared/pipes/date-format.pipe';
 import { BookingService } from '../../../../core/services/booking.service';
+import { BookingDraftService } from '../../../../core/services/booking-draft.service';
 import { IPriceEstimate } from '../../../../core/models/booking.model';
 import { ModalComponent } from '../../../../shared/components/modal/modal.component';
 import { PrivacyContentComponent } from '../../../legal/components/privacy-content/privacy-content.component';
@@ -25,6 +26,7 @@ const EMPTY_ESTIMATE: IPriceEstimate = {
 })
 export class BookingRequestPanelComponent {
   private readonly bookingService = inject(BookingService);
+  private readonly draft          = inject(BookingDraftService);
   private readonly destroyRef     = inject(DestroyRef);
   private readonly translate      = inject(TranslateService);
 
@@ -42,12 +44,33 @@ export class BookingRequestPanelComponent {
   readonly isPrivacyModalOpen = signal(false);
   readonly isTermsModalOpen   = signal(false);
 
-  readonly nameValue           = signal('');
-  readonly emailValue          = signal('');
-  readonly phoneValue          = signal('');
-  readonly messageValue        = signal('');
+  // Datos del huésped viven en el borrador (sobreviven al ida-y-vuelta de Stripe y al "atrás").
+  readonly nameValue           = this.draft.guestName;
+  readonly emailValue          = this.draft.guestEmail;
+  readonly phoneValue          = this.draft.guestPhone;
+  readonly messageValue        = this.draft.message;
+  // Consentimientos legales NO se persisten: se re-confirman en cada intento.
   readonly privacyChecked      = signal(false);
   readonly cancelPolicyChecked = signal(false);
+
+  // Pago en curso reanudable (el usuario volvió atrás con una sesión de Stripe aún viva).
+  readonly canResumePayment = computed(() => {
+    const url    = this.draft.pendingSessionUrl();
+    const expiry = this.draft.pendingHoldExpiresAt();
+    return url !== null && expiry !== null && expiry.getTime() > Date.now();
+  });
+
+  constructor() {
+    // Si al reentrar hay una sesión guardada pero ya caducó el bloqueo, se descarta.
+    if (this.draft.pendingSessionUrl() && !this.draft.hasResumablePayment()) {
+      this.draft.clearPendingPayment();
+    }
+  }
+
+  resumePayment(): void {
+    const url = this.draft.pendingSessionUrl();
+    if (url) window.location.assign(url);
+  }
 
   readonly nameTouched          = signal(false);
   readonly emailTouched         = signal(false);
@@ -139,7 +162,14 @@ export class BookingRequestPanelComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
-          window.location.assign(response.data.sessionUrl);
+          const result = response.data;
+          // Recordar la sesión para poder reanudarla si el usuario vuelve atrás desde Stripe.
+          this.draft.rememberPendingPayment(
+            result.bookingId,
+            result.sessionUrl,
+            new Date(result.holdExpiresAt),
+          );
+          window.location.assign(result.sessionUrl);
         },
         error: (err: HttpErrorResponse) => {
           this.isSubmitting.set(false);

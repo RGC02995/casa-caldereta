@@ -13,6 +13,7 @@ import { sitemapHandler } from './controllers/sitemap.controller';
 import { icalExportHandler } from './controllers/ical-export.controller';
 import { checkinService } from './services/checkin.service';
 import { icalSyncService } from './services/ical-sync.service';
+import { bookingService } from './services/booking.service';
 
 const app = express();
 
@@ -73,6 +74,14 @@ async function bootstrap(): Promise<void> {
   cron.schedule('*/15 * * * *', () => {
     icalSyncService.syncAll().catch((err: unknown) => {
       console.error('[cron] Error en sincronización iCal:', err instanceof Error ? err.message : String(err));
+    });
+  });
+
+  // Cada minuto — borra reservas pending_payment cuyo bloqueo de 10 min ya expiró
+  // (libera la fecha para otros huéspedes y cierra la sesión de Stripe abandonada)
+  cron.schedule('* * * * *', () => {
+    bookingService.cleanupExpiredPendingPayments().catch((err: unknown) => {
+      console.error('[cron] Error en limpieza de pending_payment:', err instanceof Error ? err.message : String(err));
     });
   });
 
