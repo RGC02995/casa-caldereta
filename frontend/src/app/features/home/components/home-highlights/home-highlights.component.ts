@@ -78,5 +78,15 @@ export class HomeHighlightsComponent {
         { text: ' muy cómodo.' },
       ],
     },
+    {
+      image: 'assets/images/6.jpg',
+      alt: 'Playa cercana a Casa Caldereta',
+      size: 'landscape',
+      segments: [
+        { text: 'A tan solo media hora podréis disfrutar de las hermosas playas de ' },
+        { text: 'Daimús, Gandia y Oliva', em: true },
+        { text: '.' },
+      ],
+    },
   ];
 }
