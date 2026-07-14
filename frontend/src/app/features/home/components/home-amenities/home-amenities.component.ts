@@ -35,11 +35,26 @@ export class HomeAmenitiesComponent {
     },
     {
       category: 'Cocina',
-      items: ['Fogones', 'Horno', 'Nevera', 'Lavavajillas', 'Cafetera', 'Copas de vino'],
+      items: [
+        'Vitrocerámica',
+        'Horno',
+        'Nevera',
+        'Lavavajillas',
+        'Cafetera',
+        'Copas de vino',
+        'Menaje de cocina',
+      ],
     },
     {
       category: 'Confort y tecnología',
-      items: ['WiFi', 'Smart TV', 'Aire acondicionado', 'Zona de trabajo', 'Jacuzzi'],
+      items: [
+        'WiFi',
+        'Smart TV',
+        'Aire acondicionado',
+        'Zona de trabajo',
+        'Jacuzzi',
+        'Toallas y sábanas',
+      ],
     },
     {
       category: 'Baños',
@@ -53,7 +68,7 @@ export class HomeAmenitiesComponent {
     },
     {
       category: 'Exterior',
-      items: ['Terraza privada', 'Barbacoa', 'Hoguera', 'Vistas a la montaña'],
+      items: ['Terraza privada', 'Barbacoa', 'Vistas a la montaña'],
     },
     {
       category: 'Política del alojamiento',
