@@ -7,9 +7,11 @@ import { BookingService } from '../../../../core/services/booking.service';
 import { BookingDraftService } from '../../../../core/services/booking-draft.service';
 import { BlockedPeriodService } from '../../../../core/services/blocked-period.service';
 import { PricingSettingsService } from '../../../../core/services/pricing-settings.service';
+import { PricingRuleService } from '../../../../core/services/pricing-rule.service';
 import { IBookingAvailability, IPriceEstimate } from '../../../../core/models/booking.model';
 import { IBlockedPeriodAvailability } from '../../../../core/models/blocked-period.model';
 import { IPricingSettings } from '../../../../core/models/pricing-settings.model';
+import { IPricingRule } from '../../../../core/models/pricing-rule.model';
 import { SeoService } from '../../../../core/services/seo.service';
 import { BookingHeroComponent } from '../../components/booking-hero/booking-hero.component';
 import { BookingAdvantagesComponent } from '../../components/booking-advantages/booking-advantages.component';
@@ -30,6 +32,7 @@ export class BookingPageComponent {
   private readonly bookingService      = inject(BookingService);
   private readonly blockedService      = inject(BlockedPeriodService);
   private readonly pricingSettingsService = inject(PricingSettingsService);
+  private readonly pricingRuleService  = inject(PricingRuleService);
   private readonly draft               = inject(BookingDraftService);
 
   readonly loadError = signal('');
@@ -46,6 +49,16 @@ export class BookingPageComponent {
       catchError(() => of(null as IPricingSettings | null)),
     ),
     { initialValue: null as IPricingSettings | null },
+  );
+
+  readonly pricingRules = toSignal(
+    this.refresh$.pipe(
+      switchMap(() => this.pricingRuleService.getAll().pipe(
+        map(response => response.data),
+        catchError(() => of([] as IPricingRule[])),
+      )),
+    ),
+    { initialValue: [] as IPricingRule[] },
   );
 
   readonly bookedRanges = toSignal(

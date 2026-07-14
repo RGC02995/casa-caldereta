@@ -5,6 +5,7 @@ import { BookingCalendarComponent } from './booking-calendar.component';
 import { IPricingSettings } from '../../../../core/models/pricing-settings.model';
 import { IBlockedPeriodAvailability } from '../../../../core/models/blocked-period.model';
 import { IBookingAvailability } from '../../../../core/models/booking.model';
+import { IPricingRule } from '../../../../core/models/pricing-rule.model';
 
 const PRICING: IPricingSettings = {
   monThuPrice:    100,
@@ -19,6 +20,13 @@ function bookedRange(checkIn: string, checkOut: string): IBookingAvailability {
 
 function blockedPeriod(startDate: string, endDate: string): IBlockedPeriodAvailability {
   return { startDate, endDate };
+}
+
+function pricingRule(startDate: string, endDate: string, pricePerNight: number): IPricingRule {
+  return {
+    id: `rule-${startDate}`, label: 'Regla de prueba', startDate, endDate, pricePerNight,
+    minNights: 1, createdAt: startDate, updatedAt: startDate,
+  };
 }
 
 // Agosto 2026: sáb 1 · lun 10, mar 11, mié 12, jue 13, vie 14, sáb 15, dom 16
@@ -109,6 +117,39 @@ describe('BookingCalendarComponent', () => {
     expect(day(15).price).toBe(180); // sabado
     expect(day(16).price).toBe(100); // domingo
     expect(day(17).price).toBe(100); // lunes
+  });
+
+  describe('pricingRules — precio especial de un dia (periodos especiales)', () => {
+    it('regla de un solo dia (startDate===endDate) sobreescribe el precio de ese dia en el calendario', () => {
+      fixture.componentRef.setInput('pricingSettings', PRICING);
+      fixture.componentRef.setInput('pricingRules', [pricingRule('2026-08-13', '2026-08-13', 500)]);
+      expect(day(13).price).toBe(500); // jueves normal seria 100, la regla manda
+      expect(day(14).price).toBe(150); // vie sin regla, precio base normal
+    });
+
+    it('regla de rango de varios dias sobreescribe todos los dias que cubre', () => {
+      fixture.componentRef.setInput('pricingSettings', PRICING);
+      fixture.componentRef.setInput('pricingRules', [pricingRule('2026-08-13', '2026-08-15', 999)]);
+      expect(day(13).price).toBe(999);
+      expect(day(14).price).toBe(999);
+      expect(day(15).price).toBe(999);
+      expect(day(16).price).toBe(100); // domingo, fuera del rango de la regla
+    });
+
+    it('sin reglas que coincidan, se mantiene el precio base por dia de la semana', () => {
+      fixture.componentRef.setInput('pricingSettings', PRICING);
+      fixture.componentRef.setInput('pricingRules', [pricingRule('2026-09-01', '2026-09-01', 999)]);
+      expect(day(13).price).toBe(100);
+    });
+
+    it('dos reglas solapadas: gana la ultima del array (mismo criterio "last match wins" que el backend)', () => {
+      fixture.componentRef.setInput('pricingSettings', PRICING);
+      fixture.componentRef.setInput('pricingRules', [
+        pricingRule('2026-08-10', '2026-08-15', 111),
+        pricingRule('2026-08-13', '2026-08-13', 222),
+      ]);
+      expect(day(13).price).toBe(222);
+    });
   });
 
   describe('seleccion de rango (onDayClick)', () => {

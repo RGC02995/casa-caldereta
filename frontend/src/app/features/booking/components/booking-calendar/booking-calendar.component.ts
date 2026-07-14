@@ -10,6 +10,7 @@ import { es } from 'date-fns/locale';
 import { IBookingAvailability } from '../../../../core/models/booking.model';
 import { IBlockedPeriodAvailability } from '../../../../core/models/blocked-period.model';
 import { IPricingSettings } from '../../../../core/models/pricing-settings.model';
+import { IPricingRule } from '../../../../core/models/pricing-rule.model';
 
 interface CalendarDay {
   readonly date:       Date | null;
@@ -38,6 +39,7 @@ export class BookingCalendarComponent {
   readonly checkOut        = input<Date | null>(null);
   readonly loadError       = input('');
   readonly pricingSettings = input<IPricingSettings | null>(null);
+  readonly pricingRules    = input<IPricingRule[]>([]);
 
   readonly checkInChange  = output<Date | null>();
   readonly checkOutChange = output<Date | null>();
@@ -58,6 +60,7 @@ export class BookingCalendarComponent {
       this.bookedRanges(),
       this.blockedPeriods(),
       this.pricingSettings(),
+      this.pricingRules(),
     )
   );
 
@@ -133,6 +136,7 @@ export class BookingCalendarComponent {
     bookedRanges: IBookingAvailability[],
     blockedPeriods: IBlockedPeriodAvailability[],
     pricingSettings: IPricingSettings | null,
+    pricingRules: IPricingRule[],
   ): CalendarDay[] {
     const monthStart   = startOfMonth(month);
     const monthEnd     = endOfMonth(month);
@@ -159,6 +163,12 @@ export class BookingCalendarComponent {
       start: startOfDay(new Date(b.startDate)),
       end:   startOfDay(addDays(new Date(b.endDate), 1)),
     }));
+    // Rango inclusivo en ambos extremos — mismo criterio que calculateStayTotal() en el backend
+    const parsedRules = pricingRules.map(r => ({
+      start:         startOfDay(new Date(r.startDate)),
+      end:           startOfDay(new Date(r.endDate)),
+      pricePerNight: r.pricePerNight,
+    }));
 
     let current = monthStart;
     while (!isAfter(current, monthEnd)) {
@@ -178,7 +188,13 @@ export class BookingCalendarComponent {
 
       let price = 0;
       if (!isPast && !isBooked && !isBlocked && pricingSettings) {
-        if (dow === 5)      price = pricingSettings.friPrice;
+        // Última regla que coincide gana — mismo criterio que getOverlapping()/calculateStayTotal() en el backend
+        const matchingRule = parsedRules
+          .filter(r => !isBefore(current, r.start) && !isAfter(current, r.end))
+          .at(-1);
+
+        if (matchingRule)   price = matchingRule.pricePerNight;
+        else if (dow === 5) price = pricingSettings.friPrice;
         else if (dow === 6) price = pricingSettings.satPrice;
         else                price = pricingSettings.monThuPrice; // incluye domingo
       }
