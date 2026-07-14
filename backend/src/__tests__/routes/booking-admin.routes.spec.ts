@@ -7,6 +7,7 @@ import apiRouter from '../../routes/index';
 import { signAccessToken } from '../../utils/jwt.util';
 import { BookingModel, IBookingDocument } from '../../models/booking.model';
 import { BlockedPeriodModel } from '../../models/blocked-period.model';
+import { PricingRuleModel } from '../../models/pricing-rule.model';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -74,6 +75,18 @@ describe('POST /api/v1/bookings — reserva manual del admin', () => {
     expect(res.status).toBe(201);
     expect(res.body.data.status).toBe('pending');
     expect(res.body.data.totalPrice).toBe(300); // lun+mar+mié a 100 €/noche
+  });
+
+  it('con token: el minNights de una regla de precio especial NO bloquea la reserva manual del admin', async () => {
+    await PricingRuleModel.create({
+      label: 'Fin de año', startDate: new Date('2026-08-10'), endDate: new Date('2026-08-12'),
+      pricePerNight: 500, minNights: 5,
+    });
+    const res = await request(app)
+      .post('/api/v1/bookings')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send(bookingBody({ checkIn: '2026-08-10', checkOut: '2026-08-11' })); // 1 noche, regla exige 5
+    expect(res.status).toBe(201);
   });
 
   it('con token y solape con reserva confirmed → 409', async () => {

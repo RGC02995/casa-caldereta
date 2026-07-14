@@ -22,6 +22,7 @@ import apiRouter from '../../routes/index';
 import { stripe } from '../../config/stripe';
 import { BookingModel, IBookingDocument } from '../../models/booking.model';
 import { BlockedPeriodModel } from '../../models/blocked-period.model';
+import { PricingRuleModel } from '../../models/pricing-rule.model';
 
 const sessionCreateMock = stripe.checkout.sessions.create as unknown as Mock;
 
@@ -271,6 +272,27 @@ describe('POST /api/v1/bookings/checkout — validacion de entrada (400, sin lle
       expect(res.status).toBe(400);
     }
     expect(sessionCreateMock).not.toHaveBeenCalled();
+  });
+
+  it('estancia mas corta que el minNights de una regla que la toca → 400, sin llegar a Stripe', async () => {
+    await PricingRuleModel.create({
+      label: 'Fin de año', startDate: new Date('2026-08-20'), endDate: new Date('2026-08-22'),
+      pricePerNight: 500, minNights: 3,
+    });
+    const res = await postCheckout(checkoutBody({ checkIn: '2026-08-20', checkOut: '2026-08-21' }));
+    expect(res.status).toBe(400);
+    expect(res.body.message).toContain('mínima de 3 noches');
+    expect(sessionCreateMock).not.toHaveBeenCalled();
+  });
+
+  it('estancia que cumple el minNights de la regla → 201, si llega a Stripe', async () => {
+    await PricingRuleModel.create({
+      label: 'Fin de año', startDate: new Date('2026-08-20'), endDate: new Date('2026-08-22'),
+      pricePerNight: 500, minNights: 3,
+    });
+    const res = await postCheckout(checkoutBody({ checkIn: '2026-08-20', checkOut: '2026-08-23' }));
+    expect(res.status).toBe(201);
+    expect(sessionCreateMock).toHaveBeenCalledTimes(1);
   });
 
   it('email invalido → 400', async () => {

@@ -29,7 +29,7 @@ export async function getPriceEstimateHandler(req: Request, res: Response): Prom
   } catch (error) {
     if (error instanceof Error) {
       const code = (error as { code?: string }).code;
-      if (code === 'INVALID_DATES' || code === 'SUNDAY_CLOSED') {
+      if (code === 'INVALID_DATES' || code === 'SUNDAY_CLOSED' || code === 'MIN_NIGHTS') {
         res.status(400).json({ success: false, message: error.message });
         return;
       }
@@ -211,6 +211,7 @@ export async function createCheckoutSessionHandler(req: Request, res: Response):
       const code = (error as { code?: string }).code;
       if (code === 'DATE_CONFLICT') { res.status(409).json({ success: false, message: error.message }); return; }
       if (code === 'SUNDAY_CLOSED') { res.status(400).json({ success: false, message: error.message }); return; }
+      if (code === 'MIN_NIGHTS')    { res.status(400).json({ success: false, message: error.message }); return; }
       if (code === 'INVALID_DATES' || error.name === 'ValidationError') {
         res.status(400).json({ success: false, message: error.message });
         return;

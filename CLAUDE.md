@@ -512,6 +512,20 @@ Tras el cambio anterior, el usuario reportó que el precio de un período especi
 
 ---
 
+### Forzar `minNights` de las reglas de precio especiales al reservar ✅ COMPLETADO (2026-07-14)
+Hallazgo de la auditoría de seguridad del flujo de precios (mismo día): `PricingRuleModel.minNights` se guardaba y se mostraba en el admin pero nunca se comprobaba al reservar — un huésped podía reservar 1 sola noche de una regla pensada para una estancia mínima de varias (ej. "Fin de año, mín. 3 noches"). No era una vulnerabilidad técnica (el precio de esa noche era el correcto), era una regla de negocio decorativa. Planificado en modo plan con 3 decisiones explícitas del usuario antes de tocar código.
+
+- [x] **Backend — nuevo método `validateMinNights()`** en `booking.service.ts`: si la estancia toca cualquier noche de una regla cuyo `minNights` sea mayor que las noches pedidas, rechaza con `code: 'MIN_NIGHTS'` y un mensaje que incluye el rango de fechas de la regla ("Las fechas del 20/8/2026 al 22/8/2026 requieren una estancia mínima de 3 noches"). Si varias reglas solapadas aplican, gana la más restrictiva (`minNights` más alto)
+- [x] **Se aplica solo al checkout público** (`getEstimate()` y `createCheckoutSession()`, mismo patrón que ya usa `validateCheckInDay()` para el domingo cerrado) — **NO** se toca `create()` (reservas manuales del admin), que sigue pudiendo saltarse esta regla a propósito
+- [x] `IPricingRuleOverride` (`pricing.util.ts`) ampliado con `minNights`/`label` para poder acceder a esos campos sin import circular
+- [x] `booking.controller.ts` — nuevo código `MIN_NIGHTS` mapeado a 400 en `getPriceEstimateHandler` y `createCheckoutSessionHandler`
+- [x] **Frontend — sin cambios de código**: `booking-request-panel` ya mostraba `err.error?.message` del servidor para cualquier error no-409, así que el aviso aparece solo con el cambio de backend
+- [x] **Limitación conocida y aceptada**: el calendario público (`booking-calendar`) sigue sin saber de `minNights` — deja seleccionar el rango corto en la cuadrícula, el aviso solo aparece al pedir presupuesto o confirmar. Deshabilitarlo desde el propio calendario sería un cambio más grande, no incluido
+- [x] **Tests nuevos backend** — 4 en `booking-availability.routes.spec.ts` (bloqueo con mensaje de rango, cumple mínimo, `minNights:1` no bloquea, solape gana el más alto) + 2 en `booking-checkout.routes.spec.ts` (400 sin llegar a Stripe, 201 si cumple) + 1 en `booking-admin.routes.spec.ts` (reserva manual del admin NO se ve afectada). 260/260 tests backend en verde, 81/81 frontend, `ng build` sin errores
+- **Sin commitear todavía**
+
+---
+
 ## Pendientes / Preguntas abiertas
 - [ ] **Mostrar galería de imágenes y lat/lng de puntos en `route-detail-page`** (ver sección "Mejora formulario admin de rutas" arriba, 2026-07-08) — ya se pueden gestionar desde el admin pero la página pública de la ruta todavía no las pinta (alcance diferido a propósito, "para luego")
 - [ ] **Verificar en producción tras deploy de Vercel** que el enlace externo de ruta/punto (`820f769`, 2026-07-08) se ve bien en móvil real

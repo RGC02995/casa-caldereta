@@ -4,7 +4,7 @@ import { BlockedPeriodModel } from '../models/blocked-period.model';
 import { withId } from '../utils/mongoose.util';
 import { stripe } from '../config/stripe';
 import { env } from '../config/environment';
-import { calculateStayTotal, isSunday } from '../utils/pricing.util';
+import { calculateStayTotal, isSunday, IPricingRuleOverride } from '../utils/pricing.util';
 import { pricingSettingsService } from './pricing-settings.service';
 import { pricingRuleService } from './pricing-rule.service';
 
@@ -132,6 +132,7 @@ class BookingService {
       pricingRuleService.getOverlapping(checkIn, checkOut),
     ]);
     const stay = calculateStayTotal(checkIn, checkOut, guests, config, rules);
+    this.validateMinNights(stay.nights, rules);
     return {
       totalPrice:      stay.subtotal,
       depositAmount:   stay.deposit,
@@ -284,6 +285,7 @@ class BookingService {
       pricingRuleService.getOverlapping(checkIn, checkOut),
     ]);
     const stay = calculateStayTotal(checkIn, checkOut, data.guests, config, rules);
+    this.validateMinNights(stay.nights, rules);
     const stripeSessionExpiresAt = new Date(Date.now() + SESSION_TTL_SECONDS * 1000);
     const holdExpiresAt          = new Date(Date.now() + HOLD_TTL_SECONDS * 1000);
 
@@ -562,6 +564,24 @@ class BookingService {
       throw Object.assign(
         new Error('Los domingos el alojamiento está cerrado a nuevas entradas'),
         { code: 'SUNDAY_CLOSED' },
+      );
+    }
+  }
+
+  // Solo se llama desde el checkout público (getEstimate/createCheckoutSession) — las
+  // reservas manuales del admin (create()) pueden saltarse el mínimo de noches a propósito.
+  // Si varias reglas solapan, manda la más restrictiva (el minNights más alto).
+  private validateMinNights(nights: number, rules: IPricingRuleOverride[]): void {
+    const binding = rules
+      .filter(r => r.minNights > nights)
+      .sort((a, b) => b.minNights - a.minNights)[0];
+
+    if (binding) {
+      const start = new Date(binding.startDate).toLocaleDateString('es-ES');
+      const end   = new Date(binding.endDate).toLocaleDateString('es-ES');
+      throw Object.assign(
+        new Error(`Las fechas del ${start} al ${end} requieren una estancia mínima de ${binding.minNights} noches`),
+        { code: 'MIN_NIGHTS' },
       );
     }
   }

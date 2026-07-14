@@ -28,6 +28,8 @@ export interface IPricingRuleOverride {
   startDate:     Date;
   endDate:       Date;
   pricePerNight: number;
+  minNights:     number;
+  label:         string;
 }
 
 const DEFAULT_CONFIG: IPricingConfig = {

@@ -5,6 +5,7 @@ import express from 'express';
 import request from 'supertest';
 import apiRouter from '../../routes/index';
 import { BookingModel, IBookingDocument } from '../../models/booking.model';
+import { PricingRuleModel } from '../../models/pricing-rule.model';
 
 // Mini app Express para tests — sin listen(), sin crons, sin Stripe webhook
 const app = express();
@@ -157,5 +158,63 @@ describe('GET /api/v1/bookings/price-estimate', () => {
       .query({ checkIn: '2026-08-12', checkOut: '2026-08-10', guests: '2' })
       .set('X-Forwarded-For', nextIp());
     expect(res.status).toBe(400);
+  });
+
+  describe('minNights de una regla de precio especial', () => {
+    it('estancia mas corta que el minNights de una regla que la toca → 400 con el rango de fechas en el mensaje', async () => {
+      await PricingRuleModel.create({
+        label: 'Fin de año', startDate: new Date('2026-08-20'), endDate: new Date('2026-08-22'),
+        pricePerNight: 500, minNights: 3,
+      });
+      const res = await request(app)
+        .get('/api/v1/bookings/price-estimate')
+        .query({ checkIn: '2026-08-20', checkOut: '2026-08-21', guests: '2' })
+        .set('X-Forwarded-For', nextIp());
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain('mínima de 3 noches');
+      expect(res.body.message).toMatch(/20\/8\/2026.*22\/8\/2026/);
+    });
+
+    it('estancia que cumple el minNights de la regla → 200 normal', async () => {
+      await PricingRuleModel.create({
+        label: 'Fin de año', startDate: new Date('2026-08-20'), endDate: new Date('2026-08-22'),
+        pricePerNight: 500, minNights: 3,
+      });
+      const res = await request(app)
+        .get('/api/v1/bookings/price-estimate')
+        .query({ checkIn: '2026-08-20', checkOut: '2026-08-23', guests: '2' })
+        .set('X-Forwarded-For', nextIp());
+      expect(res.status).toBe(200);
+      expect(res.body.data.nights).toBe(3);
+    });
+
+    it('regla con minNights=1 (default) no bloquea una estancia de 1 noche', async () => {
+      await PricingRuleModel.create({
+        label: 'Precio especial', startDate: new Date('2026-08-20'), endDate: new Date('2026-08-20'),
+        pricePerNight: 500, minNights: 1,
+      });
+      const res = await request(app)
+        .get('/api/v1/bookings/price-estimate')
+        .query({ checkIn: '2026-08-20', checkOut: '2026-08-21', guests: '2' })
+        .set('X-Forwarded-For', nextIp());
+      expect(res.status).toBe(200);
+    });
+
+    it('dos reglas solapadas con distinto minNights → gana la mas restrictiva (la de minNights mas alto)', async () => {
+      await PricingRuleModel.create({
+        label: 'Rango largo', startDate: new Date('2026-08-20'), endDate: new Date('2026-08-25'),
+        pricePerNight: 200, minNights: 2,
+      });
+      await PricingRuleModel.create({
+        label: 'Dia especial', startDate: new Date('2026-08-22'), endDate: new Date('2026-08-22'),
+        pricePerNight: 500, minNights: 5,
+      });
+      const res = await request(app)
+        .get('/api/v1/bookings/price-estimate')
+        .query({ checkIn: '2026-08-22', checkOut: '2026-08-23', guests: '2' })
+        .set('X-Forwarded-For', nextIp());
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain('mínima de 5 noches');
+    });
   });
 });
