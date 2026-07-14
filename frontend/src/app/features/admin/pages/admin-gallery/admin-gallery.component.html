@@ -12,10 +12,12 @@
     [activeFilter]="activeFilter()"
     [loadError]="loadError()"
     [deleteError]="deleteError()"
+    [replaceError]="replaceError()"
     [heroError]="heroError()"
     [heroPhotoId]="heroPhotoId()"
     (filterChanged)="activeFilter.set($event)"
     (deleteRequested)="onDeleteRequested($event)"
+    (replaceRequested)="onReplaceRequested($event)"
     (setHeroRequested)="onSetHeroRequested($event)"
   />
 

@@ -59,6 +59,27 @@ export async function uploadPhotoHandler(req: Request, res: Response): Promise<v
   }
 }
 
+export async function replacePhotoImageHandler(req: Request<{ id: string }>, res: Response): Promise<void> {
+  if (!isValidObjectId(req.params.id)) {
+    res.status(400).json({ success: false, message: 'ID no válido' });
+    return;
+  }
+  if (!req.file) {
+    res.status(400).json({ success: false, message: 'No se ha enviado ninguna imagen' });
+    return;
+  }
+  try {
+    const updatedPhoto = await photoService.replaceImage(req.params.id, req.file.buffer);
+    if (!updatedPhoto) {
+      res.status(404).json({ success: false, message: 'Foto no encontrada' });
+      return;
+    }
+    res.status(200).json({ success: true, data: updatedPhoto, message: 'Imagen reemplazada correctamente' });
+  } catch {
+    res.status(500).json({ success: false, message: 'Error al reemplazar la imagen' });
+  }
+}
+
 export async function updatePhotoOrderHandler(req: Request<{ id: string }>, res: Response): Promise<void> {
   if (!isValidObjectId(req.params.id)) {
     res.status(400).json({ success: false, message: 'ID no válido' });

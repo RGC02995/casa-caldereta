@@ -9,6 +9,7 @@ import { AdminGalleryUploadComponent } from '../../components/admin-gallery-uplo
 import {
   AdminGalleryGridComponent,
   IPhotoDeleteEvent,
+  IPhotoReplaceEvent,
 } from '../../components/admin-gallery-grid/admin-gallery-grid.component';
 import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal.component';
 
@@ -34,6 +35,7 @@ export class AdminGalleryComponent {
 
   readonly loadError    = signal('');
   readonly deleteError  = signal('');
+  readonly replaceError = signal('');
   readonly heroError    = signal('');
   readonly activeFilter = signal<CategoryFilter>('all');
   readonly processingId = signal<string | null>(null);
@@ -97,6 +99,34 @@ export class AdminGalleryComponent {
       },
       error: () => {
         this.deleteError.set('No se pudo eliminar la foto. Inténtalo de nuevo.');
+        this.processingId.set(null);
+      },
+    });
+  }
+
+  onReplaceRequested(event: IPhotoReplaceEvent): void {
+    if (this.processingId()) return;
+
+    this.pendingConfirm.set({
+      message: `"${event.photoAlt}"\n\n¿Reemplazar la foto por el archivo seleccionado? Esta acción no se puede deshacer.`,
+      action:  () => this.executeReplace(event),
+    });
+  }
+
+  private executeReplace(event: IPhotoReplaceEvent): void {
+    this.processingId.set(event.photoId);
+    this.replaceError.set('');
+
+    // el id del documento no cambia al reemplazar, así que si era la foto "hero" lo sigue siendo
+    this.photoService.replaceImage(event.photoId, event.file)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+      next: () => {
+        this.processingId.set(null);
+        this.refresh$.next();
+      },
+      error: () => {
+        this.replaceError.set('No se pudo reemplazar la imagen. Inténtalo de nuevo.');
         this.processingId.set(null);
       },
     });

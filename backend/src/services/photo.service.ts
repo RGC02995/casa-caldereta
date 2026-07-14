@@ -11,6 +11,28 @@ export interface IUploadPhotoData {
   order?:   number;
 }
 
+async function uploadToCloudinary(buffer: Buffer): Promise<UploadApiResponse> {
+  return new Promise<UploadApiResponse>((resolve, reject) => {
+    cloudinary.uploader.upload_stream(
+      {
+        folder:         'casa-caldereta',
+        resource_type:  'image',
+        transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+      },
+      (cloudinaryError, result) => {
+        if (cloudinaryError || !result) {
+          reject(Object.assign(
+            new Error(cloudinaryError?.message ?? 'Error desconocido al subir la imagen'),
+            { code: 'CLOUDINARY_UPLOAD_FAILED' },
+          ));
+        } else {
+          resolve(result);
+        }
+      },
+    ).end(buffer);
+  });
+}
+
 class PhotoService {
   async getAll(): Promise<IPhotoDocument[]> {
     const docs = await PhotoModel.find().sort({ category: 1, order: 1 }).lean<IPhotoDocument[]>();
@@ -23,25 +45,7 @@ class PhotoService {
   }
 
   async upload(data: IUploadPhotoData): Promise<IPhotoDocument> {
-    const uploadResult = await new Promise<UploadApiResponse>((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
-        {
-          folder:         'casa-caldereta',
-          resource_type:  'image',
-          transformation: [{ quality: 'auto', fetch_format: 'auto' }],
-        },
-        (cloudinaryError, result) => {
-          if (cloudinaryError || !result) {
-            reject(Object.assign(
-              new Error(cloudinaryError?.message ?? 'Error desconocido al subir la imagen'),
-              { code: 'CLOUDINARY_UPLOAD_FAILED' },
-            ));
-          } else {
-            resolve(result);
-          }
-        },
-      ).end(data.buffer);
-    });
+    const uploadResult = await uploadToCloudinary(data.buffer);
 
     const photo    = new PhotoModel({
       url:      uploadResult.secure_url,
@@ -55,6 +59,24 @@ class PhotoService {
     const savedDoc = await photo.save();
     const result   = await PhotoModel.findById(savedDoc._id).lean<IPhotoDocument>();
     return withId(result!);
+  }
+
+  async replaceImage(id: string, buffer: Buffer): Promise<IPhotoDocument | null> {
+    const existing = await PhotoModel.findById(id).lean<IPhotoDocument>();
+    if (!existing) return null;
+
+    const uploadResult = await uploadToCloudinary(buffer);
+
+    const doc = await PhotoModel.findByIdAndUpdate(
+      id,
+      { $set: { url: uploadResult.secure_url, publicId: uploadResult.public_id, width: uploadResult.width, height: uploadResult.height } },
+      { returnDocument: 'after', runValidators: true },
+    ).lean<IPhotoDocument>();
+
+    // publicId antiguo solo puede venir de la lectura previa a la subida, nunca del cliente
+    void cloudinary.uploader.destroy(existing.publicId);
+
+    return doc ? withId(doc) : null;
   }
 
   async updateOrder(id: string, order: number): Promise<IPhotoDocument | null> {

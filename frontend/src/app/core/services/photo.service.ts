@@ -23,6 +23,12 @@ export class PhotoService {
     return this.http.post<ApiResponse<IPhoto>>(this.baseUrl, formData);
   }
 
+  replaceImage(id: string, file: File): Observable<ApiResponse<IPhoto>> {
+    const formData = new FormData();
+    formData.append('photo', file);
+    return this.http.post<ApiResponse<IPhoto>>(`${this.baseUrl}/${id}/image`, formData);
+  }
+
   updateOrder(id: string, order: number): Observable<ApiResponse<IPhoto>> {
     return this.http.patch<ApiResponse<IPhoto>>(`${this.baseUrl}/${id}/order`, { order });
   }

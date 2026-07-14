@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   getAllPhotosHandler,
   uploadPhotoHandler,
+  replacePhotoImageHandler,
   updatePhotoOrderHandler,
   deletePhotoHandler,
 } from '../controllers/photo.controller';
@@ -12,6 +13,7 @@ const photoRouter = Router();
 
 photoRouter.get('/',           getAllPhotosHandler);
 photoRouter.post('/',          requireAuth, uploadMiddleware.single('photo'), uploadPhotoHandler);
+photoRouter.post('/:id/image', requireAuth, uploadMiddleware.single('photo'), replacePhotoImageHandler);
 photoRouter.patch('/:id/order', requireAuth, updatePhotoOrderHandler);
 photoRouter.delete('/:id',     requireAuth, deletePhotoHandler);
 

@@ -18,6 +18,12 @@ export interface IPhotoDeleteEvent {
   readonly photoAlt: string;
 }
 
+export interface IPhotoReplaceEvent {
+  readonly photoId:  string;
+  readonly photoAlt: string;
+  readonly file:     File;
+}
+
 @Component({
   selector:    'admin-gallery-grid',
   imports:     [],
@@ -30,11 +36,13 @@ export class AdminGalleryGridComponent {
   readonly activeFilter = input<CategoryFilter>('all');
   readonly loadError    = input('');
   readonly deleteError  = input('');
+  readonly replaceError = input('');
   readonly heroError    = input('');
   readonly heroPhotoId  = input<string | null>(null);
 
   readonly filterChanged    = output<CategoryFilter>();
   readonly deleteRequested  = output<IPhotoDeleteEvent>();
+  readonly replaceRequested = output<IPhotoReplaceEvent>();
   readonly setHeroRequested = output<string>();
 
   readonly filters: { label: string; value: CategoryFilter }[] = [
@@ -50,5 +58,14 @@ export class AdminGalleryGridComponent {
 
   getCategoryLabel(category: PhotoCategory): string {
     return CATEGORY_LABELS[category];
+  }
+
+  onReplaceFileSelected(event: Event, photo: IPhoto): void {
+    const inputElement = event.target as HTMLInputElement;
+    const file = inputElement.files?.[0];
+    if (!file) return;
+
+    this.replaceRequested.emit({ photoId: photo.id, photoAlt: photo.alt, file });
+    inputElement.value = '';
   }
 }

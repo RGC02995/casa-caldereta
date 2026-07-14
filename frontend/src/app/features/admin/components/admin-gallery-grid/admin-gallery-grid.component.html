@@ -9,6 +9,10 @@
       <p class="admin-gallery__action-error" role="alert">{{ deleteError() }}</p>
     }
 
+    @if (replaceError()) {
+      <p class="admin-gallery__action-error" role="alert">{{ replaceError() }}</p>
+    }
+
     @if (heroError()) {
       <p class="admin-gallery__action-error" role="alert">{{ heroError() }}</p>
     }
@@ -55,9 +59,25 @@
                 <span class="admin-gallery__item-alt" [title]="photo.alt">{{ photo.alt }}</span>
               </div>
               <div class="admin-gallery__item-actions">
+                <input
+                  type="file"
+                  class="admin-gallery__file-input"
+                  accept="image/jpeg,image/png,image/webp"
+                  [id]="'replace-input-' + photo.id"
+                  [disabled]="processingId() !== null"
+                  (change)="onReplaceFileSelected($event, photo)"
+                />
+                <label
+                  [for]="'replace-input-' + photo.id"
+                  class="admin-gallery__action-btn admin-gallery__action-btn--replace"
+                  [class.admin-gallery__action-btn--disabled]="processingId() !== null"
+                  [attr.aria-label]="'Reemplazar imagen: ' + photo.alt"
+                >
+                  Reemplazar
+                </label>
                 @if (heroPhotoId() !== photo.id) {
                   <button
-                    class="admin-gallery__hero-btn"
+                    class="admin-gallery__action-btn admin-gallery__action-btn--hero"
                     type="button"
                     [attr.aria-label]="'Establecer como imagen principal: ' + photo.alt"
                     [disabled]="processingId() !== null"
@@ -67,7 +87,7 @@
                   </button>
                 }
                 <button
-                  class="admin-gallery__delete-btn"
+                  class="admin-gallery__action-btn admin-gallery__action-btn--delete"
                   type="button"
                   [attr.aria-label]="'Eliminar foto: ' + photo.alt"
                   [disabled]="processingId() !== null"
