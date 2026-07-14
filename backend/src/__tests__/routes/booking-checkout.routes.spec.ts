@@ -114,6 +114,16 @@ describe('POST /api/v1/bookings/checkout — happy path', () => {
     // deposito = 50 % del total
     expect(saved?.depositAmount).toBe((saved?.totalPrice ?? 0) / 2);
   });
+
+  it('estancia de una sola noche (checkOut = checkIn + 1 día) → 201, sin mínimo de noches', async () => {
+    const res = await postCheckout(checkoutBody({ checkIn: '2026-08-10', checkOut: '2026-08-11' }));
+    expect(res.status).toBe(201);
+
+    const saved = await BookingModel.findById(res.body.data.bookingId);
+    expect(saved?.status).toBe('pending_payment');
+    // Lunes a 100 €/noche con 2 huéspedes
+    expect(saved?.totalPrice).toBe(100);
+  });
 });
 
 describe('POST /api/v1/bookings/checkout — conflictos de fechas (409)', () => {

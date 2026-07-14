@@ -108,6 +108,22 @@ describe('calculateStayTotal', () => {
     expect(result.deposit + result.remaining).toBe(result.subtotal);
   });
 
+  it('regla de precio de un solo día (startDate===endDate) sobreescribe solo esa noche', () => {
+    // Regla de un único día: martes con precio especial de 500 €
+    const result = calculateStayTotal(MON, new Date(2025, 0, 8), 2, undefined, [
+      { startDate: TUE, endDate: TUE, pricePerNight: 500 },
+    ]);
+    expect(result.nights).toBe(2);
+    expect(result.pricePerNight).toEqual([100, 500]); // lunes normal, martes con la regla
+  });
+
+  it('regla de un solo día que no coincide con ninguna noche de la estancia no afecta el precio', () => {
+    const result = calculateStayTotal(MON, TUE, 2, undefined, [
+      { startDate: SAT, endDate: SAT, pricePerNight: 500 },
+    ]);
+    expect(result.pricePerNight).toEqual([100]);
+  });
+
   it('3 noches vie–lun con domingo intermedio: domingo se cobra como lunes, no gratis', () => {
     const MON_NEXT = new Date(2025, 0, 13); // lunes siguiente
     const result = calculateStayTotal(FRI, MON_NEXT, 2);

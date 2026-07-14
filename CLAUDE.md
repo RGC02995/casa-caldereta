@@ -491,6 +491,20 @@ Serie de ajustes visuales/UX sobre la home a petición del usuario, iterando en 
 
 ---
 
+### Precio de un solo día en "períodos especiales" + verificación de reserva de 1 noche ✅ COMPLETADO (2026-07-14)
+Petición del usuario: el admin solo podía crear reglas de precio especial para un rango de ≥2 días (`endDate > startDate` estricto); pidió poder fijar el precio de un único día suelto, además de pedir confirmar que reservar una sola noche funciona en el panel público.
+
+- [x] **Backend — `pricing-rule.service.ts`**:
+  - `create()`: `endDate <= startDate` → `endDate < startDate` — ahora `startDate === endDate` (día único) es válido. `calculateStayTotal()`/`getOverlapping()` ya trataban el rango como inclusivo en ambos extremos, así que un día único con `startDate=endDate=X` cubre exactamente ese día sin tocar el motor de precios
+  - `update()` — **bug de seguridad encontrado y corregido de paso**: la validación de fechas solo comparaba `update.startDate` contra `update.endDate` (los dos campos del payload entrante), nunca contra lo que ya había en BD. Un `PUT` parcial enviando solo `endDate` (p.ej. `{ endDate: '2020-01-01' }`) se colaba sin validar si esa fecha quedaba antes del `startDate` real guardado, creando un rango invertido silencioso. Corregido: si se toca cualquiera de las dos fechas, se hace un `findById` previo y se valida el rango **efectivo** (payload + lo ya guardado)
+  - Mensajes de error actualizados a "igual o posterior" manteniendo la palabra "posterior" (el controller mapea a 400 buscando esa palabra en el mensaje, sin tocar `pricing-rule.controller.ts`)
+- [x] **Frontend — `admin-calendar-panel`**: checkbox nuevo "Precio de un solo día (no un período)" en el formulario de períodos especiales — al marcarlo, oculta el campo "Hasta" y usa la misma fecha como `startDate`/`endDate` al enviar; al editar una regla existente con `startDate === endDate` se detecta y marca el checkbox automáticamente; la lista de reglas muestra una sola fecha (no rango duplicado) cuando es de día único; input "Hasta" en modo rango gana `min` = fecha de inicio como guarda adicional en el cliente
+- [x] **Reserva de 1 noche — verificado, no era un bug**: revisión exhaustiva de `booking.service.ts`, `booking-calendar.component.ts` y `booking-request-panel.component.ts` no encontró ningún mínimo de noches (ni backend ni frontend); la única restricción real es "domingo no admite check-in" (no relacionada). Confirmado con test HTTP end-to-end nuevo en `booking-checkout.routes.spec.ts` (`checkIn=2026-08-10, checkOut=2026-08-11` → 201, 100 €) que una estancia de 1 noche completa el checkout correctamente
+- [x] **Tests nuevos backend** — `pricing-rule.service.spec.ts` (14 tests: día único, rango invertido rechazado en create/update, fix del bug de PUT parcial, `getOverlapping` con regla de día único) + `pricing-rule.routes.spec.ts` (14 tests de integración HTTP, incl. 401 sin auth) + 2 tests nuevos en `pricing.util.spec.ts` (regla de día único aplicada/no aplicada dentro de una estancia) + 1 test de checkout de 1 noche. 253/253 tests backend en verde, 77/77 frontend, `ng build` sin errores
+- **Sin commitear todavía** — pendiente de revisión del usuario antes de crear el commit
+
+---
+
 ## Pendientes / Preguntas abiertas
 - [ ] **Mostrar galería de imágenes y lat/lng de puntos en `route-detail-page`** (ver sección "Mejora formulario admin de rutas" arriba, 2026-07-08) — ya se pueden gestionar desde el admin pero la página pública de la ruta todavía no las pinta (alcance diferido a propósito, "para luego")
 - [ ] **Verificar en producción tras deploy de Vercel** que el enlace externo de ruta/punto (`820f769`, 2026-07-08) se ve bien en móvil real

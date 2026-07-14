@@ -79,9 +79,21 @@
           />
         </div>
 
+        <div class="admin-calendar__field admin-calendar__field--checkbox">
+          <label class="admin-calendar__checkbox-label">
+            <input
+              type="checkbox"
+              class="admin-calendar__checkbox"
+              [checked]="isSingleDay()"
+              (change)="onSingleDayToggle($any($event.target).checked)"
+            />
+            <span>Precio de un solo día (no un período)</span>
+          </label>
+        </div>
+
         <div class="admin-calendar__field-row">
           <div class="admin-calendar__field">
-            <label class="admin-calendar__label" for="priceStart">Desde *</label>
+            <label class="admin-calendar__label" for="priceStart">{{ isSingleDay() ? 'Día *' : 'Desde *' }}</label>
             <input
               id="priceStart"
               class="admin-calendar__input"
@@ -91,17 +103,20 @@
               (input)="priceStart.set($any($event.target).value)"
             />
           </div>
-          <div class="admin-calendar__field">
-            <label class="admin-calendar__label" for="priceEnd">Hasta *</label>
-            <input
-              id="priceEnd"
-              class="admin-calendar__input"
-              type="date"
-              aria-required="true"
-              [value]="priceEnd()"
-              (input)="priceEnd.set($any($event.target).value)"
-            />
-          </div>
+          @if (!isSingleDay()) {
+            <div class="admin-calendar__field">
+              <label class="admin-calendar__label" for="priceEnd">Hasta *</label>
+              <input
+                id="priceEnd"
+                class="admin-calendar__input"
+                type="date"
+                aria-required="true"
+                [attr.min]="priceStart() || null"
+                [value]="priceEnd()"
+                (input)="priceEnd.set($any($event.target).value)"
+              />
+            </div>
+          }
         </div>
 
         <div class="admin-calendar__field-row">
@@ -162,7 +177,11 @@
             <div class="admin-calendar__rule-info">
               <span class="admin-calendar__rule-label">{{ rule.label }}</span>
               <span class="admin-calendar__rule-dates">
-                {{ rule.startDate | date:'dd/MM/yy':'':'es' }} – {{ rule.endDate | date:'dd/MM/yy':'':'es' }}
+                @if (rule.startDate.slice(0, 10) === rule.endDate.slice(0, 10)) {
+                  {{ rule.startDate | date:'dd/MM/yy':'':'es' }}
+                } @else {
+                  {{ rule.startDate | date:'dd/MM/yy':'':'es' }} – {{ rule.endDate | date:'dd/MM/yy':'':'es' }}
+                }
               </span>
               <span class="admin-calendar__rule-price">
                 {{ rule.pricePerNight | currency:'EUR':'symbol':'1.0-0':'es' }}/noche · mín. {{ rule.minNights }} noches

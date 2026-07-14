@@ -46,6 +46,7 @@ export class AdminCalendarPanelComponent {
   readonly priceEnd       = signal('');
   readonly pricePerNight  = signal<number | null>(null);
   readonly priceMinNights = signal(1);
+  readonly isSingleDay    = signal(false);
 
   readonly blockStart  = signal('');
   readonly blockEnd    = signal('');
@@ -54,7 +55,7 @@ export class AdminCalendarPanelComponent {
   readonly priceFormValid = computed(() =>
     this.priceLabel().trim().length > 0 &&
     this.priceStart().length > 0 &&
-    this.priceEnd().length > 0 &&
+    (this.isSingleDay() || this.priceEnd().length > 0) &&
     this.pricePerNight() !== null &&
     (this.pricePerNight() ?? 0) >= 1 &&
     this.priceMinNights() >= 1
@@ -66,13 +67,22 @@ export class AdminCalendarPanelComponent {
   );
 
   startEditRule(rule: IPricingRule): void {
+    const start = rule.startDate.slice(0, 10);
+    const end   = rule.endDate.slice(0, 10);
+
     this.editingRuleId.set(rule.id);
     this.priceLabel.set(rule.label);
-    this.priceStart.set(rule.startDate.slice(0, 10));
-    this.priceEnd.set(rule.endDate.slice(0, 10));
+    this.priceStart.set(start);
+    this.priceEnd.set(end);
     this.pricePerNight.set(rule.pricePerNight);
     this.priceMinNights.set(rule.minNights);
+    this.isSingleDay.set(start === end);
     this.pricingError.set('');
+  }
+
+  onSingleDayToggle(checked: boolean): void {
+    this.isSingleDay.set(checked);
+    if (checked) this.priceEnd.set(this.priceStart());
   }
 
   cancelEditRule(): void {
@@ -90,7 +100,7 @@ export class AdminCalendarPanelComponent {
     const data = {
       label:         this.priceLabel().trim(),
       startDate:     this.priceStart(),
-      endDate:       this.priceEnd(),
+      endDate:       this.isSingleDay() ? this.priceStart() : this.priceEnd(),
       pricePerNight: price,
       minNights:     this.priceMinNights(),
     };
@@ -216,6 +226,7 @@ export class AdminCalendarPanelComponent {
     this.priceEnd.set('');
     this.pricePerNight.set(null);
     this.priceMinNights.set(1);
+    this.isSingleDay.set(false);
   }
 
   private resetBlockForm(): void {

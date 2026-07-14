@@ -34,8 +34,8 @@ class PricingRuleService {
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
       throw new Error('Fechas no válidas');
     }
-    if (endDate <= startDate) {
-      throw new Error('La fecha de fin debe ser posterior a la de inicio');
+    if (endDate < startDate) {
+      throw new Error('La fecha de fin debe ser igual o posterior a la de inicio');
     }
 
     const rule    = new PricingRuleModel({ ...data, startDate, endDate });
@@ -62,8 +62,18 @@ class PricingRuleService {
       update.endDate = d;
     }
 
-    if (update.startDate && update.endDate && update.endDate <= update.startDate) {
-      throw new Error('La fecha de fin debe ser posterior a la de inicio');
+    if (update.startDate || update.endDate) {
+      // Si solo se envía una de las dos fechas, hay que validar el rango
+      // resultante contra el valor ya guardado en BD, no solo contra el
+      // otro campo del payload — si no, un PUT parcial (p.ej. solo endDate)
+      // podría colar un rango invertido sin que nada lo detecte.
+      const existing = await PricingRuleModel.findById(id).lean<IPricingRuleDocument>();
+      if (!existing) return null;
+      const effectiveStart = update.startDate ?? new Date(existing.startDate);
+      const effectiveEnd   = update.endDate   ?? new Date(existing.endDate);
+      if (effectiveEnd < effectiveStart) {
+        throw new Error('La fecha de fin debe ser igual o posterior a la de inicio');
+      }
     }
 
     const doc = await PricingRuleModel.findByIdAndUpdate(
