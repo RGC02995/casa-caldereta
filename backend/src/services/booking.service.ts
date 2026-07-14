@@ -205,18 +205,18 @@ class BookingService {
     return doc ? withId(doc) : null;
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await BookingModel.findByIdAndDelete(id);
-    return result !== null;
+  async delete(id: string): Promise<IBookingDocument | null> {
+    const doc = await BookingModel.findByIdAndDelete(id).lean<IBookingDocument>();
+    return doc ? withId(doc) : null;
   }
 
   // Público — el propio huésped cancela su reserva pending_payment (aún no pagada) para
   // liberar la fecha y poder empezar de cero. Solo toca pending_payment: nunca borra pending,
   // confirmed, cancelled ni completed. Bajo riesgo: requiere el ObjectId exacto (no adivinable)
   // y solo afecta a un pago aún no confirmado.
-  async cancelOwnPendingPayment(id: string): Promise<boolean> {
+  async cancelOwnPendingPayment(id: string): Promise<IBookingDocument | null> {
     const booking = await BookingModel.findOne({ _id: id, status: 'pending_payment' }).lean<IBookingDocument>();
-    if (!booking) return false;
+    if (!booking) return null;
 
     if (booking.stripeSessionId) {
       try {
@@ -226,7 +226,7 @@ class BookingService {
       }
     }
     await BookingModel.findByIdAndDelete(id);
-    return true;
+    return withId(booking);
   }
 
   // Llamado por el cron: borra las reservas pending_payment cuyo bloqueo de 10 min ya expiró

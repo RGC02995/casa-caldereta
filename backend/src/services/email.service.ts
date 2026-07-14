@@ -23,6 +23,13 @@ interface IRefundTemplateData extends ITemplateData {
   readonly amount: number;
 }
 
+type OwnerCancellationReason = 'deleted' | 'refunded' | 'admin_cancelled' | 'guest_cancelled_pending';
+
+interface IOwnerCancellationTemplateData extends ITemplateData {
+  readonly reason: OwnerCancellationReason;
+  readonly amount?: number; // solo para 'refunded'
+}
+
 interface IPreArrivalTemplateData extends ITemplateData {
   readonly formUrl:      string;
   readonly checkInTime:  string;
@@ -219,6 +226,46 @@ function ownerPaymentReceivedHtml(data: ITemplateData, label: string = 'Dep&#243
     ${detailsTable(data)}
     ${paymentBreakdown}
     ${notesBlock}`,
+  );
+}
+
+const OWNER_CANCELLATION_COPY: Record<OwnerCancellationReason, { title: string; message: (amount?: number) => string }> = {
+  deleted: {
+    title:   'Reserva eliminada',
+    message: () => 'Has eliminado la siguiente reserva del sistema.',
+  },
+  refunded: {
+    title:   'Reembolso procesado',
+    message: (amount) => `Has reembolsado <strong>${(amount ?? 0).toFixed(2)}&nbsp;&euro;</strong> y la reserva ha quedado cancelada.`,
+  },
+  admin_cancelled: {
+    title:   'Reserva cancelada',
+    message: () => 'Has cancelado la siguiente reserva (sin reembolso).',
+  },
+  guest_cancelled_pending: {
+    title:   'Reserva pendiente cancelada por el huésped',
+    message: () => 'El hu&#233;sped ha cancelado su solicitud antes de completar el pago; la fecha vuelve a estar libre.',
+  },
+};
+
+function ownerCancellationHtml(data: IOwnerCancellationTemplateData): string {
+  const { booking, reason, amount } = data;
+  const { title, message } = OWNER_CANCELLATION_COPY[reason];
+  const guestName = escapeHtml(booking.guestName);
+
+  return emailWrapper(
+    title,
+    `<h2 style="margin:0 0 4px;font-size:20px;font-weight:400;color:#2C2C2C;">${title}</h2>
+    <p style="margin:0 0 24px;font-size:12px;color:#999;font-family:Arial,sans-serif;">Notificado el ${formatDateTime()}</p>
+    <p style="margin:0 0 20px;font-size:14px;color:#555;font-family:Arial,sans-serif;line-height:1.7;">
+      ${message(amount)}
+    </p>
+    <p style="margin:0 0 4px;font-size:16px;color:#2C2C2C;"><strong>${guestName}</strong></p>
+    <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:13px;color:#666;">
+      <a href="mailto:${escapeHtml(booking.guestEmail)}" style="color:#C9A96E;text-decoration:none;">${escapeHtml(booking.guestEmail)}</a>
+    </p>
+    <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:13px;color:#666;">${escapeHtml(booking.guestPhone)}</p>
+    ${detailsTable(data)}`,
   );
 }
 
@@ -672,6 +719,84 @@ class EmailService {
         `Huésped: ${booking.guestName} (${booking.guestEmail} · ${booking.guestPhone})`,
         `Entrada: ${checkIn} · Salida: ${checkOut}`,
         `Reembolsado: ${amount.toFixed(2)} €`,
+      ].join('\n'),
+    });
+  }
+
+  // ─── Anulaciones — aviso al propietario ──────────────────────────────────────
+
+  async notifyOwnerBookingDeleted(booking: IBookingDocument): Promise<void> {
+    if (!this.client || !env.ownerEmail) return;
+
+    const checkIn  = formatDate(booking.checkIn);
+    const checkOut = formatDate(booking.checkOut);
+
+    await this.send({
+      to:      env.ownerEmail,
+      subject: `Reserva eliminada — ${booking.guestName}`,
+      html:    ownerCancellationHtml({ booking, checkIn, checkOut, reason: 'deleted' }),
+      text:    [
+        `Has eliminado la reserva de ${booking.guestName}.`,
+        `Email: ${booking.guestEmail} | Tel: ${booking.guestPhone}`,
+        `Check-in: ${checkIn}`,
+        `Check-out: ${checkOut}`,
+      ].join('\n'),
+    });
+  }
+
+  async notifyOwnerRefundProcessed(booking: IBookingDocument, amount: number): Promise<void> {
+    if (!this.client || !env.ownerEmail) return;
+
+    const checkIn  = formatDate(booking.checkIn);
+    const checkOut = formatDate(booking.checkOut);
+
+    await this.send({
+      to:      env.ownerEmail,
+      subject: `Reembolso procesado — ${booking.guestName}`,
+      html:    ownerCancellationHtml({ booking, checkIn, checkOut, reason: 'refunded', amount }),
+      text:    [
+        `Has reembolsado ${amount.toFixed(2)} € a ${booking.guestName} — reserva cancelada.`,
+        `Email: ${booking.guestEmail} | Tel: ${booking.guestPhone}`,
+        `Check-in: ${checkIn}`,
+        `Check-out: ${checkOut}`,
+      ].join('\n'),
+    });
+  }
+
+  async notifyOwnerBookingCancelled(booking: IBookingDocument): Promise<void> {
+    if (!this.client || !env.ownerEmail) return;
+
+    const checkIn  = formatDate(booking.checkIn);
+    const checkOut = formatDate(booking.checkOut);
+
+    await this.send({
+      to:      env.ownerEmail,
+      subject: `Reserva cancelada — ${booking.guestName}`,
+      html:    ownerCancellationHtml({ booking, checkIn, checkOut, reason: 'admin_cancelled' }),
+      text:    [
+        `Has cancelado la reserva de ${booking.guestName} (sin reembolso).`,
+        `Email: ${booking.guestEmail} | Tel: ${booking.guestPhone}`,
+        `Check-in: ${checkIn}`,
+        `Check-out: ${checkOut}`,
+      ].join('\n'),
+    });
+  }
+
+  async notifyOwnerGuestCancelledPending(booking: IBookingDocument): Promise<void> {
+    if (!this.client || !env.ownerEmail) return;
+
+    const checkIn  = formatDate(booking.checkIn);
+    const checkOut = formatDate(booking.checkOut);
+
+    await this.send({
+      to:      env.ownerEmail,
+      subject: `Solicitud pendiente cancelada por el huésped — ${booking.guestName}`,
+      html:    ownerCancellationHtml({ booking, checkIn, checkOut, reason: 'guest_cancelled_pending' }),
+      text:    [
+        `${booking.guestName} ha cancelado su solicitud antes de completar el pago.`,
+        `Email: ${booking.guestEmail} | Tel: ${booking.guestPhone}`,
+        `Check-in: ${checkIn}`,
+        `Check-out: ${checkOut}`,
       ].join('\n'),
     });
   }

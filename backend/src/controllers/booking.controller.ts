@@ -163,6 +163,9 @@ export async function updateBookingStatusHandler(req: Request<{ id: string }>, r
     if (status === 'confirmed' || status === 'cancelled') {
       void emailService.sendGuestStatusUpdate(booking, status);
     }
+    if (status === 'cancelled') {
+      void emailService.notifyOwnerBookingCancelled(booking);
+    }
   } catch {
     res.status(500).json({ success: false, message: 'Error al actualizar la reserva' });
   }
@@ -180,6 +183,8 @@ export async function deleteBookingHandler(req: Request<{ id: string }>, res: Re
       return;
     }
     res.status(200).json({ success: true, message: 'Reserva eliminada' });
+
+    void emailService.notifyOwnerBookingDeleted(deleted);
   } catch {
     res.status(500).json({ success: false, message: 'Error al eliminar la reserva' });
   }
@@ -254,6 +259,8 @@ export async function cancelPendingPaymentHandler(req: Request<{ id: string }>, 
       return;
     }
     res.status(200).json({ success: true, message: 'Reserva cancelada' });
+
+    void emailService.notifyOwnerGuestCancelledPending(cancelled);
   } catch {
     res.status(500).json({ success: false, message: 'Error al cancelar la reserva' });
   }
@@ -325,6 +332,7 @@ export async function refundBookingHandler(req: Request<{ id: string }>, res: Re
     res.status(200).json({ success: true, data: booking, message: 'Reembolso procesado y reserva cancelada' });
 
     void emailService.sendGuestRefundCancellation(booking, amount);
+    void emailService.notifyOwnerRefundProcessed(booking, amount);
   } catch (error) {
     if (error instanceof Error) {
       const code = (error as { code?: string }).code;

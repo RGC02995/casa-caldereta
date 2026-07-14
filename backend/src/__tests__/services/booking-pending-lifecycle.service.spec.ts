@@ -58,29 +58,29 @@ afterEach(async () => {
 });
 
 describe('cancelOwnPendingPayment()', () => {
-  it('borra la pending_payment y expira su sesión — devuelve true', async () => {
+  it('borra la pending_payment y expira su sesión — devuelve la reserva cancelada', async () => {
     const booking = await seedBooking({
       status: 'pending_payment', holdExpiresAt: IN_10_MIN(), stripeSessionId: 'cs_propia',
     });
 
     const result = await bookingService.cancelOwnPendingPayment(String(booking._id));
 
-    expect(result).toBe(true);
+    expect(result?.id).toBe(String(booking._id));
     expect(await BookingModel.findById(booking._id)).toBeNull();
     expect(sessionExpireMock).toHaveBeenCalledWith('cs_propia');
   });
 
-  it('id inexistente → false, no lanza', async () => {
+  it('id inexistente → null, no lanza', async () => {
     const result = await bookingService.cancelOwnPendingPayment(new mongoose.Types.ObjectId().toString());
-    expect(result).toBe(false);
+    expect(result).toBeNull();
   });
 
-  it('reserva confirmed → false, NO la borra (solo toca pending_payment)', async () => {
+  it('reserva confirmed → null, NO la borra (solo toca pending_payment)', async () => {
     const booking = await seedBooking({ status: 'confirmed' });
 
     const result = await bookingService.cancelOwnPendingPayment(String(booking._id));
 
-    expect(result).toBe(false);
+    expect(result).toBeNull();
     expect(await BookingModel.findById(booking._id)).not.toBeNull();
   });
 
@@ -92,7 +92,7 @@ describe('cancelOwnPendingPayment()', () => {
 
     const result = await bookingService.cancelOwnPendingPayment(String(booking._id));
 
-    expect(result).toBe(true);
+    expect(result?.id).toBe(String(booking._id));
     expect(await BookingModel.findById(booking._id)).toBeNull();
   });
 });
