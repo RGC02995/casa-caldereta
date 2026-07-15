@@ -24,6 +24,8 @@ export interface IBookingDocument extends Document {
   stripeRemainingPaymentIntentId?:  string;
   remainingPaidAt?:                 Date;
   remainingPaymentEmailSentAt?:     Date;
+  remainingPaymentReminder3dSentAt?: Date;  // centinela: recordatorio de 3 días antes ya enviado
+  remainingPaymentReminder1dSentAt?: Date;  // centinela: recordatorio final (1 día antes) ya enviado
   // Check-in / check-out
   guestFormToken?:           string;   // SHA-256 hash (select:false)
   guestFormTokenExpiresAt?:  Date;
@@ -125,8 +127,10 @@ const bookingSchema = new Schema<IBookingDocument>(
       sparse: true,
       index:  true,
     },
-    remainingPaidAt:             { type: Date },
-    remainingPaymentEmailSentAt: { type: Date },
+    remainingPaidAt:                  { type: Date },
+    remainingPaymentEmailSentAt:      { type: Date },
+    remainingPaymentReminder3dSentAt: { type: Date },
+    remainingPaymentReminder1dSentAt: { type: Date },
     // Check-in / check-out
     guestFormToken: {
       type:   String,

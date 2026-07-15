@@ -3,6 +3,7 @@ import { isValidObjectId } from 'mongoose';
 import { bookingService, ICreateBookingData } from '../services/booking.service';
 import { BookingStatus } from '../models/booking.model';
 import { emailService } from '../services/email.service';
+import { checkinService } from '../services/checkin.service';
 import { verifyInvoiceToken, generateInvoiceHtml, generateInvoicePdf, buildInvoiceUrl } from '../utils/invoice.util';
 
 export async function getPriceEstimateHandler(req: Request, res: Response): Promise<void> {
@@ -233,8 +234,8 @@ export async function createRemainingPaymentSessionHandler(req: Request<{ id: st
   }
 
   try {
-    const result = await bookingService.createRemainingPaymentSession(req.params.id);
-    res.status(201).json({ success: true, data: result, message: 'Sesión de pago restante creada' });
+    const result = await checkinService.sendRemainingPaymentEmailNow(req.params.id);
+    res.status(201).json({ success: true, data: result, message: 'Enlace de pago restante enviado al huésped' });
   } catch (error) {
     if (error instanceof Error) {
       const code = (error as { code?: string }).code;

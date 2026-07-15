@@ -13,6 +13,7 @@ import {
   IBookingDeleteEvent,
   IBookingRefundEvent,
   IBookingCheckInEvent,
+  IBookingRemainingPaymentEvent,
 } from '../../components/admin-booking-list/admin-booking-list.component';
 import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal.component';
 import { AdminRefundModalComponent, IRefundConfirmedEvent } from '../../components/admin-refund-modal/admin-refund-modal.component';
@@ -159,6 +160,37 @@ export class AdminBookingsComponent {
 
   closeRefundModal(): void {
     this.refundModalOpen.set(false);
+  }
+
+  onRemainingPaymentRequested(event: IBookingRemainingPaymentEvent): void {
+    if (this.processingId()) return;
+
+    const booking = this.allBookings().find(b => b.id === event.bookingId);
+    const amount  = booking ? `${booking.remainingAmount} €` : 'el resto';
+
+    this.pendingConfirm.set({
+      message: `${event.guestName}\n\n¿Enviar el enlace de pago de ${amount} al huésped por email?`,
+      danger:  false,
+      action:  () => this.executeRemainingPayment(event),
+    });
+  }
+
+  private executeRemainingPayment(event: IBookingRemainingPaymentEvent): void {
+    this.processingId.set(event.bookingId);
+    this.actionError.set('');
+
+    this.bookingService.createRemainingPaymentSession(event.bookingId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.processingId.set(null);
+          this.refresh$.next();
+        },
+        error: () => {
+          this.actionError.set('No se pudo enviar el pago restante. Inténtalo de nuevo.');
+          this.processingId.set(null);
+        },
+      });
   }
 
   onDeleteRequested(event: IBookingDeleteEvent): void {

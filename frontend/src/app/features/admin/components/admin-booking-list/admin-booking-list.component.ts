@@ -25,6 +25,11 @@ export interface IBookingCheckInEvent {
   readonly guestName: string;
 }
 
+export interface IBookingRemainingPaymentEvent {
+  readonly bookingId: string;
+  readonly guestName: string;
+}
+
 interface IStatusTransition {
   readonly label:  string;
   readonly status: BookingStatus;
@@ -66,6 +71,7 @@ export class AdminBookingListComponent {
   readonly checkInRequested     = output<IBookingCheckInEvent>();
   readonly checkOutRequested    = output<IBookingCheckInEvent>();
   readonly viewTravelersRequested = output<string>();
+  readonly remainingPaymentRequested = output<IBookingRemainingPaymentEvent>();
 
   readonly filters: { label: string; value: StatusFilter }[] = [
     { label: 'Todas',          value: 'all'             },
@@ -105,5 +111,19 @@ export class AdminBookingListComponent {
 
   onCheckOutRequested(bookingId: string, guestName: string): void {
     this.checkOutRequested.emit({ bookingId, guestName });
+  }
+
+  onRemainingPaymentRequested(bookingId: string, guestName: string): void {
+    this.remainingPaymentRequested.emit({ bookingId, guestName });
+  }
+
+  depositPaid(booking: IBooking): boolean {
+    return booking.status !== 'pending_payment';
+  }
+
+  remainingPaymentState(booking: IBooking): 'paid' | 'sent' | 'pending' {
+    if (booking.remainingPaidAt) return 'paid';
+    if (booking.remainingPaymentEmailSentAt) return 'sent';
+    return 'pending';
   }
 }

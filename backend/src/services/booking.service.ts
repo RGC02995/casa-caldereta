@@ -423,6 +423,14 @@ class BookingService {
       throw Object.assign(new Error('El pago restante ya fue abonado'), { code: 'ALREADY_PAID' });
     }
 
+    if (booking.stripeRemainingSessionId) {
+      try {
+        await stripe.checkout.sessions.expire(booking.stripeRemainingSessionId);
+      } catch {
+        // Ya pagada, expirada o completada — no bloquea la creación de la nueva sesión
+      }
+    }
+
     const checkInFormatted  = new Date(booking.checkIn).toLocaleDateString('es-ES');
     const checkOutFormatted = new Date(booking.checkOut).toLocaleDateString('es-ES');
 

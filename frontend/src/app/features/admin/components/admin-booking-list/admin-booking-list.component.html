@@ -61,6 +61,14 @@
               <span class="admin-bookings__badge admin-bookings__badge--{{ booking.status }}">
                 {{ statusLabel(booking.status) }}
               </span>
+              @if (booking.status === 'confirmed' || booking.status === 'completed') {
+                <span class="admin-bookings__payment-chip admin-bookings__payment-chip--paid">Depósito ✓</span>
+                @switch (remainingPaymentState(booking)) {
+                  @case ('paid')    { <span class="admin-bookings__payment-chip admin-bookings__payment-chip--paid">Resto ✓</span> }
+                  @case ('sent')    { <span class="admin-bookings__payment-chip admin-bookings__payment-chip--sent">Resto: enviado</span> }
+                  @case ('pending') { <span class="admin-bookings__payment-chip admin-bookings__payment-chip--pending">Resto: pendiente</span> }
+                }
+              }
             </td>
             <td class="admin-bookings__table-td">
               <div class="admin-bookings__actions">
@@ -130,6 +138,17 @@
                     Reembolsar
                   </button>
                 }
+                @if (booking.status === 'confirmed' && !booking.remainingPaidAt) {
+                  <button
+                    class="admin-bookings__action-btn admin-bookings__action-btn--remaining-payment"
+                    type="button"
+                    [attr.aria-label]="(booking.remainingPaymentEmailSentAt ? 'Reenviar' : 'Enviar') + ' el pago restante a ' + booking.guestName"
+                    [disabled]="processingId() !== null"
+                    (click)="onRemainingPaymentRequested(booking.id, booking.guestName)"
+                  >
+                    {{ booking.remainingPaymentEmailSentAt ? 'Reenviar segundo pago' : 'Enviar segundo pago' }}
+                  </button>
+                }
                 <button
                   class="admin-bookings__action-btn admin-bookings__action-btn--delete"
                   type="button"
@@ -161,6 +180,14 @@
           <span class="admin-bookings__badge admin-bookings__badge--{{ booking.status }}">
             {{ statusLabel(booking.status) }}
           </span>
+          @if (booking.status === 'confirmed' || booking.status === 'completed') {
+            <span class="admin-bookings__payment-chip admin-bookings__payment-chip--paid">Depósito ✓</span>
+            @switch (remainingPaymentState(booking)) {
+              @case ('paid')    { <span class="admin-bookings__payment-chip admin-bookings__payment-chip--paid">Resto ✓</span> }
+              @case ('sent')    { <span class="admin-bookings__payment-chip admin-bookings__payment-chip--sent">Resto: enviado</span> }
+              @case ('pending') { <span class="admin-bookings__payment-chip admin-bookings__payment-chip--pending">Resto: pendiente</span> }
+            }
+          }
         </div>
 
         <div class="admin-bookings__card-body">
@@ -255,6 +282,17 @@
               (click)="onRefundRequested(booking.id, booking.guestName)"
             >
               Reembolsar y cancelar
+            </button>
+          }
+          @if (booking.status === 'confirmed' && !booking.remainingPaidAt) {
+            <button
+              class="admin-bookings__action-btn admin-bookings__action-btn--remaining-payment"
+              type="button"
+              [attr.aria-label]="(booking.remainingPaymentEmailSentAt ? 'Reenviar' : 'Enviar') + ' el pago restante a ' + booking.guestName"
+              [disabled]="processingId() !== null"
+              (click)="onRemainingPaymentRequested(booking.id, booking.guestName)"
+            >
+              {{ booking.remainingPaymentEmailSentAt ? 'Reenviar segundo pago' : 'Enviar segundo pago' }}
             </button>
           }
           <button

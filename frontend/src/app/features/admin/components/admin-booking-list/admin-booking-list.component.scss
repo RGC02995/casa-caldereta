@@ -240,6 +240,23 @@
     &--completed { background-color: $color-neutral-200;         color: $color-neutral-600; }
   }
 
+  // ── CHIPS DE ESTADO DE PAGO ─────────────────────────────
+
+  &__payment-chip {
+    display: inline-block;
+    font-family: $font-family-body;
+    font-size: 10px;
+    font-weight: $font-weight-semibold;
+    padding: 1px 7px;
+    border-radius: $border-radius-full;
+    margin-left: $space-2;
+    white-space: nowrap;
+
+    &--paid    { background-color: rgba($color-success, 0.12); color: color.adjust($color-success, $lightness: -8%); }
+    &--sent    { background-color: rgba($color-warning, 0.12); color: color.adjust($color-warning, $lightness: -10%); }
+    &--pending { background-color: $color-neutral-200;         color: $color-neutral-600; }
+  }
+
   // ── BOTONES DE ACCIÓN ──────────────────────────────────
 
   &__action-btn {
@@ -296,6 +313,12 @@
       background-color: rgba($color-error, 0.07);
       border-color: rgba($color-error, 0.24);
       color: $color-error;
+    }
+
+    &--remaining-payment:hover:not(:disabled) {
+      background-color: rgba($color-primary, 0.06);
+      border-color: rgba($color-primary, 0.25);
+      color: $color-primary-dark;
     }
 
     &--send-form:hover:not(:disabled) {

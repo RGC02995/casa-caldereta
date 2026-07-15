@@ -5,11 +5,13 @@ import { TravelerDocumentModel, ITravelerDocumentDoc } from '../models/traveler-
 import { withId } from '../utils/mongoose.util';
 import { isValidDni, isValidContact } from '../utils/traveler-validation.util';
 import { emailService } from './email.service';
-import { bookingService } from './booking.service';
+import { bookingService, IRemainingPaymentSessionResult } from './booking.service';
 import { env } from '../config/environment';
 
-const DAYS_BEFORE_CHECKIN         = 2;
-const DAYS_BEFORE_REMAINING_PAYMENT = 7;
+const DAYS_BEFORE_CHECKIN            = 2;
+const DAYS_BEFORE_REMAINING_PAYMENT  = 7;
+const DAYS_SECOND_REMAINING_REMINDER = 3;
+const DAYS_FINAL_REMAINING_REMINDER  = 1;
 
 export interface ICheckinFormInfo {
   bookingId:        string;
@@ -281,6 +283,25 @@ class CheckinService {
     return withId(updated!);
   }
 
+  // ─── Segundo pago: crear sesión + enviar email + marcar centinela ────────────
+  // Punto único reutilizado por: el botón "Enviar/Reenviar segundo pago" del admin,
+  // el aviso last-minute post-webhook y los crons de recordatorio (7d/3d/1d).
+  // No comprueba si ya se había enviado antes — llamarlo de nuevo es un reenvío
+  // intencional (createRemainingPaymentSession ya expira la sesión de Stripe anterior).
+
+  async sendRemainingPaymentEmailNow(bookingId: string): Promise<IRemainingPaymentSessionResult> {
+    const booking = await BookingModel.findById(bookingId).lean<IBookingDocument>();
+    if (!booking) {
+      throw Object.assign(new Error('Reserva no encontrada'), { code: 'NOT_FOUND' });
+    }
+
+    const result = await bookingService.createRemainingPaymentSession(bookingId);
+    await emailService.sendRemainingPaymentReminder(booking, result.sessionUrl);
+    await BookingModel.findByIdAndUpdate(bookingId, { remainingPaymentEmailSentAt: new Date() });
+
+    return result;
+  }
+
   // ─── Webhook: comprobaciones post-confirmación ───────────────────────────────
   // Llamado desde el webhook de Stripe tras confirmar el depósito.
   // Envía el recordatorio del segundo pago y/o el formulario de viajeros si el
@@ -301,11 +322,7 @@ class CheckinService {
       !booking.remainingPaymentEmailSentAt
     ) {
       try {
-        const result = await bookingService.createRemainingPaymentSession(String(booking._id));
-        await emailService.sendRemainingPaymentReminder(booking, result.sessionUrl);
-        await BookingModel.findByIdAndUpdate(booking._id, {
-          remainingPaymentEmailSentAt: new Date(),
-        });
+        await this.sendRemainingPaymentEmailNow(String(booking._id));
         console.info(`[webhook] Email segundo pago enviado (last-minute) a ${booking.guestEmail}`);
       } catch (err) {
         console.error(
@@ -385,12 +402,7 @@ class CheckinService {
 
     for (const booking of bookings) {
       try {
-        const result = await bookingService.createRemainingPaymentSession(String(booking._id));
-        await emailService.sendRemainingPaymentReminder(booking, result.sessionUrl);
-
-        await BookingModel.findByIdAndUpdate(booking._id, {
-          remainingPaymentEmailSentAt: new Date(),
-        });
+        await this.sendRemainingPaymentEmailNow(String(booking._id));
 
         console.info(`[payment-cron] Email pago restante enviado a ${booking.guestEmail}`);
 
@@ -413,6 +425,61 @@ class CheckinService {
       } catch (err) {
         console.error(
           `[payment-cron] Error en reserva ${String(booking._id)}:`,
+          err instanceof Error ? err.message : String(err),
+        );
+      }
+    }
+  }
+
+  // ─── Cron: recordatorios escalonados si sigue sin pagar (3 días y 1 día antes) ──
+  // A diferencia del cron de 7 días (rango, cubre reservas last-minute), aquí basta
+  // con el día exacto: toda reserva ya pasó por el primer aviso mucho antes de
+  // llegar a estos dos. No se encadenan entre sí — cada uno tiene su propio
+  // centinela y se dispara igual aunque el recordatorio anterior no se marcara.
+
+  async sendSecondRemainingPaymentReminders(): Promise<void> {
+    await this.sendRemainingPaymentReminderForDay(
+      DAYS_SECOND_REMAINING_REMINDER,
+      'remainingPaymentReminder3dSentAt',
+      '[payment-cron-3d]',
+    );
+  }
+
+  async sendFinalRemainingPaymentReminders(): Promise<void> {
+    await this.sendRemainingPaymentReminderForDay(
+      DAYS_FINAL_REMAINING_REMINDER,
+      'remainingPaymentReminder1dSentAt',
+      '[payment-cron-1d]',
+    );
+  }
+
+  private async sendRemainingPaymentReminderForDay(
+    daysBeforeCheckin: number,
+    sentinelField:     'remainingPaymentReminder3dSentAt' | 'remainingPaymentReminder1dSentAt',
+    logLabel:          string,
+  ): Promise<void> {
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + daysBeforeCheckin);
+    targetDate.setHours(0, 0, 0, 0);
+
+    const nextDay = new Date(targetDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+
+    const bookings = await BookingModel.find({
+      status:           'confirmed',
+      checkIn:          { $gte: targetDate, $lt: nextDay },
+      remainingPaidAt:  null,
+      [sentinelField]:  null,
+    }).lean<IBookingDocument[]>();
+
+    for (const booking of bookings) {
+      try {
+        await this.sendRemainingPaymentEmailNow(String(booking._id));
+        await BookingModel.findByIdAndUpdate(booking._id, { [sentinelField]: new Date() });
+        console.info(`${logLabel} Recordatorio de pago restante enviado a ${booking.guestEmail}`);
+      } catch (err) {
+        console.error(
+          `${logLabel} Error en reserva ${String(booking._id)}:`,
           err instanceof Error ? err.message : String(err),
         );
       }

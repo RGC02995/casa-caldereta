@@ -63,6 +63,20 @@ async function bootstrap(): Promise<void> {
     });
   });
 
+  // 10:00 — segundo recordatorio pago restante (3 días antes, si sigue sin pagar)
+  cron.schedule('0 10 * * *', () => {
+    checkinService.sendSecondRemainingPaymentReminders().catch((err: unknown) => {
+      console.error('[cron] Error en job pago restante (3d):', err instanceof Error ? err.message : String(err));
+    });
+  });
+
+  // 10:00 — recordatorio final pago restante (1 día antes, si sigue sin pagar)
+  cron.schedule('0 10 * * *', () => {
+    checkinService.sendFinalRemainingPaymentReminders().catch((err: unknown) => {
+      console.error('[cron] Error en job pago restante (1d):', err instanceof Error ? err.message : String(err));
+    });
+  });
+
   // Cada hora — check-in automático a la hora configurada + email de bienvenida
   cron.schedule('0 * * * *', () => {
     checkinService.runAutoCheckin().catch((err: unknown) => {
