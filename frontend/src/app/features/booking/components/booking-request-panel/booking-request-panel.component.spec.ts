@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
@@ -125,5 +125,36 @@ describe('BookingRequestPanelComponent', () => {
 
     http.expectNone((r) => r.url.includes('cancel-pending'));
     expect(draft.guestName()).toBe('');
+  });
+
+  it('con un pago pendiente reanudable, hace scroll automático al aviso tras el primer render', async () => {
+    // Se destruye el fixture creado en beforeEach: su afterNextRender aún no se ha
+    // disparado (nunca se llamó a detectChanges) y podría interferir con el conteo de llamadas.
+    fixture.destroy();
+
+    // jsdom no implementa scrollIntoView de forma nativa; se define antes de espiarla.
+    Element.prototype.scrollIntoView = vi.fn();
+    const scrollSpy = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => {});
+    const draft = TestBed.inject(BookingDraftService);
+    draft.rememberPendingPayment('bk_1', 'https://checkout.stripe.com/test', new Date(Date.now() + 5 * 60 * 1000));
+
+    const localFixture = TestBed.createComponent(BookingRequestPanelComponent);
+    localFixture.detectChanges();
+    await localFixture.whenStable();
+
+    expect(scrollSpy).toHaveBeenCalledTimes(1);
+    expect(scrollSpy).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' });
+    scrollSpy.mockRestore();
+  });
+
+  it('sin pago pendiente, no hace scroll automático', async () => {
+    Element.prototype.scrollIntoView = vi.fn();
+    const scrollSpy = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => {});
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(scrollSpy).not.toHaveBeenCalled();
+    scrollSpy.mockRestore();
   });
 });

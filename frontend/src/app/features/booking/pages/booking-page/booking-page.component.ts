@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, DestroyRef } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { format } from 'date-fns';
 import { map, catchError } from 'rxjs/operators';
@@ -114,6 +114,14 @@ export class BookingPageComponent {
       canonicalPath: '/reservar',
       keywords:      'reservar casa rural Valencia, disponibilidad alojamiento Aielo de Rugat, reserva casa vacaciones Valencia',
     });
+
+    // Si el navegador restaura esta página desde bfcache (botón "atrás" tras ir a Stripe),
+    // se fuerza una recarga completa para traer datos frescos y recalcular el pago pendiente.
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) window.location.reload();
+    };
+    window.addEventListener('pageshow', onPageShow);
+    inject(DestroyRef).onDestroy(() => window.removeEventListener('pageshow', onPageShow));
   }
 
   onConflict(): void {

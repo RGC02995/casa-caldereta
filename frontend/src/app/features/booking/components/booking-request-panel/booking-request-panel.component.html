@@ -45,7 +45,7 @@
 
   <!-- Pago en curso: el usuario volvió atrás con una sesión de Stripe aún viva -->
   @if (canResumePayment()) {
-    <div class="booking-resume" role="status">
+    <div class="booking-resume" role="status" #resumeSection>
       <p class="booking-resume__text">{{ 'booking.form.resumeNotice' | translate }}</p>
       <button type="button" class="booking-resume__btn" (click)="resumePayment()">
         {{ 'booking.form.resumeButton' | translate }}

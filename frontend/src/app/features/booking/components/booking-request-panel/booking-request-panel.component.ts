@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, output, signal, DestroyRef } from '@angular/core';
+import { Component, computed, inject, input, output, signal, DestroyRef, ElementRef, afterNextRender, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { format } from 'date-fns';
@@ -61,11 +61,20 @@ export class BookingRequestPanelComponent {
     return url !== null && expiry !== null && expiry.getTime() > Date.now();
   });
 
+  readonly resumeSection = viewChild<ElementRef<HTMLDivElement>>('resumeSection');
+
   constructor() {
     // Si al reentrar hay una sesión guardada pero ya caducó el bloqueo, se descarta.
     if (this.draft.pendingSessionUrl() && !this.draft.hasResumablePayment()) {
       this.draft.clearPendingPayment();
     }
+
+    // Tras el primer render, si hay un pago reanudable, se hace scroll automático hasta el aviso.
+    afterNextRender(() => {
+      if (this.canResumePayment()) {
+        this.resumeSection()?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
   }
 
   resumePayment(): void {
