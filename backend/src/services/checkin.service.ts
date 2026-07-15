@@ -3,7 +3,8 @@ import { BookingModel, IBookingDocument } from '../models/booking.model';
 import { CheckinSettingsModel, ICheckinSettingsDocument } from '../models/checkin-settings.model';
 import { TravelerDocumentModel, ITravelerDocumentDoc } from '../models/traveler-document.model';
 import { withId } from '../utils/mongoose.util';
-import { isValidDni, isValidContact } from '../utils/traveler-validation.util';
+import { isValidDni, isValidNie, isValidPhone, isValidEmail } from '../utils/traveler-validation.util';
+import { PAISES_ISO_CODES } from '../data/iso-3166-1-alpha3';
 import { emailService } from './email.service';
 import { bookingService, IRemainingPaymentSessionResult } from './booking.service';
 import { env } from '../config/environment';
@@ -29,17 +30,19 @@ export interface ITravelerInput {
   numDocumento:        string;
   numSoporte:          string;
   apellido1:           string;
-  apellido2:           string;
+  apellido2?:          string;
   nombre:              string;
   sexo?:               string;
   fechaNacimiento:     string;
   parentesco?:         string;
   pais:                string;
   paisResidencia:      string;
-  ciudadResidencia:    string;
+  nombreMunicipio?:    string;
+  codigoMunicipio?:    string;
   direccionResidencia: string;
   codigoPostal:        string;
-  contacto:            string;
+  telefono?:           string;
+  correo?:             string;
 }
 
 export interface ITodayActivity {
@@ -154,15 +157,45 @@ class CheckinService {
       if (fechaNacimiento > new Date()) {
         throw Object.assign(new Error(`${prefix}: la fecha de nacimiento no puede ser una fecha futura`), { code: 'VALIDATION' });
       }
-      if (traveler.tipoDocumento === 'DNI') {
+      if (traveler.tipoDocumento === 'NIF') {
+        if (!traveler.apellido2?.trim()) {
+          throw Object.assign(new Error(`${prefix}: el segundo apellido es obligatorio para NIF`), { code: 'VALIDATION' });
+        }
         if (!isValidDni(traveler.numDocumento)) {
-          throw Object.assign(new Error(`${prefix}: el formato del DNI no es válido`), { code: 'VALIDATION' });
+          throw Object.assign(new Error(`${prefix}: el formato del DNI/NIF no es válido`), { code: 'VALIDATION' });
         }
         // Normalizado sin espacios/guion antes de guardar — el formulario admite "12345678-Z"
         traveler.numDocumento = traveler.numDocumento.trim().replace(/[\s-]/g, '');
       }
-      if (!isValidContact(traveler.contacto)) {
-        throw Object.assign(new Error(`${prefix}: el teléfono o correo electrónico no tiene un formato válido`), { code: 'VALIDATION' });
+      if (traveler.tipoDocumento === 'NIE') {
+        if (!isValidNie(traveler.numDocumento)) {
+          throw Object.assign(new Error(`${prefix}: el formato del NIE no es válido`), { code: 'VALIDATION' });
+        }
+        traveler.numDocumento = traveler.numDocumento.trim().replace(/[\s-]/g, '');
+      }
+      if (!PAISES_ISO_CODES.has(traveler.pais)) {
+        throw Object.assign(new Error(`${prefix}: la nacionalidad no es un país válido`), { code: 'VALIDATION' });
+      }
+      if (!PAISES_ISO_CODES.has(traveler.paisResidencia)) {
+        throw Object.assign(new Error(`${prefix}: el país de residencia no es válido`), { code: 'VALIDATION' });
+      }
+      if (traveler.paisResidencia === 'ESP') {
+        if (!/^\d{5}$/.test(traveler.codigoMunicipio ?? '')) {
+          throw Object.assign(new Error(`${prefix}: el municipio de residencia no es válido`), { code: 'VALIDATION' });
+        }
+      } else if (!traveler.nombreMunicipio?.trim()) {
+        throw Object.assign(new Error(`${prefix}: el municipio de residencia es obligatorio`), { code: 'VALIDATION' });
+      }
+      const telefono = traveler.telefono?.trim();
+      const correo   = traveler.correo?.trim();
+      if (!telefono && !correo) {
+        throw Object.assign(new Error(`${prefix}: debes indicar un teléfono o un correo electrónico`), { code: 'VALIDATION' });
+      }
+      if (telefono && !isValidPhone(telefono)) {
+        throw Object.assign(new Error(`${prefix}: el teléfono no tiene un formato válido`), { code: 'VALIDATION' });
+      }
+      if (correo && !isValidEmail(correo)) {
+        throw Object.assign(new Error(`${prefix}: el correo electrónico no tiene un formato válido`), { code: 'VALIDATION' });
       }
     }
 
@@ -172,17 +205,19 @@ class CheckinService {
       numDocumento:        travelerInput.numDocumento,
       numSoporte:          travelerInput.numSoporte,
       apellido1:           travelerInput.apellido1,
-      apellido2:           travelerInput.apellido2,
+      apellido2:           travelerInput.apellido2?.trim() || undefined,
       nombre:              travelerInput.nombre,
       sexo:                travelerInput.sexo?.trim() || undefined,
       fechaNacimiento:     new Date(travelerInput.fechaNacimiento),
       parentesco:          travelerInput.parentesco?.trim() || undefined,
       pais:                travelerInput.pais,
       paisResidencia:      travelerInput.paisResidencia,
-      ciudadResidencia:    travelerInput.ciudadResidencia,
+      nombreMunicipio:     travelerInput.nombreMunicipio?.trim() || undefined,
+      codigoMunicipio:     travelerInput.codigoMunicipio?.trim() || undefined,
       direccionResidencia: travelerInput.direccionResidencia,
       codigoPostal:        travelerInput.codigoPostal,
-      contacto:            travelerInput.contacto,
+      telefono:            travelerInput.telefono?.trim() || undefined,
+      correo:              travelerInput.correo?.trim() || undefined,
       fechaEntrada:        booking.checkIn,
     }));
 

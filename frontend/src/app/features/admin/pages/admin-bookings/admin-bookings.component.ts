@@ -5,8 +5,10 @@ import { BehaviorSubject, switchMap, of, timer } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { BookingService } from '../../../../core/services/booking.service';
 import { CheckinService } from '../../../../core/services/checkin.service';
+import { GeoReferenceService } from '../../../../core/services/geo-reference.service';
 import { IBooking, BookingStatus } from '../../../../core/models/booking.model';
 import { ITravelerDocument } from '../../../../core/models/checkin.model';
+import { tipoDocumentoLabel, sexoLabel, parentescoLabel } from '../../../../core/constants/traveler-catalog.constants';
 import {
   AdminBookingListComponent,
   IBookingStatusChangeEvent,
@@ -39,9 +41,17 @@ const STATUS_CONFIRMATIONS: Partial<Record<BookingStatus, string>> = {
   styleUrl:    './admin-bookings.component.scss',
 })
 export class AdminBookingsComponent {
-  private readonly bookingService  = inject(BookingService);
-  private readonly checkinService  = inject(CheckinService);
-  private readonly destroyRef      = inject(DestroyRef);
+  private readonly bookingService      = inject(BookingService);
+  private readonly checkinService      = inject(CheckinService);
+  private readonly geoReferenceService = inject(GeoReferenceService);
+  private readonly destroyRef          = inject(DestroyRef);
+
+  private readonly paisNombrePorCodigo = toSignal(
+    this.geoReferenceService.getPaises().pipe(
+      map(paises => new Map(paises.map(p => [p.code, p.name]))),
+    ),
+    { initialValue: new Map<string, string>() },
+  );
 
   readonly loadError    = signal('');
   readonly actionError  = signal('');
@@ -346,26 +356,55 @@ export class AdminBookingsComponent {
     this.travelersData.set([]);
   }
 
+  // ── Resolución código → etiqueta legible (con fallback a campos antiguos
+  // para registros creados antes de este cambio) ────────────────────────────────
+
+  resolvePaisNombre(codigo: string): string {
+    return this.paisNombrePorCodigo().get(codigo) ?? codigo;
+  }
+
+  resolveTipoDocumento(traveler: ITravelerDocument): string {
+    return tipoDocumentoLabel(traveler.tipoDocumento) ?? traveler.tipoDocumento;
+  }
+
+  resolveSexo(traveler: ITravelerDocument): string {
+    return sexoLabel(traveler.sexo) ?? '';
+  }
+
+  resolveParentesco(traveler: ITravelerDocument): string {
+    return parentescoLabel(traveler.parentesco) ?? '';
+  }
+
+  resolveMunicipio(traveler: ITravelerDocument): string {
+    return traveler.nombreMunicipio
+      ?? (traveler.codigoMunicipio ? `Código INE ${traveler.codigoMunicipio}` : traveler.ciudadResidencia ?? '');
+  }
+
+  resolveContacto(traveler: ITravelerDocument): string {
+    const partes = [traveler.telefono, traveler.correo].filter(Boolean);
+    return partes.length > 0 ? partes.join(' / ') : (traveler.contacto ?? '');
+  }
+
   copyForSesHospederia(): void {
     const lines: string[] = [];
     this.travelersData().forEach((traveler, index) => {
       if (index > 0) lines.push('');
       lines.push(`--- VIAJERO ${index + 1} ---`);
       lines.push(`Apellido 1: ${traveler.apellido1}`);
-      lines.push(`Apellido 2: ${traveler.apellido2}`);
+      lines.push(`Apellido 2: ${traveler.apellido2 ?? ''}`);
       lines.push(`Nombre: ${traveler.nombre}`);
       lines.push(`Fecha nacimiento: ${new Date(traveler.fechaNacimiento).toLocaleDateString('es-ES')}`);
-      lines.push(`Sexo: ${traveler.sexo ?? 'No indicado'}`);
-      lines.push(`Parentesco: ${traveler.parentesco ?? 'No indicado'}`);
-      lines.push(`Tipo documento: ${traveler.tipoDocumento}`);
+      lines.push(`Sexo: ${this.resolveSexo(traveler) || 'No indicado'}`);
+      lines.push(`Parentesco: ${this.resolveParentesco(traveler) || 'No indicado'}`);
+      lines.push(`Tipo documento: ${this.resolveTipoDocumento(traveler)}`);
       lines.push(`Nº documento: ${traveler.numDocumento}`);
       lines.push(`Nº soporte: ${traveler.numSoporte}`);
-      lines.push(`Nacionalidad: ${traveler.pais}`);
-      lines.push(`País residencia: ${traveler.paisResidencia}`);
-      lines.push(`Ciudad residencia: ${traveler.ciudadResidencia}`);
+      lines.push(`Nacionalidad: ${this.resolvePaisNombre(traveler.pais)}`);
+      lines.push(`País residencia: ${this.resolvePaisNombre(traveler.paisResidencia)}`);
+      lines.push(`Municipio residencia: ${this.resolveMunicipio(traveler)}`);
       lines.push(`Dirección: ${traveler.direccionResidencia}`);
       lines.push(`Código postal: ${traveler.codigoPostal}`);
-      lines.push(`Teléfono/Email: ${traveler.contacto}`);
+      lines.push(`Teléfono/Email: ${this.resolveContacto(traveler)}`);
     });
 
     navigator.clipboard.writeText(lines.join('\n')).catch(() => undefined);

@@ -66,10 +66,12 @@ ${tag('tipoDocumento', viajero.tipoDocumento)}
 ${tag('numeroDocumento', viajero.numDocumento)}
 ${tag('numeroSoporte', viajero.numSoporte)}
 ${tag('direccion', viajero.direccionResidencia)}
-${tag('municipio', viajero.ciudadResidencia)}
+${tag('municipio', viajero.nombreMunicipio)}
+${tag('codigoMunicipio', viajero.codigoMunicipio)}
 ${tag('codigoPostal', viajero.codigoPostal)}
 ${tag('paisResidencia', viajero.paisResidencia)}
-${tag('contacto', viajero.contacto)}
+${tag('telefono', viajero.telefono)}
+${tag('correo', viajero.correo)}
 ${tag('parentesco', viajero.parentesco)}
     </viajero>`;
     })

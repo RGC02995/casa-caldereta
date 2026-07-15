@@ -1,7 +1,7 @@
 import { BookingStatus } from './booking.model';
 
-export type TipoDocumento = 'DNI' | 'NIE' | 'Pasaporte' | 'Permiso de residencia' | 'Otro';
-export type Sexo = 'H' | 'M';
+export type TipoDocumento = 'NIF' | 'NIE' | 'PAS' | 'OTRO';
+export type Sexo = 'H' | 'M' | 'O';
 
 export interface ICheckinSettings {
   readonly id:           string;
@@ -33,18 +33,24 @@ export interface ITravelerDocument {
   readonly numDocumento:        string;
   readonly numSoporte:          string;
   readonly apellido1:           string;
-  readonly apellido2:           string;
+  readonly apellido2?:          string;
   readonly nombre:              string;
   readonly sexo?:               Sexo;
   readonly fechaNacimiento:     string;
   readonly parentesco?:         string;
   readonly pais:                string;
   readonly paisResidencia:      string;
-  readonly ciudadResidencia:    string;
+  readonly nombreMunicipio?:    string;
+  readonly codigoMunicipio?:    string;
   readonly direccionResidencia: string;
   readonly codigoPostal:        string;
-  readonly contacto:            string;
+  readonly telefono?:           string;
+  readonly correo?:             string;
   readonly fechaEntrada:        string;
+  /** @deprecated sustituido por nombreMunicipio/codigoMunicipio — solo presente en registros anteriores */
+  readonly ciudadResidencia?:   string;
+  /** @deprecated sustituido por telefono/correo — solo presente en registros anteriores */
+  readonly contacto?:           string;
 }
 
 export interface ICheckinFormInfo {
@@ -63,15 +69,17 @@ export interface ITravelerInput {
   numDocumento:        string;
   numSoporte:          string;
   apellido1:           string;
-  apellido2:           string;
+  apellido2?:          string | undefined;
   nombre:              string;
   sexo?:               Sexo | undefined;
   fechaNacimiento:     string;
   parentesco?:         string | undefined;
   pais:                string;
   paisResidencia:      string;
-  ciudadResidencia:    string;
+  nombreMunicipio?:    string | undefined;
+  codigoMunicipio?:    string | undefined;
   direccionResidencia: string;
   codigoPostal:        string;
-  contacto:            string;
+  telefono?:           string | undefined;
+  correo?:             string | undefined;
 }

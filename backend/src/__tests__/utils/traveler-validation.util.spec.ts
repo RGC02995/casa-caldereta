@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isValidDni, isValidPhone, isValidContact } from '../../utils/traveler-validation.util';
+import { isValidDni, isValidNie, isValidPhone, isValidEmail } from '../../utils/traveler-validation.util';
 
 describe('isValidDni', () => {
   it('acepta un DNI válido sin separadores', () => {
@@ -31,17 +31,51 @@ describe('isValidDni', () => {
   });
 });
 
-describe('isValidContact', () => {
-  it('acepta un teléfono español', () => {
-    expect(isValidContact('677876219')).toBe(true);
+describe('isValidNie', () => {
+  it('acepta un NIE válido con prefijo X', () => {
+    expect(isValidNie('X1234567L')).toBe(true);
   });
 
-  it('acepta un email', () => {
-    expect(isValidContact('huesped@example.com')).toBe(true);
+  it('acepta un NIE válido con prefijo Y', () => {
+    expect(isValidNie('Y1234567X')).toBe(true);
   });
 
-  it('rechaza texto que no es ni teléfono ni email', () => {
-    expect(isValidContact('no soy un contacto')).toBe(false);
+  it('acepta un NIE válido con prefijo Z', () => {
+    expect(isValidNie('Z1234567R')).toBe(true);
+  });
+
+  it('acepta un NIE válido en minúscula', () => {
+    expect(isValidNie('x1234567l')).toBe(true);
+  });
+
+  it('acepta un NIE válido escrito con guion', () => {
+    expect(isValidNie('X-1234567-L')).toBe(true);
+  });
+
+  it('rechaza una letra de control incorrecta', () => {
+    expect(isValidNie('X1234567A')).toBe(false);
+  });
+
+  it('rechaza un DNI (empieza por dígito, no es un NIE)', () => {
+    expect(isValidNie('12345678Z')).toBe(false);
+  });
+
+  it('rechaza un prefijo de letra no válido', () => {
+    expect(isValidNie('A1234567L')).toBe(false);
+  });
+});
+
+describe('isValidEmail', () => {
+  it('acepta un email válido', () => {
+    expect(isValidEmail('huesped@example.com')).toBe(true);
+  });
+
+  it('rechaza texto que no es un email', () => {
+    expect(isValidEmail('no soy un email')).toBe(false);
+  });
+
+  it('rechaza un email sin dominio', () => {
+    expect(isValidEmail('huesped@')).toBe(false);
   });
 });
 

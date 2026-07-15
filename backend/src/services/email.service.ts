@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 import { env } from '../config/environment';
 import { IBookingDocument, BookingStatus } from '../models/booking.model';
+import { PAISES_ISO_3166 } from '../data/iso-3166-1-alpha3';
 
 interface ISendOptions {
   readonly to:      string;
@@ -41,17 +42,52 @@ interface ICheckinTraveler {
   readonly numDocumento:        string;
   readonly numSoporte:          string;
   readonly apellido1:           string;
-  readonly apellido2:           string;
+  readonly apellido2?:          string;
   readonly nombre:              string;
   readonly sexo?:               string;
   readonly fechaNacimiento:     string;
   readonly parentesco?:         string;
   readonly pais:                string;
   readonly paisResidencia:      string;
-  readonly ciudadResidencia:    string;
+  readonly nombreMunicipio?:    string;
+  readonly codigoMunicipio?:    string;
   readonly direccionResidencia: string;
   readonly codigoPostal:        string;
-  readonly contacto:            string;
+  readonly telefono?:           string;
+  readonly correo?:             string;
+}
+
+const TIPO_DOCUMENTO_LABELS: Record<string, string> = {
+  NIF:  'DNI / NIF',
+  NIE:  'NIE',
+  PAS:  'Pasaporte',
+  OTRO: 'Otro',
+};
+
+const PARENTESCO_LABELS: Record<string, string> = {
+  AB: 'Abuelo/a',
+  BA: 'Bisabuelo/a',
+  BN: 'Bisnieto/a',
+  CD: 'Cuñado/a',
+  CY: 'Cónyuge',
+  HJ: 'Hijo/a',
+  HR: 'Hermano/a',
+  NI: 'Nieto/a',
+  PM: 'Padre o madre',
+  SB: 'Sobrino/a',
+  SG: 'Suegro/a',
+  TI: 'Tío/a',
+  YN: 'Yerno o nuera',
+  TU: 'Tutor/a',
+  OT: 'Otro',
+};
+
+const PAIS_NOMBRE_POR_CODIGO: Record<string, string> = Object.fromEntries(
+  PAISES_ISO_3166.map(p => [p.code, p.name]),
+);
+
+function nombrePais(codigo: string): string {
+  return PAIS_NOMBRE_POR_CODIGO[codigo] ?? codigo;
 }
 
 // ─── Utilidades de formato ────────────────────────────────────────────────────
@@ -476,7 +512,11 @@ function ownerCheckinFormSubmittedHtml(booking: IBookingDocument, travelers: ICh
     const fechaNac  = new Date(t.fechaNacimiento).toLocaleDateString('es-ES', {
       day: '2-digit', month: '2-digit', year: 'numeric',
     });
-    const nombre    = `${escapeHtml(t.apellido1)} ${escapeHtml(t.apellido2)}, ${escapeHtml(t.nombre)}`;
+    const nombre    = `${escapeHtml(t.apellido1)} ${escapeHtml(t.apellido2 ?? '')}, ${escapeHtml(t.nombre)}`;
+    const sexoLabel = t.sexo === 'H' ? 'Hombre' : t.sexo === 'M' ? 'Mujer' : t.sexo === 'O' ? 'Otro' : 'No indicado';
+    const parentescoLabel = t.parentesco ? (PARENTESCO_LABELS[t.parentesco] ?? t.parentesco) : 'No indicado';
+    const tipoDocumentoLabel = TIPO_DOCUMENTO_LABELS[t.tipoDocumento] ?? t.tipoDocumento;
+    const municipioLabel = t.nombreMunicipio ?? (t.codigoMunicipio ? `Código INE ${t.codigoMunicipio}` : 'No indicado');
     const bg        = i % 2 === 0 ? '#FFF' : '#F9F7F4';
     return `
     <tr style="background:#2C2C2C;">
@@ -489,28 +529,28 @@ function ownerCheckinFormSubmittedHtml(booking: IBookingDocument, travelers: ICh
       ${tdLabel('Fecha nacimiento')}${td(fechaNac)}
     </tr>
     <tr style="background:${bg};">
-      ${tdLabel('Tipo documento')}${td(escapeHtml(t.tipoDocumento))}
+      ${tdLabel('Tipo documento')}${td(escapeHtml(tipoDocumentoLabel))}
       ${tdLabel('N&#186; documento')}${td(escapeHtml(t.numDocumento))}
     </tr>
     <tr style="background:${bg};">
       ${tdLabel('N&#186; soporte')}${td(escapeHtml(t.numSoporte))}
-      ${tdLabel('Sexo')}${td(escapeHtml(t.sexo === 'H' ? 'Hombre' : t.sexo === 'M' ? 'Mujer' : 'No indicado'))}
+      ${tdLabel('Sexo')}${td(escapeHtml(sexoLabel))}
     </tr>
     <tr style="background:${bg};">
-      ${tdLabel('Parentesco')}${td(escapeHtml(t.parentesco ?? 'No indicado'))}
-      ${tdLabel('Nacionalidad')}${td(escapeHtml(t.pais))}
+      ${tdLabel('Parentesco')}${td(escapeHtml(parentescoLabel))}
+      ${tdLabel('Nacionalidad')}${td(escapeHtml(nombrePais(t.pais)))}
     </tr>
     <tr style="background:${bg};">
-      ${tdLabel('Pa&#237;s residencia')}${td(escapeHtml(t.paisResidencia))}
-      ${tdLabel('Ciudad residencia')}${td(escapeHtml(t.ciudadResidencia))}
+      ${tdLabel('Pa&#237;s residencia')}${td(escapeHtml(nombrePais(t.paisResidencia)))}
+      ${tdLabel('Municipio residencia')}${td(escapeHtml(municipioLabel))}
     </tr>
     <tr style="background:${bg};">
       ${tdLabel('Direcci&#243;n')}${td(escapeHtml(t.direccionResidencia))}
       ${tdLabel('C&#243;digo postal')}${td(escapeHtml(t.codigoPostal))}
     </tr>
     <tr style="background:${bg};">
-      ${tdLabel('Tel&#233;fono / Email')}${td(escapeHtml(t.contacto))}
-      <td></td><td></td>
+      ${tdLabel('Tel&#233;fono')}${td(escapeHtml(t.telefono ?? 'No indicado'))}
+      ${tdLabel('Correo')}${td(escapeHtml(t.correo ?? 'No indicado'))}
     </tr>
     <tr><td colspan="4" style="padding:4px 0;"></td></tr>`;
   }).join('');

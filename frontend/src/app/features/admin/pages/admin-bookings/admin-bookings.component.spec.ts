@@ -40,8 +40,9 @@ describe('AdminBookingsComponent — segundo pago (reenvío manual)', () => {
     component = fixture.componentInstance;
     http      = TestBed.inject(HttpTestingController);
 
-    // Carga inicial de reservas (toSignal se suscribe al construir el componente)
+    // Carga inicial de reservas y de países (ambos toSignal se suscriben al construir el componente)
     http.expectOne(BOOKINGS_URL).flush({ success: true, data: [makeBooking()] });
+    http.expectOne('assets/data/paises-iso3166.json').flush([{ code: 'ESP', name: 'España' }]);
     fixture.detectChanges();
   });
 

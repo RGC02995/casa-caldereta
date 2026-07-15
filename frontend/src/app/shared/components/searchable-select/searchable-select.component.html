@@ -1,0 +1,40 @@
+<div class="searchable-select" clickOutside (clickOutside)="closeDropdown()">
+  <input
+    class="searchable-select__input"
+    type="text"
+    role="combobox"
+    aria-autocomplete="list"
+    aria-haspopup="listbox"
+    [attr.aria-expanded]="isOpen()"
+    [id]="id() || null"
+    [placeholder]="placeholder()"
+    [disabled]="disabled()"
+    [value]="query()"
+    (focus)="onFocus()"
+    (input)="onInput($event)"
+    (keydown)="onKeydown($event)"
+    autocomplete="off"
+  />
+
+  @if (isOpen() && filteredOptions().length > 0) {
+    <ul class="searchable-select__dropdown" role="listbox">
+      @for (option of filteredOptions(); track option.value) {
+        <li
+          class="searchable-select__option"
+          role="option"
+          [attr.aria-selected]="option.value === value()"
+          (mousedown)="onSelect(option)"
+        >
+          {{ option.label }}
+          @if (option.sublabel) {
+            <span class="searchable-select__option-sublabel">{{ option.sublabel }}</span>
+          }
+        </li>
+      }
+    </ul>
+  } @else if (isOpen() && query().trim().length >= minChars()) {
+    <ul class="searchable-select__dropdown" role="listbox">
+      <li class="searchable-select__option searchable-select__option--empty">Sin resultados</li>
+    </ul>
+  }
+</div>

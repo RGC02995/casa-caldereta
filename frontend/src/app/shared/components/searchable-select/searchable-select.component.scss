@@ -1,0 +1,79 @@
+@use '../../../../styles/variables' as *;
+@use '../../../../styles/mixins' as *;
+
+.searchable-select {
+  position: relative;
+  width: 100%;
+
+  &__input {
+    display: block;
+    width: 100%;
+    padding: 8px $space-3;
+    border: 1px solid $color-neutral-300;
+    border-radius: $border-radius-sm;
+    background-color: $color-white;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-800;
+    transition: border-color $transition-fast, box-shadow $transition-fast;
+    box-sizing: border-box;
+
+    &::placeholder { color: $color-neutral-400; }
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.12);
+    }
+
+    &:disabled {
+      background-color: $color-neutral-100;
+      cursor: not-allowed;
+    }
+  }
+
+  &__dropdown {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    max-height: 260px;
+    overflow-y: auto;
+    margin: 0;
+    padding: $space-2 0;
+    list-style: none;
+    background-color: $color-white;
+    border: 1px solid $color-neutral-200;
+    border-radius: $border-radius-sm;
+    box-shadow: $shadow-lg;
+  }
+
+  &__option {
+    padding: $space-2 $space-4;
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-neutral-800;
+    cursor: pointer;
+
+    &:hover,
+    &[aria-selected='true'] {
+      background-color: $color-neutral-100;
+    }
+
+    &--empty {
+      color: $color-neutral-400;
+      cursor: default;
+
+      &:hover {
+        background-color: transparent;
+      }
+    }
+  }
+
+  &__option-sublabel {
+    color: $color-neutral-400;
+    font-size: $font-size-xs;
+    margin-left: $space-1;
+  }
+}

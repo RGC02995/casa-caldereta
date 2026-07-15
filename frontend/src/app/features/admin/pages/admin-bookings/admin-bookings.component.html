@@ -109,17 +109,17 @@
                   <td class="admin-bookings__travelers-td admin-bookings__travelers-td--num">{{ i + 1 }}</td>
                   <td class="admin-bookings__travelers-td">{{ traveler.apellido1 }} {{ traveler.apellido2 }}, {{ traveler.nombre }}</td>
                   <td class="admin-bookings__travelers-td">{{ traveler.fechaNacimiento | date:'dd/MM/yyyy' }}</td>
-                  <td class="admin-bookings__travelers-td admin-bookings__travelers-td--center">{{ traveler.sexo }}</td>
-                  <td class="admin-bookings__travelers-td">{{ traveler.parentesco }}</td>
-                  <td class="admin-bookings__travelers-td">{{ traveler.tipoDocumento }}</td>
+                  <td class="admin-bookings__travelers-td admin-bookings__travelers-td--center">{{ resolveSexo(traveler) }}</td>
+                  <td class="admin-bookings__travelers-td">{{ resolveParentesco(traveler) }}</td>
+                  <td class="admin-bookings__travelers-td">{{ resolveTipoDocumento(traveler) }}</td>
                   <td class="admin-bookings__travelers-td admin-bookings__travelers-td--mono">{{ traveler.numDocumento }}</td>
                   <td class="admin-bookings__travelers-td admin-bookings__travelers-td--mono">{{ traveler.numSoporte }}</td>
-                  <td class="admin-bookings__travelers-td">{{ traveler.pais }}</td>
-                  <td class="admin-bookings__travelers-td">{{ traveler.paisResidencia }}</td>
-                  <td class="admin-bookings__travelers-td">{{ traveler.ciudadResidencia }}</td>
+                  <td class="admin-bookings__travelers-td">{{ resolvePaisNombre(traveler.pais) }}</td>
+                  <td class="admin-bookings__travelers-td">{{ resolvePaisNombre(traveler.paisResidencia) }}</td>
+                  <td class="admin-bookings__travelers-td">{{ resolveMunicipio(traveler) }}</td>
                   <td class="admin-bookings__travelers-td">{{ traveler.direccionResidencia }}</td>
                   <td class="admin-bookings__travelers-td admin-bookings__travelers-td--mono">{{ traveler.codigoPostal }}</td>
-                  <td class="admin-bookings__travelers-td">{{ traveler.contacto }}</td>
+                  <td class="admin-bookings__travelers-td">{{ resolveContacto(traveler) }}</td>
                 </tr>
               }
             </tbody>

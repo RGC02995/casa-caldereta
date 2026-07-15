@@ -131,8 +131,12 @@
 
                 <div class="checkin-form__field">
                   <label class="checkin-form__label" [for]="'apellido2-' + i">
-                    Segundo apellido <span class="checkin-form__required" aria-hidden="true">*</span>
-                    <span class="checkin-form__hint">Si no tienes, escribe N/A</span>
+                    Segundo apellido
+                    @if (traveler.tipoDocumento === 'NIF') {
+                      <span class="checkin-form__required" aria-hidden="true">*</span>
+                    } @else {
+                      (opcional)
+                    }
                   </label>
                   <input
                     class="checkin-form__input"
@@ -182,27 +186,35 @@
                     (change)="updateField(i, 'sexo', $event)"
                   >
                     <option value="" disabled>Seleccionar</option>
-                    <option value="H">Hombre</option>
-                    <option value="M">Mujer</option>
-                  </select>
-                </div>
-
-                <div class="checkin-form__field">
-                  <label class="checkin-form__label" [for]="'parentesco-' + i">
-                    Parentesco (opcional)
-                  </label>
-                  <select
-                    class="checkin-form__select"
-                    [id]="'parentesco-' + i"
-                    [value]="traveler.parentesco"
-                    (change)="updateField(i, 'parentesco', $event)"
-                  >
-                    <option value="" disabled>Seleccionar</option>
-                    @for (p of PARENTESCOS; track p) {
-                      <option [value]="p">{{ p }}</option>
+                    @for (s of SEXOS; track s.code) {
+                      <option [value]="s.code">{{ s.label }}</option>
                     }
                   </select>
                 </div>
+
+                @if (hasMinor()) {
+                  <div class="checkin-form__field">
+                    <label class="checkin-form__label" [for]="'parentesco-' + i">
+                      {{ isMinor(traveler.fechaNacimiento) ? 'Parentesco con el adulto acompañante' : 'Parentesco con el/la menor' }} (opcional)
+                      <span class="checkin-form__hint">
+                        {{ isMinor(traveler.fechaNacimiento)
+                          ? 'Indica tu relación con el adulto responsable de este viaje'
+                          : 'Indica tu relación de parentesco con el menor que viaja contigo' }}
+                      </span>
+                    </label>
+                    <select
+                      class="checkin-form__select"
+                      [id]="'parentesco-' + i"
+                      [value]="traveler.parentesco"
+                      (change)="updateField(i, 'parentesco', $event)"
+                    >
+                      <option value="" disabled>Seleccionar</option>
+                      @for (p of PARENTESCOS; track p.code) {
+                        <option [value]="p.code">{{ p.label }}</option>
+                      }
+                    </select>
+                  </div>
+                }
 
                 <div class="checkin-form__field">
                   <label class="checkin-form__label" [for]="'tipoDocumento-' + i">
@@ -214,8 +226,8 @@
                     [value]="traveler.tipoDocumento"
                     (change)="updateField(i, 'tipoDocumento', $event)"
                   >
-                    @for (tipo of TIPOS_DOCUMENTO; track tipo) {
-                      <option [value]="tipo">{{ tipo }}</option>
+                    @for (tipo of TIPOS_DOCUMENTO; track tipo.code) {
+                      <option [value]="tipo.code">{{ tipo.label }}</option>
                     }
                   </select>
                 </div>
@@ -254,14 +266,12 @@
                   <label class="checkin-form__label" [for]="'pais-' + i">
                     Nacionalidad <span class="checkin-form__required" aria-hidden="true">*</span>
                   </label>
-                  <input
-                    class="checkin-form__input"
+                  <searchable-select
                     [id]="'pais-' + i"
-                    type="text"
+                    [options]="countryOptions()"
                     [value]="traveler.pais"
-                    (input)="updateField(i, 'pais', $event)"
-                    placeholder="Ej: Española, Francesa..."
-                    autocomplete="country-name"
+                    placeholder="Buscar país..."
+                    (valueChange)="updateFieldValue(i, 'pais', $event)"
                   />
                 </div>
 
@@ -271,30 +281,43 @@
                   <label class="checkin-form__label" [for]="'paisResidencia-' + i">
                     País de residencia <span class="checkin-form__required" aria-hidden="true">*</span>
                   </label>
-                  <input
-                    class="checkin-form__input"
+                  <searchable-select
                     [id]="'paisResidencia-' + i"
-                    type="text"
+                    [options]="countryOptions()"
                     [value]="traveler.paisResidencia"
-                    (input)="updateField(i, 'paisResidencia', $event)"
-                    placeholder="Ej: España, Alemania..."
-                    autocomplete="country-name"
+                    placeholder="Buscar país..."
+                    (valueChange)="updateFieldValue(i, 'paisResidencia', $event)"
                   />
                 </div>
 
-                <div class="checkin-form__field">
-                  <label class="checkin-form__label" [for]="'ciudadResidencia-' + i">
-                    Ciudad de residencia <span class="checkin-form__required" aria-hidden="true">*</span>
-                  </label>
-                  <input
-                    class="checkin-form__input"
-                    [id]="'ciudadResidencia-' + i"
-                    type="text"
-                    [value]="traveler.ciudadResidencia"
-                    (input)="updateField(i, 'ciudadResidencia', $event)"
-                    placeholder="Ej: Valencia"
-                  />
-                </div>
+                @if (traveler.paisResidencia === 'ESP') {
+                  <div class="checkin-form__field">
+                    <label class="checkin-form__label" [for]="'codigoMunicipio-' + i">
+                      Municipio de residencia <span class="checkin-form__required" aria-hidden="true">*</span>
+                    </label>
+                    <searchable-select
+                      [id]="'codigoMunicipio-' + i"
+                      [options]="municipioOptions()"
+                      [value]="traveler.codigoMunicipio"
+                      placeholder="Buscar municipio..."
+                      (valueChange)="updateFieldValue(i, 'codigoMunicipio', $event)"
+                    />
+                  </div>
+                } @else {
+                  <div class="checkin-form__field">
+                    <label class="checkin-form__label" [for]="'nombreMunicipio-' + i">
+                      Ciudad de residencia <span class="checkin-form__required" aria-hidden="true">*</span>
+                    </label>
+                    <input
+                      class="checkin-form__input"
+                      [id]="'nombreMunicipio-' + i"
+                      type="text"
+                      [value]="traveler.nombreMunicipio"
+                      (input)="updateField(i, 'nombreMunicipio', $event)"
+                      placeholder="Ej: Lisboa"
+                    />
+                  </div>
+                }
 
                 <div class="checkin-form__field checkin-form__field--full">
                   <label class="checkin-form__label" [for]="'direccionResidencia-' + i">
@@ -327,17 +350,33 @@
                 </div>
 
                 <div class="checkin-form__field">
-                  <label class="checkin-form__label" [for]="'contacto-' + i">
-                    Teléfono o correo electrónico <span class="checkin-form__required" aria-hidden="true">*</span>
+                  <label class="checkin-form__label" [for]="'telefono-' + i">
+                    Teléfono
+                    <span class="checkin-form__hint">Indica al menos uno de los dos: teléfono o correo</span>
                   </label>
                   <input
                     class="checkin-form__input"
-                    [id]="'contacto-' + i"
-                    type="text"
-                    [value]="traveler.contacto"
-                    (input)="updateField(i, 'contacto', $event)"
-                    placeholder="Ej: +34 600 000 000 o correo@email.com"
+                    [id]="'telefono-' + i"
+                    type="tel"
+                    [value]="traveler.telefono"
+                    (input)="updateField(i, 'telefono', $event)"
+                    placeholder="Ej: +34 600 000 000"
                     autocomplete="tel"
+                  />
+                </div>
+
+                <div class="checkin-form__field">
+                  <label class="checkin-form__label" [for]="'correo-' + i">
+                    Correo electrónico
+                  </label>
+                  <input
+                    class="checkin-form__input"
+                    [id]="'correo-' + i"
+                    type="email"
+                    [value]="traveler.correo"
+                    (input)="updateField(i, 'correo', $event)"
+                    placeholder="Ej: correo@email.com"
+                    autocomplete="email"
                   />
                 </div>
 
