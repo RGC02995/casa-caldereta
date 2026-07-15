@@ -153,6 +153,7 @@
       "submitting":         "Preparing payment...",
       "selectDates":        "Select dates first",
       "proceed":            "Proceed to payment",
+      "emailNotice":        "Check your email (including your spam folder) one week before your arrival: we'll send you the mandatory guest registration form and the link to pay the remaining balance.",
       "resumeNotice":       "You have a payment in progress for these dates. You can pick up where you left off.",
       "resumeButton":       "Continue with payment",
       "cancelAndRestartButton": "Cancel and start over",

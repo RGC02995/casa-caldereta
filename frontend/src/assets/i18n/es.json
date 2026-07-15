@@ -153,6 +153,7 @@
       "submitting": "Preparando pago...",
       "selectDates": "Selecciona las fechas primero",
       "proceed": "Proceder al pago",
+      "emailNotice": "Revisa tu email (y también la carpeta de spam) una semana antes de tu llegada: te enviaremos el registro obligatorio de viajeros y el enlace de pago del resto de la reserva.",
       "resumeNotice": "Tienes un pago en curso para estas fechas. Puedes continuar donde lo dejaste.",
       "resumeButton": "Continuar con el pago",
       "cancelAndRestartButton": "Cancelar y empezar de nuevo",

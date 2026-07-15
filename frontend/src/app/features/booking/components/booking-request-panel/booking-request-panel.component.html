@@ -233,6 +233,15 @@
       <p class="booking-form__payment-hint">
         Pagas ahora el 50 % ({{ priceEstimate().depositAmount }} €). El resto ({{ priceEstimate().remainingAmount }} €) se cobra 7 días antes de tu llegada.
       </p>
+
+      <div class="booking-form__email-notice" role="note">
+        <svg class="booking-form__email-notice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="16" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <p class="booking-form__email-notice-text">{{ 'booking.form.emailNotice' | translate }}</p>
+      </div>
     }
 
   </form>
