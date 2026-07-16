@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/require-auth.middleware';
 import { uploadMiddleware } from '../middleware/upload.middleware';
+import { publicRateLimiter } from '../middleware/rate-limit.middleware';
 import {
   getAllRoutesHandler,
   getPublishedRoutesHandler,
@@ -18,8 +19,8 @@ import {
 const routeRouter = Router();
 
 // Rutas públicas — lectura de contenido publicado
-routeRouter.get('/published',        getPublishedRoutesHandler);
-routeRouter.get('/slug/:slug',       getRouteBySlugHandler);
+routeRouter.get('/published',        publicRateLimiter, getPublishedRoutesHandler);
+routeRouter.get('/slug/:slug',       publicRateLimiter, getRouteBySlugHandler);
 
 // Rutas protegidas — gestión del admin
 routeRouter.get('/',                       requireAuth, getAllRoutesHandler);
