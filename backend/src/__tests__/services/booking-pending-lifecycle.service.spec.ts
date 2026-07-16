@@ -142,11 +142,14 @@ describe('confirmDepositPayment() — defensivo', () => {
 
   it('reserva pending_payment sin conflicto → confirmed', async () => {
     await seedBooking({ status: 'pending_payment', holdExpiresAt: IN_10_MIN(), stripeSessionId: 'cs_ok' });
+    const before = new Date();
     const result = await bookingService.confirmDepositPayment('cs_ok', 'pi_ok');
     expect(result.outcome).toBe('confirmed');
     if (result.outcome === 'confirmed') {
       expect(result.booking.status).toBe('confirmed');
       expect(result.booking.stripePaymentIntentId).toBe('pi_ok');
+      expect(result.booking.depositPaidAt).toBeDefined();
+      expect(new Date(result.booking.depositPaidAt!).getTime()).toBeGreaterThanOrEqual(before.getTime());
     }
   });
 

@@ -171,8 +171,11 @@ export async function getTravelersXmlHandler(req: Request, res: Response): Promi
       return;
     }
 
-    const travelers = await checkinService.getTravelers(bookingId);
-    const xml = generateSesHospedajesXml(booking, travelers);
+    const [travelers, settings] = await Promise.all([
+      checkinService.getTravelers(bookingId),
+      checkinService.getSettings(),
+    ]);
+    const xml = generateSesHospedajesXml(booking, travelers, settings);
 
     res.status(200);
     res.setHeader('Content-Type', 'application/xml; charset=utf-8');

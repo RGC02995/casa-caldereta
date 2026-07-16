@@ -19,6 +19,7 @@ export interface IBookingDocument extends Document {
   stripePaymentIntentId?:    string;
   stripeSessionExpiresAt?:   Date;   // vida real de la sesión Stripe (mín. 30 min que exige Stripe)
   holdExpiresAt?:            Date;    // bloqueo interno de la fecha (10 min); libera antes que Stripe
+  depositPaidAt?:            Date;
   // Stripe — segundo pago (restante)
   stripeRemainingSessionId?:        string;
   stripeRemainingPaymentIntentId?:  string;
@@ -116,6 +117,7 @@ const bookingSchema = new Schema<IBookingDocument>(
       type:  Date,
       index: true,
     },
+    depositPaidAt: { type: Date },
     // Stripe — segundo pago
     stripeRemainingSessionId: {
       type:   String,

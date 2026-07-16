@@ -401,7 +401,7 @@ class BookingService {
 
     const doc = await BookingModel.findByIdAndUpdate(
       booking._id,
-      { status: 'confirmed', stripePaymentIntentId: paymentIntentId },
+      { status: 'confirmed', stripePaymentIntentId: paymentIntentId, depositPaidAt: now },
       { returnDocument: 'after', runValidators: true },
     ).lean<IBookingDocument>();
 
