@@ -549,6 +549,18 @@ El usuario compartió el documento oficial del Ministerio del Interior ("Instruc
 
 ---
 
+### Fix — 429 en `/photos` por rate limit demasiado bajo ✅ COMPLETADO (2026-07-16)
+Usuario reportó `Failed to load resource: 429 (photos, line 0)` en la web.
+
+- **Causa**: `GET /photos`, `GET /routes/published` y `GET /routes/slug/:slug` no tenían rate limiter propio — solo caían bajo `globalRateLimiter` (`server.ts:43`, montado antes de todo el `apiRouter`), compartido por **todos** los endpoints de la API a la vez (100 req/15min por IP). Una carga normal de home (photos + routes + reviews + availability + pricing-rules) multiplicada por unas pocas recargas, o una IP compartida (móvil/CGNAT/oficina), agotaba el cupo con tráfico legítimo — no era un ataque
+- **Fix 1** (`263999d`) — `publicRateLimiter` (30/min) añadido a esas 3 rutas, mismo patrón que ya usaba `reviews`/`availability` desde la auditoría de 2026-06-17
+- **Fix 2** — `RATE_LIMIT_MAX_REQUESTS` (global) subido de `100` a `500` por 15min, en `backend/.env` local y en Railway (variable de entorno del servicio backend, actualizada manualmente por el usuario). Seguro de subir: endpoints sensibles (`login`, `checkout`, `review submit`, `checkin form`) tienen su propio limiter más estricto encima y no se ven afectados
+- **Confirmado que no es un tope de Railway/Cloudinary**: Railway (plan Hobby, $5/mes + $5 crédito incluido) no impone rate limit de peticiones a la app, solo factura por uso de CPU/RAM/red; Cloudinary tiene cuota propia pero afecta a entrega/subida de imágenes, no al endpoint `/photos` del backend
+- 309/309 tests backend en verde tras el cambio
+- Commit `263999d` — pusheado a `main`
+
+---
+
 ## Pendientes / Preguntas abiertas
 - [ ] **Mostrar galería de imágenes y lat/lng de puntos en `route-detail-page`** (ver sección "Mejora formulario admin de rutas" arriba, 2026-07-08) — ya se pueden gestionar desde el admin pero la página pública de la ruta todavía no las pinta (alcance diferido a propósito, "para luego")
 - [ ] **Verificar en producción tras deploy de Vercel** que el enlace externo de ruta/punto (`820f769`, 2026-07-08) se ve bien en móvil real
@@ -634,3 +646,4 @@ El usuario compartió el documento oficial del Ministerio del Interior ("Instruc
 | fix: mejoras UX/UI del hero en móvil — botones, label, nota y hueco vacío (`b6e78ed`) | Botones a ancho completo en móvil, label ilegible corregido, palabra "SOLO" resaltada, fix de min-height por offset del header fijo |
 | style: quitar chevron del hero y mejorar texto de las cards de highlights (`db2cc03`) | Chevron de scroll revertido (sin valor real), colores de highlights corregidos (título como estaba, verde navbar al texto de las cards), tamaño de texto aumentado |
 | feat: formulario de check-in conforme al esquema oficial SES.HOSPEDAJES (`e1d346d`) | Selectores de país (ISO 3166-1) y municipio (código INE), parentesco con los 15 códigos oficiales condicionado a menor, teléfono/correo separados, tipoDocumento con códigos oficiales, validación NIE, componente searchable-select nuevo |
+| fix: aplicar publicRateLimiter a /photos y /routes públicas (`263999d`) | 429 en carga normal de la web por globalRateLimiter compartido (100/15min) — publicRateLimiter propio en photos/routes + RATE_LIMIT_MAX_REQUESTS global 100→500 |
