@@ -174,14 +174,17 @@ export class BookingCalendarComponent {
     while (!isAfter(current, monthEnd)) {
       const isPast = isBefore(startOfDay(current), today);
 
-      // El dia de llegada de otra reserva (r.start) solo bloquea si el clic definiria un
+      // El dia de inicio de otra reserva o bloqueo (r.start) solo bloquea si el clic definiria un
       // NUEVO check-in; si ya hay un check-in seleccionado, es un check-out valido (back-to-back).
       const isBookedInterior       = parsedBooked.some(r => isAfter(current, r.start) && isBefore(current, r.end));
       const isBookedCheckInArrival = parsedBooked.some(r => isSameDay(current, r.start));
       const isBooked = isBookedInterior ||
         (isBookedCheckInArrival && this.wouldStartNewRange(current, checkInDate, checkOutDate));
 
-      const isBlocked = parsedBlocked.some(r => !isBefore(current, r.start) && isBefore(current, r.end));
+      const isBlockedInterior = parsedBlocked.some(r => isAfter(current, r.start) && isBefore(current, r.end));
+      const isBlockedStart    = parsedBlocked.some(r => isSameDay(current, r.start));
+      const isBlocked = isBlockedInterior ||
+        (isBlockedStart && this.wouldStartNewRange(current, checkInDate, checkOutDate));
 
       const dow = getDay(current); // 0=Dom, 1=Lun, ..., 5=Vie, 6=Sáb
       const isSundayCheckInAttempt = dow === 0 && this.wouldStartNewRange(current, checkInDate, checkOutDate);

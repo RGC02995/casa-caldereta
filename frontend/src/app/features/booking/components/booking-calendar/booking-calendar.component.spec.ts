@@ -95,6 +95,12 @@ describe('BookingCalendarComponent', () => {
     expect(day(16).isBlocked).toBe(false);
   });
 
+  it('dia de inicio de un bloqueo sigue deshabilitado como nuevo check-in sin seleccion previa', () => {
+    fixture.componentRef.setInput('blockedPeriods', [blockedPeriod('2026-08-15', '2026-08-18')]);
+    expect(day(15).isBlocked).toBe(true);
+    expect(day(15).isDisabled).toBe(true);
+  });
+
   it('domingo deshabilitado como check-in cuando no hay seleccion previa (coincide con SUNDAY_CLOSED del backend)', () => {
     fixture.componentRef.setInput('pricingSettings', PRICING);
     const sunday = day(16);
@@ -205,6 +211,20 @@ describe('BookingCalendarComponent', () => {
       component.onDayClick(day(15));
       expect(checkInEmits).toHaveLength(0);
       expect(checkOutEmits).toHaveLength(0);
+    });
+
+    it('hueco de un solo dia entre dos bloqueos: el dia de inicio del segundo bloqueo SI es checkout valido tras marcar checkIn en el hueco', () => {
+      // Bloqueo hasta el 10 (inclusive), 11 libre, bloqueo desde el 12 → reserva de 1 noche 11→12
+      fixture.componentRef.setInput('blockedPeriods', [
+        blockedPeriod('2026-08-08', '2026-08-10'),
+        blockedPeriod('2026-08-12', '2026-08-15'),
+      ]);
+      fixture.componentRef.setInput('checkIn', new Date(2026, 7, 11));
+      expect(day(12).isDisabled).toBe(false);
+      component.onDayClick(day(12));
+      expect(checkOutEmits).toHaveLength(1);
+      expect(checkOutEmits[0]?.getDate()).toBe(12);
+      expect(checkInEmits).toHaveLength(0);
     });
 
     it('click anterior al checkIn → mueve el checkIn', () => {
