@@ -561,6 +561,18 @@ Usuario reportó `Failed to load resource: 429 (photos, line 0)` en la web.
 
 ---
 
+### Fix — XML SES.HOSPEDAJES rechazado por el portal: falta namespace en `<peticion>` ✅ COMPLETADO (2026-07-20)
+Usuario intentó subir un XML generado al portal real `hospedajes.ses.mir.es` y recibió el error `cvc-elt.1.a: Cannot find the declaration of element 'peticion'` en la línea 8, columna 11 del fichero.
+
+- **Causa**: el elemento raíz `<peticion>` se generaba sin ningún `xmlns` desde su reescritura del 2026-07-16 (ver "XML SES.HOSPEDAJES reestructurado" en Pendientes) — esa reescritura se basó en la prosa/tablas de campos de "Instrucciones para el alta masiva de comunicaciones v1.2.0", documento que no incluía un ejemplo de fichero completo con namespace. Sin `xmlns`, el validador del portal no puede casar el elemento `peticion` del fichero con ninguna declaración global del esquema, aunque el nombre y la estructura interna sean correctos
+- **Fuente encontrada**: `MIR-HOSPE-DSI-WS-Servicio de Hospedajes - Comunicaciones v3.1.2` (PDF distinto al usado en la sesión del 2026-07-16, localizado por búsqueda web en `seshospedajes.es`, extraído con `pdftotext`/poppler) — su "ANEXO I. EJEMPLO DE ALTA DE COMUNICACIONES" reproduce un fichero XML completo real: `<alt:peticion xmlns:alt="http://www.neg.hospedajes.mir.es/altaParteHospedaje">`. Este mismo documento confirma también, campo a campo, la estructura `solicitud/comunicacion/contrato/persona` y los bloques comunes `direccion`/`pago` ya implementados — sin discrepancias con lo hecho el 2026-07-16
+- **Fix** (`da38bab`) — `ses-hospedajes-xml.util.ts`: elemento raíz pasa de `<peticion>` a `<alt:peticion xmlns:alt="http://www.neg.hospedajes.mir.es/altaParteHospedaje">` (prefijo `alt` solo en la raíz, sin namespace por defecto — los elementos hijos se dejan sin prefijo a propósito, igual que el ejemplo oficial, porque el esquema los declara "unqualified"; un `xmlns` por defecto en la raíz los habría cualificado también, rompiendo la validación)
+- 2 tests actualizados/nuevos en `ses-hospedajes-xml.util.spec.ts` (envoltorio `<alt:peticion>`/`</alt:peticion>`, namespace exacto declarado). 310/310 tests backend en verde, `tsc --noEmit` sin errores
+- XML de ejemplo generado e inspeccionado visualmente contra el fichero del Anexo I antes de dar el fix por bueno
+- **Sigue pendiente**: confirmar con una comunicación de prueba real en el portal que el fichero ya se acepta de principio a fin (esta vez sí se intentó una subida real, que es lo que sacó a la luz el bug — pero el resultado de una subida ya corregida todavía no se ha confirmado)
+
+---
+
 ## Pendientes / Preguntas abiertas
 - [ ] **Mostrar galería de imágenes y lat/lng de puntos en `route-detail-page`** (ver sección "Mejora formulario admin de rutas" arriba, 2026-07-08) — ya se pueden gestionar desde el admin pero la página pública de la ruta todavía no las pinta (alcance diferido a propósito, "para luego")
 - [ ] **Verificar en producción tras deploy de Vercel** que el enlace externo de ruta/punto (`820f769`, 2026-07-08) se ve bien en móvil real
@@ -573,6 +585,7 @@ Usuario reportó `Failed to load resource: 429 (photos, line 0)` en la web.
   - **14 tests nuevos** en `ses-hospedajes-xml.util.spec.ts` (envoltorio, codigoEstablecimiento, fechaContrato, datetime de entrada/salida, numPersonas, pago con/sin remainingPaidAt/depositPaidAt, rol, soporteDocumento, dirección España vs. extranjero, parentesco con menor, referencia) + 1 test de `depositPaidAt` en `booking-pending-lifecycle.service.spec.ts`. 309/309 tests backend en verde, `tsc --noEmit` y `ng build` sin errores
   - XML de ejemplo generado e inspeccionado visualmente contra la tabla del PDF antes de dar el trabajo por bueno
   - **Limitación conocida**: esta verificación es documental (contra el PDF), no contra el portal real — solo una comunicación de prueba real en `hospedajes.ses.mir.es` puede confirmar la aceptación al 100%
+  - **Actualización 2026-07-20**: el usuario sí probó a subirlo al portal real y encontró un bug — faltaba el `xmlns` del elemento raíz (ver "Fix — XML SES.HOSPEDAJES rechazado por el portal" más arriba). Corregido en `da38bab`; el resto de la estructura verificada aquí no presentó discrepancias contra la fuente adicional consultada (`MIR-HOSPE-DSI-WS-Servicio de Hospedajes - Comunicaciones v3.1.2`)
 - [ ] **(Opcional, no bloqueante)** Admin — la tabla de viajeros muestra el código INE en crudo ("Código INE 46043") en vez del nombre del municipio cuando el país de residencia es España; decisión deliberada para no duplicar el listado de 8.131 municipios en el backend/admin — si se prefiere ver el nombre resuelto, es un cambio pequeño aparte
 - [x] **Resend — Click Tracking desactivado** ✅ (2026-07-04) en resend.com → Domains → `casa-caldereta.com` → Configuration → Enable tracking metrics. Resuelve el problema de los links `awstrack.me` bloqueados por uBO en el email de pre-llegada.
 - [x] **Comprar dominio `casa-caldereta.com`** en Namecheap con `casacaldereta@gmail.com` ✅ (2026-06-26)
@@ -647,3 +660,4 @@ Usuario reportó `Failed to load resource: 429 (photos, line 0)` en la web.
 | style: quitar chevron del hero y mejorar texto de las cards de highlights (`db2cc03`) | Chevron de scroll revertido (sin valor real), colores de highlights corregidos (título como estaba, verde navbar al texto de las cards), tamaño de texto aumentado |
 | feat: formulario de check-in conforme al esquema oficial SES.HOSPEDAJES (`e1d346d`) | Selectores de país (ISO 3166-1) y municipio (código INE), parentesco con los 15 códigos oficiales condicionado a menor, teléfono/correo separados, tipoDocumento con códigos oficiales, validación NIE, componente searchable-select nuevo |
 | fix: aplicar publicRateLimiter a /photos y /routes públicas (`263999d`) | 429 en carga normal de la web por globalRateLimiter compartido (100/15min) — publicRateLimiter propio en photos/routes + RATE_LIMIT_MAX_REQUESTS global 100→500 |
+| fix: añadir namespace xmlns al elemento raíz del XML SES.HOSPEDAJES (`da38bab`) | Portal rechazaba con cvc-elt.1.a "Cannot find declaration of element 'peticion'" — faltaba xmlns; corregido a `<alt:peticion xmlns:alt="http://www.neg.hospedajes.mir.es/altaParteHospedaje">` según Anexo I de MIR-HOSPE-DSI-WS-Servicio de Hospedajes - Comunicaciones v3.1.2 |
