@@ -41,9 +41,20 @@ function makeTraveler(overrides: Partial<ITravelerDocumentDoc> = {}): ITravelerD
 describe('generateSesHospedajesXml', () => {
   it('usa <peticion><solicitud> como envoltorio raíz, no <parteViajeros>', () => {
     const xml = generateSesHospedajesXml(makeBooking(), [makeTraveler()], settings);
-    expect(xml).toMatch(/<peticion>[\s\S]*<solicitud>/);
+    expect(xml).toMatch(/<alt:peticion[^>]*>[\s\S]*<solicitud>/);
+    expect(xml).toMatch(/<\/alt:peticion>\s*$/);
     expect(xml).not.toContain('<parteViajeros>');
     expect(xml).not.toContain('<establecimiento>');
+  });
+
+  it('declara el namespace oficial altaParteHospedaje en el elemento raíz', () => {
+    // Confirmado 2026-07-20 contra el Anexo I de "MIR-HOSPE-DSI-WS-Servicio de
+    // Hospedajes - Comunicaciones v3.1.2": sin este xmlns el portal responde
+    // "cvc-elt.1.a: Cannot find the declaration of element 'peticion'".
+    const xml = generateSesHospedajesXml(makeBooking(), [makeTraveler()], settings);
+    expect(xml).toContain(
+      '<alt:peticion xmlns:alt="http://www.neg.hospedajes.mir.es/altaParteHospedaje">',
+    );
   });
 
   it('emite el codigoEstablecimiento confirmado, no la licencia turística CV-VUT', () => {

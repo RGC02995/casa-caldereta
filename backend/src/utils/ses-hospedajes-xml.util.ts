@@ -40,6 +40,16 @@ function tag(name: string, value: string | undefined | null, indent = 8): string
 // Ministerio del Interior, RD 933/2021), verificado campo a campo contra ese
 // documento el 2026-07-16. Bloques comunes "direccion" (7.1) y "pago" (7.2)
 // también verificados contra el mismo documento.
+//
+// El elemento raíz <peticion> requiere el namespace del alta de partes de
+// viajeros — confirmado el 2026-07-20 contra el Anexo I ("Ejemplo de alta de
+// comunicaciones") de "MIR-HOSPE-DSI-WS-Servicio de Hospedajes -
+// Comunicaciones v3.1.2", que reproduce un fichero XML completo con
+// <alt:peticion xmlns:alt="http://www.neg.hospedajes.mir.es/altaParteHospedaje">.
+// Sin este xmlns el validador del portal responde
+// "cvc-elt.1.a: Cannot find the declaration of element 'peticion'" porque no
+// hay ningún elemento global sin namespace con ese nombre en el esquema.
+const PETICION_NAMESPACE = 'http://www.neg.hospedajes.mir.es/altaParteHospedaje';
 
 export function generateSesHospedajesXml(
   booking: IBookingDocument,
@@ -98,7 +108,7 @@ ${tag('parentesco', viajero.parentesco)}
   antes de subirlo al portal — esta verificación es documental, no ha sido
   validada contra el portal real con una comunicación de prueba.
 -->
-<peticion>
+<alt:peticion xmlns:alt="${PETICION_NAMESPACE}">
   <solicitud>
     <codigoEstablecimiento>${escapeXml(CODIGO_ESTABLECIMIENTO)}</codigoEstablecimiento>
     <comunicacion>
@@ -115,6 +125,6 @@ ${pagoXml}
 ${personasXml}
     </comunicacion>
   </solicitud>
-</peticion>
+</alt:peticion>
 `;
 }
