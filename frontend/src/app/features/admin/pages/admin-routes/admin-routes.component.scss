@@ -59,4 +59,34 @@
     border-radius: $border-radius-sm;
     margin-bottom: $space-5;
   }
+
+  &__upload-errors {
+    padding: $space-3 $space-4;
+    background-color: rgba($color-error, 0.07);
+    border-left: 3px solid $color-error;
+    border-radius: $border-radius-sm;
+    margin-bottom: $space-5;
+  }
+
+  &__upload-errors-title {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: color.adjust($color-error, $lightness: -8%);
+    margin: 0 0 $space-2 0;
+  }
+
+  &__upload-errors-list {
+    margin: 0;
+    padding-left: $space-5;
+    display: flex;
+    flex-direction: column;
+    gap: $space-1;
+  }
+
+  &__upload-errors-item {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: color.adjust($color-error, $lightness: -8%);
+  }
 }

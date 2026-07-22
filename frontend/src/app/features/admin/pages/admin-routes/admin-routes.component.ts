@@ -1,9 +1,11 @@
 import { Component, computed, inject, signal, viewChild, DestroyRef } from '@angular/core';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, switchMap, concatMap, from, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { map, catchError, toArray } from 'rxjs/operators';
 import { RouteService } from '../../../../core/services/route.service';
 import { IRoute } from '../../../../core/models/route.model';
+import { ApiResponse } from '../../../../core/models/api-response.model';
 import { AdminRouteFormComponent, IRouteFormSubmitEvent } from '../../components/admin-route-form/admin-route-form.component';
 import { AdminRouteListComponent } from '../../components/admin-route-list/admin-route-list.component';
 import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal.component';
@@ -13,6 +15,18 @@ type FormMode = 'hidden' | 'create' | 'edit';
 interface IPendingConfirm {
   readonly message: string;
   readonly action:  () => void;
+}
+
+interface IUploadTask {
+  readonly label:   string;
+  readonly request: Observable<ApiResponse<IRoute>>;
+}
+
+interface IUploadOutcome {
+  readonly label:   string;
+  readonly success: boolean;
+  readonly route?:  IRoute;
+  readonly reason?: string;
 }
 
 @Component({
@@ -28,8 +42,9 @@ export class AdminRoutesComponent {
 
   readonly pendingConfirm = signal<IPendingConfirm | null>(null);
 
-  readonly loadError    = signal('');
-  readonly actionError  = signal('');
+  readonly loadError      = signal('');
+  readonly actionError    = signal('');
+  readonly uploadFailures = signal<string[]>([]);
   readonly isSubmitting = signal(false);
   readonly processingId = signal<string | null>(null);
   readonly formMode     = signal<FormMode>('hidden');
@@ -57,12 +72,14 @@ export class AdminRoutesComponent {
   openCreateForm(): void {
     this.editingRoute.set(null);
     this.actionError.set('');
+    this.uploadFailures.set([]);
     this.formMode.set('create');
   }
 
   openEditForm(route: IRoute): void {
     this.editingRoute.set(route);
     this.actionError.set('');
+    this.uploadFailures.set([]);
     this.formMode.set('edit');
   }
 
@@ -70,73 +87,113 @@ export class AdminRoutesComponent {
     this.formMode.set('hidden');
     this.editingRoute.set(null);
     this.actionError.set('');
+    this.uploadFailures.set([]);
   }
 
   onFormSubmit(event: IRouteFormSubmitEvent): void {
     if (this.isSubmitting()) return;
     this.isSubmitting.set(true);
     this.actionError.set('');
+    this.uploadFailures.set([]);
 
-    const currentFormMode  = this.formMode();
-    const currentRoute     = this.editingRoute();
+    const currentFormMode = this.formMode();
+    const currentRoute    = this.editingRoute();
 
     const saveRequest = currentFormMode === 'create'
       ? this.routeService.create({ ...event.payload, isPublished: false })
       : this.routeService.update(currentRoute!.id, event.payload);
 
+    let savedRoute!: IRoute;
+
     saveRequest.pipe(
       concatMap(response => {
-        const routeId = currentFormMode === 'create' ? response.data.id : currentRoute!.id;
-        const uploads: Observable<unknown>[] = [];
-
-        if (event.coverImageFile) {
-          uploads.push(
-            this.routeService.uploadCoverImage(routeId, event.coverImageFile).pipe(
-              catchError(() => {
-                this.actionError.set('Ruta guardada, pero la imagen de portada no se pudo subir.');
-                return of(null);
-              }),
-            ),
-          );
-        }
-
-        event.pointImageFiles.forEach((file, index) => {
-          if (!file) return;
-          uploads.push(
-            this.routeService.uploadPointImage(routeId, index, file).pipe(
-              catchError(() => {
-                this.actionError.set('Ruta guardada, pero alguna imagen de punto no se pudo subir.');
-                return of(null);
-              }),
-            ),
-          );
-        });
-
-        event.galleryImageFiles.forEach(file => {
-          uploads.push(
-            this.routeService.uploadGalleryImage(routeId, file).pipe(
-              catchError(() => {
-                this.actionError.set('Ruta guardada, pero alguna imagen de galería no se pudo subir.');
-                return of(null);
-              }),
-            ),
-          );
-        });
-
-        return uploads.length ? from(uploads).pipe(concatMap(upload => upload)) : of(null);
+        savedRoute = response.data;
+        return this.runUploadTasks(this.buildUploadTasks(savedRoute.id, event));
       }),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe({
-      next: () => {
-        this.isSubmitting.set(false);
-        this.closeForm();
-        this.refresh$.next();
-      },
+      next: outcomes => this.handleSaveOutcome(currentFormMode, savedRoute, outcomes),
       error: () => {
         this.actionError.set('No se pudo guardar la ruta. Inténtalo de nuevo.');
         this.isSubmitting.set(false);
       },
     });
+  }
+
+  private buildUploadTasks(routeId: string, event: IRouteFormSubmitEvent): IUploadTask[] {
+    const tasks: IUploadTask[] = [];
+
+    if (event.coverImageFile) {
+      tasks.push({
+        label:   'la portada',
+        request: this.routeService.uploadCoverImage(routeId, event.coverImageFile),
+      });
+    }
+
+    event.pointImageFiles.forEach((file, index) => {
+      if (!file) return;
+      const pointName = event.payload.points[index]?.name;
+      tasks.push({
+        label:   pointName ? `el punto ${index + 1}: ${pointName}` : `el punto ${index + 1}`,
+        request: this.routeService.uploadPointImage(routeId, index, file),
+      });
+    });
+
+    event.galleryImageFiles.forEach((file, index) => {
+      tasks.push({
+        label:   `la imagen de galería ${index + 1} (${file.name})`,
+        request: this.routeService.uploadGalleryImage(routeId, file),
+      });
+    });
+
+    return tasks;
+  }
+
+  private runUploadTasks(tasks: IUploadTask[]): Observable<IUploadOutcome[]> {
+    if (tasks.length === 0) return of([]);
+
+    return from(tasks).pipe(
+      concatMap(task =>
+        task.request.pipe(
+          map(response => ({ label: task.label, success: true as const, route: response.data })),
+          catchError((error: unknown) => {
+            console.error(`[AdminRoutes] Fallo al subir ${task.label}:`, error);
+            return of({ label: task.label, success: false as const, reason: this.describeUploadError(error) });
+          }),
+        ),
+      ),
+      toArray(),
+    );
+  }
+
+  private describeUploadError(error: unknown): string {
+    if (error instanceof HttpErrorResponse) {
+      const message = (error.error as { message?: unknown } | null)?.message;
+      if (typeof message === 'string' && message.trim()) return message;
+    }
+    return 'no se pudo subir. Inténtalo de nuevo.';
+  }
+
+  private handleSaveOutcome(formModeAtSubmit: FormMode, savedRoute: IRoute, outcomes: IUploadOutcome[]): void {
+    this.isSubmitting.set(false);
+    this.refresh$.next();
+
+    const failures = outcomes.filter(outcome => !outcome.success);
+
+    let latestRoute = savedRoute;
+    for (const outcome of outcomes) {
+      if (outcome.success && outcome.route) latestRoute = outcome.route;
+    }
+
+    if (failures.length === 0) {
+      this.closeForm();
+      return;
+    }
+
+    this.uploadFailures.set(failures.map(failure => `No se pudo subir ${failure.label}: ${failure.reason}`));
+    this.actionError.set('La ruta se guardó correctamente, pero alguna imagen no se pudo subir. Revisa el detalle abajo y vuelve a intentarlo.');
+    this.editingRoute.set(latestRoute);
+    if (formModeAtSubmit === 'create') this.formMode.set('edit');
   }
 
   onGalleryImageDelete(publicId: string): void {

@@ -370,7 +370,7 @@ Objetivo: el formulario de creación/edición de rutas del admin solo permitía 
 | Vercel (frontend) | casacaldereta@gmail.com | ✅ Transferido (2026-07-04) |
 | MongoDB Atlas | casacaldereta@gmail.com | ✅ Transferido |
 | Cloudinary | raulgc2995@gmail.com | ✅ Se queda así (cliente conforme) |
-| Stripe | casacaldereta@gmail.com | ✅ Test mode — webhook apunta a `api.casa-caldereta.com` |
+| Stripe | casacaldereta@gmail.com | ✅ Modo live en funcionamiento (2026-07-22) — webhook apunta a `api.casa-caldereta.com` |
 | Resend | casacaldereta@gmail.com | ✅ Activo — FROM: `reservas@casa-caldereta.com`, dominio verificado, click tracking off |
 | GitHub | raulgc2995@gmail.com | ✅ Se queda así |
 | Namecheap | casacaldereta@gmail.com | ✅ Dominio `casa-caldereta.com` — migración completa (2026-07-04) |
@@ -587,6 +587,21 @@ Usuario reportó que tras la primera sincronización correcta, una ejecución po
 
 ---
 
+---
+
+### Fix — imagen del 3er punto de ruta no se veía + galería pública de rutas ✅ COMPLETADO (2026-07-22)
+Usuario reportó que en la página pública de detalle de ruta, el 3er punto de interés (y siguientes) solo mostraba el nombre sin imagen, y que la galería de imágenes de la ruta no se veía en ningún sitio.
+
+- [x] **Investigación exhaustiva antes de tocar nada** — confirmado con datos reales de producción (`GET /routes/slug/...`) que la ruta `via-verde-del-serpis-y-circo-de-la-saforen-bici` tiene su punto 3 ("Fabrica de la Llum") guardado con `name`+`description` pero sin `imageUrl`/`imagePublicId` en Mongo. Descartado por revisión de código: no hay bug de índice ni `slice()` en `route-detail-page` (el `@for` itera todo `route.points` sin límite), no hay CSS que oculte nada a partir del 3er elemento, y el backend (`uploadPointImage` en `route.service.ts`) hace un `$set` atómico por campo — sin condición de carrera de "array completo pisado"
+- [x] **Causa real encontrada** — `admin-routes.component.ts` (`onFormSubmit()`): las subidas de imagen (portada/puntos/galería) ocurren en llamadas HTTP separadas DESPUÉS de guardar la ruta; cada una estaba envuelta en un `catchError` que descartaba el error real (sin `console.error`), ponía un mensaje genérico sin decir qué imagen falló, y dejaba que el flujo cerrara el modal como si todo hubiera ido bien con `of(null)`. Así fue como el punto 3 de esa ruta se quedó sin imagen sin dejar ningún rastro útil
+- [x] **Fix backend de errores** — nuevos `buildUploadTasks()`/`runUploadTasks()`/`describeUploadError()`/`handleSaveOutcome()` en `admin-routes.component.ts`: cada subida fallida se identifica por label legible ("el punto 2: Fabrica de la Llum"), se loguea con `console.error`, y se aprovecha el `message` real que ya devuelve el backend en sus 400/404/500. Si hay ≥1 fallo, el formulario **ya no se cierra** — se mantiene abierto con `editingRoute` actualizado al estado real (incluidas las imágenes que sí subieron), y si el fallo ocurre creando una ruta nueva, pasa a modo edición para que un reintento haga `PATCH` en vez de duplicar la ruta con otro `POST`. Nuevo signal `uploadFailures` + bloque de lista en `admin-routes.component.html`/`.scss`
+- [x] **Galería pública implementada** — `route-detail-page` reutiliza `GalleryLightboxComponent` (ya existente en `features/gallery/`, mismo patrón de import cross-feature que ya usa `booking-request-panel`→`features/legal`) mediante un `computed galleryPhotos()` que mapea `IRouteImage{url,publicId}` → `GalleryPhoto{id,photoId,src,alt}`. Nueva sección "Galería" (grid 2/3 cols con botones que abren el lightbox) entre "Sobre esta ruta" y "Puntos de interés", oculta por completo si `route.images` está vacío. Lat/lng de los puntos queda fuera de alcance (sería un mapa, tarea aparte)
+- [x] **Tests nuevos frontend** — `admin-routes.component.spec.ts` (3: fallo de subida mantiene form abierto con mensaje correcto, todo OK cierra el form, fallo en modo `create` pasa a `edit`) + `route-detail-page.component.spec.ts` (3: mapeo correcto de `galleryPhotos()`, apertura del lightbox al pulsar miniatura, sección ausente del DOM sin imágenes — con polyfill de `HTMLDialogElement.showModal()` para jsdom, que no lo implementa). 113/113 tests frontend en verde, `ng build` y `ng lint` sin errores nuevos
+- [ ] **Dato pendiente (no es código)** — la ruta real afectada seguirá con el punto 3 sin imagen hasta que el usuario la reedite desde el admin (ya arreglado) y vuelva a subir la foto de "Fabrica de la Llum"
+- **Sin commitear todavía**
+
+---
+
 ## Pendientes / Preguntas abiertas
 - [ ] **Bug de integridad conocido, documentado y diferido a propósito (2026-07-22)** — `upsertExternal()` en `blocked-period.service.ts` filtra solo por `{ externalUid }`, sin `origin` (el índice único de `blocked-period.model.ts` también es solo `{ externalUid: 1 }`, no compuesto). Si Airbnb y Booking.com generasen alguna vez el mismo UID para un evento, el registro cambiaría de plataforma silenciosamente — ya documentado desde antes en un test llamado `HALLAZGO` en `ical-sync.service.spec.ts`. Probabilidad muy baja (requiere colisión exacta de UID entre dos plataformas independientes) pero el impacto sería real si ocurriese (fechas de una plataforma podrían quedar sin bloqueo). Arreglarlo requiere migrar el índice único en MongoDB Atlas (drop del índice `{externalUid:1}` + create del compuesto `{origin:1, externalUid:1}`) vía script manual — desplegar solo el nuevo schema NO basta, el índice viejo seguiría vigente y más estricto (confirmado leyendo el código fuente de Mongoose instalado: solo `syncIndexes()` retira índices obsoletos, y no se usa en este proyecto, solo el `autoIndex` por defecto que únicamente crea). Seguir el patrón de `backend/scripts/migrate-blocked-period-origin.js` para el script de migración cuando se retome.
 - [ ] **Mostrar galería de imágenes y lat/lng de puntos en `route-detail-page`** (ver sección "Mejora formulario admin de rutas" arriba, 2026-07-08) — ya se pueden gestionar desde el admin pero la página pública de la ruta todavía no las pinta (alcance diferido a propósito, "para luego")
@@ -613,7 +628,7 @@ Usuario reportó que tras la primera sincronización correcta, una ejecución po
   - [x] `vercel.json` → rewrite de `/sitemap.xml` actualizado a `https://api.casa-caldereta.com/sitemap.xml`
   - [x] `backend/.env.example` → placeholders de Vercel sustituidos por `casa-caldereta.com`
   - [x] Resend → dominio verificado + `RESEND_FROM_EMAIL` cambiado a `reservas@casa-caldereta.com`
-- [ ] **Stripe live** — KYC (DNI propietario + cuenta bancaria) + claves `sk_live_...` + nuevo webhook secret → actualizar Railway
+- [x] **Stripe live** ✅ (2026-07-22) — modo live ya en funcionamiento (confirmado por el usuario)
 - [x] **Vercel** — cuenta `casacaldereta@gmail.com` creada + proyecto frontend transferido ✅ (2026-07-04)
 - [x] **Railway backend antiguo eliminado** (`backend-production-d85c`) de la cuenta `raulgc2995@gmail.com` ✅ (2026-07-04)
 - [ ] **SEO** — código listo, pendiente de commit + deploy y de pasos manuales en Google:

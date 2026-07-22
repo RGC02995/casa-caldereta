@@ -13,6 +13,17 @@
     <p class="admin-routes__action-error" role="alert">{{ actionError() }}</p>
   }
 
+  @if (uploadFailures().length > 0) {
+    <div class="admin-routes__upload-errors" role="alert">
+      <p class="admin-routes__upload-errors-title">Imágenes no subidas:</p>
+      <ul class="admin-routes__upload-errors-list">
+        @for (failure of uploadFailures(); track failure) {
+          <li class="admin-routes__upload-errors-item">{{ failure }}</li>
+        }
+      </ul>
+    </div>
+  }
+
   @if (formMode() !== 'hidden') {
     <admin-route-form
       #routeForm

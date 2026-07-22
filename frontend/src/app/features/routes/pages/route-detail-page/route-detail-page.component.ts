@@ -1,9 +1,11 @@
-import { Component, inject, signal, DestroyRef } from '@angular/core';
+import { Component, computed, inject, signal, DestroyRef } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouteService } from '../../../../core/services/route.service';
 import { IRoute, RouteDifficulty, RouteType } from '../../../../core/models/route.model';
 import { SeoService } from '../../../../core/services/seo.service';
+import { GalleryLightboxComponent } from '../../../gallery/components/gallery-lightbox/gallery-lightbox.component';
+import { GalleryPhoto } from '../../../gallery/gallery.types';
 
 const DIFFICULTY_LABELS: Record<RouteDifficulty, string> = {
   easy:     'Fácil',
@@ -20,7 +22,7 @@ const TYPE_LABELS: Record<RouteType, string> = {
 
 @Component({
   selector:    'route-detail-page',
-  imports:     [RouterLink],
+  imports:     [RouterLink, GalleryLightboxComponent],
   templateUrl: './route-detail-page.component.html',
   styleUrl:    './route-detail-page.component.scss',
 })
@@ -33,6 +35,20 @@ export class RouteDetailPageComponent {
   readonly isLoading = signal(true);
   readonly loadError = signal('');
   readonly routeData = signal<IRoute | null>(null);
+
+  readonly selectedGalleryIndex  = signal(-1);
+  readonly isGalleryLightboxOpen = computed(() => this.selectedGalleryIndex() >= 0);
+
+  readonly galleryPhotos = computed((): GalleryPhoto[] => {
+    const route = this.routeData();
+    if (!route) return [];
+    return route.images.map((image, index) => ({
+      id:      index,
+      photoId: image.publicId,
+      src:     image.url,
+      alt:     `${route.title} — imagen ${index + 1}`,
+    }));
+  });
 
   constructor() {
     if (!this.slug) {
@@ -79,5 +95,13 @@ export class RouteDetailPageComponent {
     const hours     = Math.floor(minutes / 60);
     const remaining = minutes % 60;
     return remaining > 0 ? `${hours}h ${remaining}min` : `${hours}h`;
+  }
+
+  openGalleryLightbox(index: number): void {
+    this.selectedGalleryIndex.set(index);
+  }
+
+  closeGalleryLightbox(): void {
+    this.selectedGalleryIndex.set(-1);
   }
 }
