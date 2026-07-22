@@ -70,4 +70,12 @@
     line-height: $line-height-relaxed;
     margin: 0;
   }
+
+  &__note {
+    font-size: $font-size-sm;
+    font-style: italic;
+    color: $color-secondary-dark;
+    line-height: $line-height-relaxed;
+    margin: 0;
+  }
 }

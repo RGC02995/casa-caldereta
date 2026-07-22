@@ -110,7 +110,8 @@
     "advantages": {
       "label": "Ventaja exclusiva",
       "title": "Mejor precio garantizado",
-      "text": "Reserva directamente con nosotros y consigue el mejor precio: sin comisiones de intermediarios."
+      "text": "Reserva directamente con nosotros y consigue el mejor precio: cancelación gratuita 7 días antes de la entrada.",
+      "note": "Contacta con nosotros para estancias superiores a 5 días para un descuento especial."
     },
     "cal": {
       "prevMonth": "Mes anterior",
