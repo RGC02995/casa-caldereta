@@ -202,10 +202,53 @@ describe('icalSyncService.syncAll — importacion de feeds Airbnb/Booking', () =
     await icalSyncService.syncAll();
 
     const block = await BlockedPeriodModel.findOne({ externalUid: 'airbnb-evt-1' });
-    expect(block?.startDate.getFullYear()).toBe(2026);
-    expect(block?.startDate.getMonth()).toBe(7);
-    expect(block?.startDate.getDate()).toBe(10);
-    // node-ical parsea VALUE=DATE a medianoche local → dia 13 exclusivo tal cual
-    expect(block?.endDate.getDate()).toBe(13);
+    expect(block?.startDate.getUTCFullYear()).toBe(2026);
+    expect(block?.startDate.getUTCMonth()).toBe(7);
+    expect(block?.startDate.getUTCDate()).toBe(10);
+    expect(block?.endDate.getUTCDate()).toBe(13);
+  });
+
+  it('VALUE=DATE se normaliza a medianoche UTC exacta, sin depender del TZ del proceso que ejecuta el sync', async () => {
+    airbnbResponse = { status: 200, body: icsFeed([{ uid: 'airbnb-evt-1', start: '20260810', end: '20260813' }]) };
+    await icalSyncService.syncAll();
+
+    const block = await BlockedPeriodModel.findOne({ externalUid: 'airbnb-evt-1' });
+    // node-ical parsea VALUE=DATE con el Date(y,m,d) nativo, en la hora LOCAL del proceso.
+    // toUtcMidnight() lo normaliza para que el instante guardado sea siempre el mismo
+    // (medianoche UTC exacta) sin importar en que TZ corra el servidor.
+    expect(block?.startDate.toISOString()).toBe('2026-08-10T00:00:00.000Z');
+    expect(block?.endDate.toISOString()).toBe('2026-08-13T00:00:00.000Z');
+  });
+
+  it('BUG: feed con VCALENDAR válido pero sin VEVENTs (vacío pero válido) NO debe borrar los bloqueos existentes de la plataforma', async () => {
+    bookingResponse = { status: 200, body: icsFeed([{ uid: 'booking-evt-1', start: '20260901', end: '20260903' }]) };
+    await icalSyncService.syncAll();
+    expect(await BlockedPeriodModel.countDocuments({ origin: 'booking' })).toBe(1);
+
+    // Segunda sync: Booking responde 200 con un VCALENDAR válido pero 0 VEVENTs
+    // (p. ej. rate limiting devolviendo un calendario vacío en vez de un error HTTP).
+    bookingResponse = { status: 200, body: icsFeed([]) };
+    await icalSyncService.syncAll();
+
+    const blocks = await BlockedPeriodModel.find({ origin: 'booking' });
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].externalUid).toBe('booking-evt-1');
+  });
+
+  it('feed vacío-pero-válido en una plataforma no impide que la otra siga borrando sus propios bloqueos obsoletos', async () => {
+    airbnbResponse  = { status: 200, body: icsFeed(AIRBNB_TWO_EVENTS) };
+    bookingResponse = { status: 200, body: icsFeed([{ uid: 'booking-evt-1', start: '20260901', end: '20260903' }]) };
+    await icalSyncService.syncAll();
+
+    // Booking deja de anunciar eventos (feed vacío-pero-válido) → se conserva su bloqueo.
+    // Airbnb cancela uno de los dos eventos → ese bloqueo SÍ debe desaparecer con normalidad.
+    airbnbResponse  = { status: 200, body: icsFeed([AIRBNB_TWO_EVENTS[0]]) };
+    bookingResponse = { status: 200, body: icsFeed([]) };
+    await icalSyncService.syncAll();
+
+    expect(await BlockedPeriodModel.countDocuments({ origin: 'booking' })).toBe(1); // conservado
+    const airbnbBlocks = await BlockedPeriodModel.find({ origin: 'airbnb' });
+    expect(airbnbBlocks).toHaveLength(1); // el cancelado sí se borró con normalidad
+    expect(airbnbBlocks[0].externalUid).toBe('airbnb-evt-1');
   });
 });
