@@ -115,9 +115,10 @@ export class BookingCalendarComponent {
       start: startOfDay(new Date(b.checkIn)),
       end:   startOfDay(new Date(b.checkOut)),
     }));
+    // endDate llega ya EXCLUSIVO del servidor (normalizado en getPublicAvailability) — no sumar días
     const parsedBlocked = this.blockedPeriods().map(b => ({
       start: startOfDay(new Date(b.startDate)),
-      end:   startOfDay(addDays(new Date(b.endDate), 1)),
+      end:   startOfDay(new Date(b.endDate)),
     }));
     const days = differenceInCalendarDays(end, start);
 
@@ -159,9 +160,12 @@ export class BookingCalendarComponent {
       start: startOfDay(new Date(b.checkIn)),
       end:   startOfDay(new Date(b.checkOut)),
     }));
+    // endDate llega ya EXCLUSIVO del servidor (normalizado en getPublicAvailability):
+    // el día de salida de una reserva importada de Airbnb/Booking queda libre para
+    // una nueva entrada; los bloqueos manuales llegan con su día extra ya sumado.
     const parsedBlocked = blockedPeriods.map(b => ({
       start: startOfDay(new Date(b.startDate)),
-      end:   startOfDay(addDays(new Date(b.endDate), 1)),
+      end:   startOfDay(new Date(b.endDate)),
     }));
     // Rango inclusivo en ambos extremos — mismo criterio que calculateStayTotal() en el backend
     const parsedRules = pricingRules.map(r => ({

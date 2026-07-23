@@ -1,6 +1,10 @@
 import { BlockedPeriodModel, BlockedPeriodOrigin, IBlockedPeriodDocument } from '../models/blocked-period.model';
 import { withId } from '../utils/mongoose.util';
 
+function addOneDay(date: Date): Date {
+  return new Date(date.getTime() + 24 * 60 * 60 * 1000);
+}
+
 export interface ICreateBlockedPeriodData {
   startDate:    string;
   endDate:      string;
@@ -20,11 +24,21 @@ class BlockedPeriodService {
     return docs.map(withId);
   }
 
-  // Proyección mínima para el calendario público — sin reason/origin/externalUid
+  // Proyección mínima para el calendario público — sin reason/origin/externalUid.
+  // Normaliza todo a UNA convención: endDate EXCLUSIVO (primer día libre, el de
+  // salida). Los bloqueos manuales se guardan/pintan inclusivos → se devuelve
+  // endDate + 1 día; los importados de Airbnb/Booking ya llegan exclusivos del
+  // feed → tal cual. Mismo criterio que ical-export.controller.ts y
+  // hasBlockedConflict() en booking.service.ts.
   async getPublicAvailability(): Promise<IBlockedPeriodAvailability[]> {
-    return BlockedPeriodModel.find({}, { startDate: 1, endDate: 1, _id: 0 })
+    const docs = await BlockedPeriodModel.find({}, { startDate: 1, endDate: 1, origin: 1, _id: 0 })
       .sort({ startDate: 1 })
-      .lean<IBlockedPeriodAvailability[]>();
+      .lean<{ startDate: Date; endDate: Date; origin: BlockedPeriodOrigin }[]>();
+
+    return docs.map(doc => ({
+      startDate: doc.startDate,
+      endDate:   doc.origin === 'manual' ? addOneDay(doc.endDate) : doc.endDate,
+    }));
   }
 
   async create(data: ICreateBlockedPeriodData): Promise<IBlockedPeriodDocument> {

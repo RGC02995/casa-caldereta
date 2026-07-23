@@ -85,6 +85,28 @@ describe('GET /api/v1/blocked-periods/availability', () => {
     expect(res.body.data[0]).toHaveProperty('startDate');
     expect(res.body.data[0]).toHaveProperty('endDate');
   });
+
+  it('normaliza endDate a exclusivo: manual devuelve endDate+1 dia, importado tal cual', async () => {
+    // Manual 10→12 inclusivo (los 3 dias enteros bloqueados) → primer dia libre: el 13
+    await BlockedPeriodModel.create({
+      startDate: new Date('2026-08-10'), endDate: new Date('2026-08-12'), origin: 'manual',
+    });
+    // Importado 20→22 ya exclusivo (noches 20-21, salida el 22 por la mañana) → tal cual
+    await BlockedPeriodModel.create({
+      startDate: new Date('2026-08-20'), endDate: new Date('2026-08-22'),
+      origin: 'airbnb', externalUid: 'airbnb-uid-exclusivo',
+    });
+
+    const res = await request(app).get('/api/v1/blocked-periods/availability');
+    expect(res.status).toBe(200);
+
+    const periods = res.body.data as { startDate: string; endDate: string }[];
+    const manual  = periods.find(p => p.startDate.startsWith('2026-08-10'));
+    const airbnb  = periods.find(p => p.startDate.startsWith('2026-08-20'));
+
+    expect(manual?.endDate.startsWith('2026-08-13')).toBe(true); // inclusivo → +1
+    expect(airbnb?.endDate.startsWith('2026-08-22')).toBe(true); // ya exclusivo → sin cambio
+  });
 });
 
 describe('POST /api/v1/blocked-periods', () => {

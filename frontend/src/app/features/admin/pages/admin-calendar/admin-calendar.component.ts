@@ -87,8 +87,15 @@ export class AdminCalendarComponent {
         const start = new Date(b.startDate);
         const end   = new Date(b.endDate);
         start.setHours(0, 0, 0, 0);
-        end.setHours(23, 59, 59, 999);
-        return date >= start && date <= end;
+        // Manuales: endDate INCLUSIVO (el propietario bloquea el último día entero).
+        // Importados de Airbnb/Booking: endDate EXCLUSIVO (día de salida — no se pinta,
+        // el huésped se va por la mañana y ese día admite una nueva entrada).
+        if (b.origin === 'manual') {
+          end.setHours(23, 59, 59, 999);
+          return date >= start && date <= end;
+        }
+        end.setHours(0, 0, 0, 0);
+        return date >= start && date < end;
       }) ?? null;
 
       const booking = bookings.find(b => {

@@ -87,12 +87,21 @@ describe('BookingCalendarComponent', () => {
     expect(day(13).isDisabled).toBe(true);
   });
 
-  it('bloqueo manual inclusivo 13-15: deshabilita 13, 14 Y 15; el 16 libre', () => {
-    fixture.componentRef.setInput('blockedPeriods', [blockedPeriod('2026-08-13', '2026-08-15')]);
+  it('bloqueo manual 13-15 (el servidor lo normaliza a 13→16 exclusivo): deshabilita 13, 14 y 15; el 16 libre', () => {
+    // getPublicAvailability() suma +1 al endDate de los manuales antes de responder
+    fixture.componentRef.setInput('blockedPeriods', [blockedPeriod('2026-08-13', '2026-08-16')]);
     expect(day(13).isBlocked).toBe(true);
     expect(day(14).isBlocked).toBe(true);
-    expect(day(15).isBlocked).toBe(true); // endDate inclusivo (addDays +1)
+    expect(day(15).isBlocked).toBe(true);
     expect(day(16).isBlocked).toBe(false);
+  });
+
+  it('reserva importada 20→22 (endDate exclusivo del feed): noches 20-21 bloqueadas, el 22 (dia de salida) reservable', () => {
+    fixture.componentRef.setInput('blockedPeriods', [blockedPeriod('2026-08-20', '2026-08-22')]);
+    expect(day(20).isBlocked).toBe(true);
+    expect(day(21).isBlocked).toBe(true);
+    expect(day(22).isBlocked).toBe(false);
+    expect(day(22).isDisabled).toBe(false); // el huesped sale por la mañana — nueva entrada posible
   });
 
   it('dia de inicio de un bloqueo sigue deshabilitado como nuevo check-in sin seleccion previa', () => {
@@ -214,9 +223,9 @@ describe('BookingCalendarComponent', () => {
     });
 
     it('hueco de un solo dia entre dos bloqueos: el dia de inicio del segundo bloqueo SI es checkout valido tras marcar checkIn en el hueco', () => {
-      // Bloqueo hasta el 10 (inclusive), 11 libre, bloqueo desde el 12 → reserva de 1 noche 11→12
+      // endDate exclusivo: bloqueo 8→11 ocupa 8-10, el 11 queda libre, bloqueo desde el 12 → reserva de 1 noche 11→12
       fixture.componentRef.setInput('blockedPeriods', [
-        blockedPeriod('2026-08-08', '2026-08-10'),
+        blockedPeriod('2026-08-08', '2026-08-11'),
         blockedPeriod('2026-08-12', '2026-08-15'),
       ]);
       fixture.componentRef.setInput('checkIn', new Date(2026, 7, 11));
