@@ -77,10 +77,13 @@ class BlockedPeriodService {
     );
   }
 
-  async deleteStaleExternal(origin: BlockedPeriodOrigin, activeUids: string[]): Promise<number> {
+  // Solo limpia bloqueos externos YA PASADOS (endDate anterior a `before`).
+  // Nunca toca un bloqueo que incluya hoy o cualquier día futuro: el sync no puede
+  // liberar una fecha ocupada por error. Las cancelaciones futuras se liberan a mano.
+  async deletePastExternal(origin: BlockedPeriodOrigin, before: Date): Promise<number> {
     const result = await BlockedPeriodModel.deleteMany({
       origin,
-      externalUid: { $nin: activeUids },
+      endDate: { $lt: before },
     });
     return result.deletedCount ?? 0;
   }

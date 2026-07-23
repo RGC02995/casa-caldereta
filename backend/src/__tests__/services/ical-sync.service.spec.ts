@@ -114,19 +114,21 @@ describe('icalSyncService.syncAll — importacion de feeds Airbnb/Booking', () =
     expect(blocks[0].endDate.getDate()).toBe(14);
   });
 
-  it('evento desaparecido del feed (reserva cancelada en la plataforma) → su bloqueo se elimina', async () => {
+  it('reserva FUTURA que desaparece del feed NO se borra automáticamente (se conserva; se libera a mano)', async () => {
     airbnbResponse = { status: 200, body: icsFeed(AIRBNB_TWO_EVENTS) };
     await icalSyncService.syncAll();
 
+    // El evento -2 (futuro) desaparece del feed: podría ser una lectura mala.
+    // Con "nunca liberar fechas futuras", su bloqueo NO debe borrarse.
     airbnbResponse = { status: 200, body: icsFeed([AIRBNB_TWO_EVENTS[0]]) };
     await icalSyncService.syncAll();
 
-    const blocks = await BlockedPeriodModel.find({ origin: 'airbnb' });
-    expect(blocks).toHaveLength(1);
-    expect(blocks[0].externalUid).toBe('airbnb-evt-1');
+    const blocks = await BlockedPeriodModel.find({ origin: 'airbnb' }).sort({ startDate: 1 });
+    expect(blocks).toHaveLength(2);
+    expect(blocks.map(b => b.externalUid)).toEqual(['airbnb-evt-1', 'airbnb-evt-2']);
   });
 
-  it('los bloqueos manuales sobreviven a la sincronizacion (deleteStale solo toca su origin)', async () => {
+  it('los bloqueos manuales no se ven afectados por la sincronizacion (solo toca su propio origin externo)', async () => {
     await BlockedPeriodModel.create({
       startDate: new Date('2026-09-01'), endDate: new Date('2026-09-05'),
       origin: 'manual', reason: 'Obras',
@@ -235,20 +237,35 @@ describe('icalSyncService.syncAll — importacion de feeds Airbnb/Booking', () =
     expect(blocks[0].externalUid).toBe('booking-evt-1');
   });
 
-  it('feed vacío-pero-válido en una plataforma no impide que la otra siga borrando sus propios bloqueos obsoletos', async () => {
+  it('feed vacío o parcial no borra bloqueos FUTUROS de ninguna plataforma', async () => {
     airbnbResponse  = { status: 200, body: icsFeed(AIRBNB_TWO_EVENTS) };
     bookingResponse = { status: 200, body: icsFeed([{ uid: 'booking-evt-1', start: '20260901', end: '20260903' }]) };
     await icalSyncService.syncAll();
 
-    // Booking deja de anunciar eventos (feed vacío-pero-válido) → se conserva su bloqueo.
-    // Airbnb cancela uno de los dos eventos → ese bloqueo SÍ debe desaparecer con normalidad.
+    // Booking: feed vacío. Airbnb: feed parcial (falta un evento futuro).
+    // Todos los bloqueos futuros se conservan.
     airbnbResponse  = { status: 200, body: icsFeed([AIRBNB_TWO_EVENTS[0]]) };
     bookingResponse = { status: 200, body: icsFeed([]) };
     await icalSyncService.syncAll();
 
-    expect(await BlockedPeriodModel.countDocuments({ origin: 'booking' })).toBe(1); // conservado
-    const airbnbBlocks = await BlockedPeriodModel.find({ origin: 'airbnb' });
-    expect(airbnbBlocks).toHaveLength(1); // el cancelado sí se borró con normalidad
-    expect(airbnbBlocks[0].externalUid).toBe('airbnb-evt-1');
+    expect(await BlockedPeriodModel.countDocuments({ origin: 'booking' })).toBe(1);
+    const airbnbBlocks = await BlockedPeriodModel.find({ origin: 'airbnb' }).sort({ startDate: 1 });
+    expect(airbnbBlocks).toHaveLength(2);
+    expect(airbnbBlocks.map(b => b.externalUid)).toEqual(['airbnb-evt-1', 'airbnb-evt-2']);
+  });
+
+  it('limpia automáticamente los bloqueos externos YA PASADOS (housekeeping inofensivo)', async () => {
+    await BlockedPeriodModel.create({
+      startDate: new Date('2020-01-10T00:00:00.000Z'),
+      endDate:   new Date('2020-01-13T00:00:00.000Z'),
+      origin: 'booking', reason: 'Booking.com', externalUid: 'booking-viejo-1',
+    });
+    bookingResponse = { status: 200, body: icsFeed([{ uid: 'booking-evt-1', start: '20260901', end: '20260903' }]) };
+
+    await icalSyncService.syncAll();
+
+    const blocks = await BlockedPeriodModel.find({ origin: 'booking' });
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].externalUid).toBe('booking-evt-1'); // el pasado se limpió, el futuro se conserva
   });
 });

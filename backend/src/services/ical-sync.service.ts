@@ -51,7 +51,7 @@ class IcalSyncService {
       throw new Error(`Feed de ${platform.label} no es un iCal válido`);
     }
 
-    const activeUids: string[] = [];
+    let syncedCount = 0;
 
     for (const component of Object.values(events)) {
       if (!component || component.type !== 'VEVENT') continue;
@@ -61,7 +61,7 @@ class IcalSyncService {
       const start = isDateOnly ? toUtcMidnight(component.start) : component.start;
       const end   = isDateOnly ? toUtcMidnight(component.end)   : component.end;
 
-      activeUids.push(component.uid);
+      syncedCount++;
       await blockedPeriodService.upsertExternal(
         platform.origin,
         component.uid,
@@ -71,19 +71,15 @@ class IcalSyncService {
       );
     }
 
-    // Un feed con VCALENDAR válido pero 0 VEVENTs es indistinguible, desde aquí, de un
-    // fallo temporal del proveedor (rate limiting, hiccup puntual...) devolviendo un
-    // calendario "vacío pero válido" en vez de un error HTTP. $nin de un array vacío no
-    // excluye nada — un deleteMany aquí borraría TODOS los bloqueos vigentes de la
-    // plataforma. Ante la duda, no borrar: se omite el borrado y se avisa; si la próxima
-    // sync trae ≥1 evento activo, los bloqueos realmente obsoletos se limpian igual.
-    if (activeUids.length === 0) {
-      console.warn(`[ical-sync] ${platform.label}: 0 eventos activos — se omite el borrado de bloqueos existentes por seguridad`);
-      return;
-    }
+    // El sync NUNCA borra un bloqueo de una fecha futura a partir del feed: una lectura
+    // vacía o parcial (rate limiting, hiccup del proveedor...) no puede liberar una fecha
+    // ocupada por error. Solo se limpian automáticamente los bloqueos ya PASADOS
+    // (inofensivo). Las cancelaciones de reservas futuras se liberan a mano en el admin.
+    const now = new Date();
+    const startOfTodayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const cleaned = await blockedPeriodService.deletePastExternal(platform.origin, startOfTodayUtc);
 
-    const deleted = await blockedPeriodService.deleteStaleExternal(platform.origin, activeUids);
-    console.log(`[ical-sync] ${platform.label}: ${activeUids.length} eventos activos, ${deleted} bloqueos eliminados`);
+    console.log(`[ical-sync] ${platform.label}: ${syncedCount} eventos sincronizados, ${cleaned} bloqueos pasados eliminados`);
   }
 }
 
